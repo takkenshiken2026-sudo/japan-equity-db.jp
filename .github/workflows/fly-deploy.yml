@@ -1,10 +1,9 @@
 name: Deploy to Fly.io
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
+# Fly.io はアカウントに支払い情報が必要です。FLY_API_TOKEN を Secrets に設定してから実行してください。
 jobs:
   deploy:
     runs-on: ubuntu-latest

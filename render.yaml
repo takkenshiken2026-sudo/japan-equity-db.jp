@@ -1,0 +1,21 @@
+# Render Blueprint: https://dashboard.render.com/select-repo?type=blueprint
+# SQLite 永続化には Starter プラン以上 + disk が必要です。
+services:
+  - type: web
+    name: japan-equity-db
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    region: singapore
+    healthCheckPath: /api/health
+    envVars:
+      - key: SITE_URL
+        value: https://japan-equity-db.jp
+      - key: DATABASE_URL
+        value: sqlite:///./data/edinet.db
+      - key: EDINET_API_KEY
+        sync: false
+    disk:
+      name: edinet-data
+      mountPath: /app/data
+      sizeGB: 1

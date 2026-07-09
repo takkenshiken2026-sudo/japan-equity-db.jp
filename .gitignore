@@ -11,6 +11,7 @@ data/
 backend/data/*.db*
 backend/data/*.log
 backend/data/collection-logs/
+public_site/
 *.db
 *.sqlite3
 .DS_Store
