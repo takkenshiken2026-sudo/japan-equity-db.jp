@@ -218,19 +218,33 @@ def main() -> None:
         print("Sitemap from repo or minimal fallback")
 
     sys.path.insert(0, str(ROOT / "tools"))
+    quick_deploy = os.environ.get("QUICK_DEPLOY", "").lower() in ("1", "true", "yes")
     try:
-        from export_static_data import export_static_data
+        if quick_deploy:
+            from mirror_live_data import mirror_live_data
 
-        manifest = export_static_data(OUT)
+            print("Quick deploy: mirroring live /data (skip DB export)")
+            manifest = mirror_live_data(OUT, SITE_URL)
+        else:
+            from export_static_data import export_static_data
+
+            manifest = export_static_data(OUT)
         if manifest.get("screening_count"):
             listed_count = int(manifest["screening_count"])
             listed_label = _listed_count_label(listed_count)
             print(
                 f"Static data: {listed_count} screening, "
-                f"{manifest.get('company_bundles', 0)} bundles"
+                f"{manifest.get('company_bundles', manifest.get('mirrored_companies', 0))} bundles"
             )
+        elif quick_deploy and (OUT / "data/manifest.json").exists():
+            manifest_data = json.loads((OUT / "data/manifest.json").read_text(encoding="utf-8"))
+            if manifest_data.get("screening_count"):
+                listed_count = int(manifest_data["screening_count"])
+                listed_label = _listed_count_label(listed_count)
     except Exception as exc:  # noqa: BLE001
         print(f"Static export failed: {exc}")
+        if quick_deploy:
+            raise
 
     for name in ("index.html", "disclaimer.html"):
         target = OUT / name

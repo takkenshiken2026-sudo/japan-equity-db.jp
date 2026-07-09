@@ -12,6 +12,10 @@ on:
         description: Skip daily sync (build only from Release DB)
         type: boolean
         default: false
+      quick_deploy:
+        description: Fast deploy — mirror live JSON and rebuild HTML only (~15 min)
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -41,6 +45,7 @@ jobs:
         run: pip install -r backend/requirements.txt
 
       - name: Restore database from Release
+        if: github.event_name != 'workflow_dispatch' || inputs.quick_deploy != true
         env:
           GH_TOKEN: ${{ github.token }}
           DB_BACKUP_URL: https://github.com/takkenshiken2026-sudo/japan-equity-db.jp/releases/download/db-backup/edinet.db.gz
@@ -55,7 +60,7 @@ jobs:
           fi
 
       - name: Daily sync
-        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.skip_sync != true)
+        if: (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.skip_sync != true)) && inputs.quick_deploy != true
         run: |
           if [ -z "$EDINET_API_KEY" ]; then
             echo "::warning::EDINET_API_KEY 未設定 — sync をスキップ"
@@ -75,7 +80,7 @@ jobs:
           python -c "from app.db_maintenance import checkpoint_sqlite_wal; checkpoint_sqlite_wal('TRUNCATE')"
 
       - name: Publish database backup
-        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.skip_sync != true)
+        if: (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.skip_sync != true)) && inputs.quick_deploy != true
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -90,6 +95,7 @@ jobs:
         env:
           GOOGLE_SITE_VERIFICATION: ${{ secrets.GOOGLE_SITE_VERIFICATION }}
           GOOGLE_SITE_VERIFICATION_HTML: ${{ secrets.GOOGLE_SITE_VERIFICATION_HTML }}
+          QUICK_DEPLOY: ${{ github.event_name == 'workflow_dispatch' && inputs.quick_deploy == true && '1' || '' }}
         run: python3 tools/build_public_site.py
 
       - uses: actions/configure-pages@v5
