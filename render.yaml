@@ -1,5 +1,6 @@
 # Render Blueprint: https://dashboard.render.com/select-repo?type=blueprint
-# SQLite 永続化には Starter プラン以上 + disk が必要です。
+# 本番: UI + API + SEO + SQLite を単一サービスで提供します。
+# DNS (japan-equity-db.jp) は Render のカスタムドメインに向けてください（GitHub Pages は使いません）。
 services:
   - type: web
     name: japan-equity-db
@@ -8,16 +9,26 @@ services:
     plan: starter
     region: singapore
     healthCheckPath: /api/health
+    autoDeploy: true
+    domains:
+      - japan-equity-db.jp
+      - www.japan-equity-db.jp
     envVars:
       - key: SITE_URL
         value: https://japan-equity-db.jp
       - key: DATABASE_URL
         value: sqlite:///./data/edinet.db
+      - key: COLLECTION_LOG_DIR
+        value: /app/data/collection-logs
+      - key: ENABLE_DAILY_CRON
+        value: "true"
       - key: EDINET_API_KEY
         sync: false
       - key: GOOGLE_SITE_VERIFICATION
         sync: false
+      - key: DB_BACKUP_URL
+        sync: false
     disk:
       name: edinet-data
       mountPath: /app/data
-      sizeGB: 1
+      sizeGB: 2

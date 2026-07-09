@@ -1,8 +1,10 @@
-name: Deploy GitHub Pages
+# GitHub Pages は本番では使いません（API が動かないため）。
+# 本番は Render モノリス（deploy-production.yml / render.yaml）を使用してください。
+# 静的プレビューが必要な場合のみ手動実行してください。
+
+name: Deploy GitHub Pages (preview only)
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:

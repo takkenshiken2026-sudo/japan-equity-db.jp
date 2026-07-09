@@ -7,6 +7,8 @@ services:
       - .env
     environment:
       DATABASE_URL: sqlite:///./data/edinet.db
+      ENABLE_DAILY_CRON: "false"
+      COLLECTION_LOG_DIR: /app/data/collection-logs
     volumes:
       - ./backend/data:/app/data
     restart: unless-stopped

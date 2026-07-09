@@ -74,8 +74,24 @@ def collection_logs(
 
 
 @app.get("/api/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+def health() -> dict:
+    db = SessionLocal()
+    try:
+        companies = db.scalar(select(func.count()).select_from(Company)) or 0
+        listed = (
+            db.scalar(
+                select(func.count()).select_from(Company).where(Company.listing_status == "上場")
+            )
+            or 0
+        )
+        return {
+            "status": "ok",
+            "db_ready": companies > 0,
+            "companies": companies,
+            "listed": listed,
+        }
+    finally:
+        db.close()
 
 
 @app.get("/api/stats")

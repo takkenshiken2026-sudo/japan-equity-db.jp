@@ -92,17 +92,31 @@ sqlite3 data/edinet.db "PRAGMA wal_checkpoint(TRUNCATE);"
 ./scripts/seo-verify.sh http://127.0.0.1:8000
 ```
 
-## デプロイ（Docker）
+## デプロイ（本番）
+
+**本番は Render モノリス**（UI + API + SEO + SQLite）です。詳細は [docs/PRODUCTION.md](docs/PRODUCTION.md) を参照。
 
 ```bash
-# Docker Desktop を起動してから
+# 初回: DB バックアップを Release にアップロード → Render の DB_BACKUP_URL に設定
+./scripts/publish-db-backup.sh
+
+# 日常: main に push すると Render へ自動デプロイ
+git push origin main
+```
+
+- 本番 URL: https://japan-equity-db.jp
+- GitHub Pages は API 非対応のため **本番では使用しません**（プレビューのみ手動可）
+
+### ローカル Docker（開発用）
+
+```bash
 docker compose up -d --build
 ```
 
 - URL: http://localhost:8000/
-- DB: `backend/data/edinet.db` をボリュームマウント（データ永続化）
+- DB: `backend/data/edinet.db` をボリュームマウント
 - 停止: `docker compose down`
-- ログ: `docker compose logs -f app`
+- 本番 cron は無効（`ENABLE_DAILY_CRON=false`）
 
 株価・財務の更新（ホスト側で実行）:
 

@@ -189,12 +189,18 @@ def main() -> None:
         sitemap_xml = _sitemap_from_repo() or _minimal_sitemap()
         print("Sitemap from repo or minimal fallback")
 
-    for name in ("index.html", "disclaimer.html", "charts.js"):
+    for name in ("index.html", "disclaimer.html"):
         target = OUT / name
         target.write_text(
             _replace_placeholders((MOCK / name).read_text(encoding="utf-8"), listed_label=listed_label),
             encoding="utf-8",
         )
+    assets_dir = OUT / "assets"
+    assets_dir.mkdir(parents=True, exist_ok=True)
+    (assets_dir / "charts.js").write_text(
+        _replace_placeholders((MOCK / "charts.js").read_text(encoding="utf-8"), listed_label=listed_label),
+        encoding="utf-8",
+    )
 
     _write_brand_assets(listed_label)
     _write_robots_txt()
