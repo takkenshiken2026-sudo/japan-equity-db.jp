@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "public_site"
 MOCK = ROOT / "mock"
 SEO = ROOT / "seo"
-SITE_URL = os.environ.get("SITE_URL", "https://japan-equity-db.jp").rstrip("/")
+SITE_URL = (os.environ.get("SITE_URL") or "https://japan-equity-db.jp").rstrip("/")
 META_DESCRIPTION = (
     "有報・四半期の財務データとニュース・検索トレンドで上場企業を分析できる株チェック。"
 )

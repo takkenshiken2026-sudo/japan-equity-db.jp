@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-os.environ.setdefault("SITE_URL", "https://japan-equity-db.jp")
+os.environ["SITE_URL"] = "https://japan-equity-db.jp"
 
 from build_public_site import SEO, _sitemap_from_db  # noqa: E402
 
