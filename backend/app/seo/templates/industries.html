@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block description %}{{ meta_description }}{% endblock %}
+{% block canonical %}{{ canonical_url }}{% endblock %}
+{% block og_title %}{{ page_title }}{% endblock %}
+{% block og_description %}{{ meta_description }}{% endblock %}
+{% block og_url %}{{ canonical_url }}{% endblock %}
+{% block twitter_title %}{{ page_title }}{% endblock %}
+{% block twitter_description %}{{ meta_description }}{% endblock %}
+{% block json_ld %}<script type="application/ld+json">{{ json_ld | tojson }}</script>{% endblock %}
+
+{% block content %}
+<nav class="breadcrumb" aria-label="パンくず">
+  <a href="/">トップ</a> / 業種一覧
+</nav>
+<h1>業種別 上場企業一覧</h1>
+<p class="subtitle">有価証券報告書の財務データがある上場企業を業種別に分類しています。</p>
+
+<div class="industry-grid">
+  {% for ind in industries %}
+  <a class="industry-card" href="{{ ind.url }}">
+    <strong>{{ ind.name }}</strong>
+    <div class="count">{{ ind.count }}社</div>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

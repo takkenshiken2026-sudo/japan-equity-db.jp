@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block head_extra %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+<script src="/assets/charts.js" defer></script>
+{% endblock %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block description %}{{ meta_description }}{% endblock %}
+{% block canonical %}{{ canonical_url }}{% endblock %}
+{% block og_title %}{{ page_title }}{% endblock %}
+{% block og_description %}{{ meta_description }}{% endblock %}
+{% block og_url %}{{ canonical_url }}{% endblock %}
+{% block twitter_title %}{{ page_title }}{% endblock %}
+{% block twitter_description %}{{ meta_description }}{% endblock %}
+{% block json_ld %}<script type="application/ld+json">{{ json_ld | tojson }}</script>{% endblock %}
+
+{% block content %}
+<nav class="breadcrumb" aria-label="パンくず">
+  <a href="/">トップ</a> / <a href="/industries">業種一覧</a> / {{ industry_name }}
+</nav>
+<h1>{{ industry_name }}（上場企業）</h1>
+<p class="subtitle">売上高順に{{ companies|length }}社を掲載（業種内上位80社まで）。業種内の財務水準と推移分析の入口です。</p>
+
+{% if industry_stats %}
+<section class="card">
+  <h2>業種サマリー</h2>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="lbl">掲載企業数</div><div class="val">{{ industry_stats.count }}社</div></div>
+    <div class="kpi"><div class="lbl">平均営業利益率</div><div class="val">{{ industry_stats.avg_margin }}</div></div>
+    <div class="kpi"><div class="lbl">平均ROE</div><div class="val">{{ industry_stats.avg_roe }}</div></div>
+    <div class="kpi"><div class="lbl">平均売上成長率</div><div class="val">{{ industry_stats.avg_growth }}</div></div>
+    <div class="kpi"><div class="lbl">最大売上高</div><div class="val">{{ industry_stats.top_revenue }}</div></div>
+  </div>
+</section>
+{% endif %}
+
+{% if chart_data %}
+<section class="card">
+  <h2>売上高ランキング（上位12社）</h2>
+  <p class="section-lead">業種内の規模感を棒グラフで比較できます。</p>
+  <div class="chart-canvas-wrap tall"><canvas id="industry-revenue-chart"></canvas></div>
+</section>
+{% endif %}
+
+<section class="card">
+  <h2>企業比較表（売上順）</h2>
+  <p class="section-lead">売上・利益・収益性・成長率を一覧で比較できます。</p>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>企業名</th><th>コード</th><th class="num">売上高</th><th class="num">営業利益</th>
+          <th class="num">純利益</th><th class="num">営業利益率</th><th class="num">ROE</th>
+          <th class="num">成長率</th><th class="num">PER</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in companies %}
+        <tr>
+          <td><a href="{{ c.url }}">{{ c.name }}</a></td>
+          <td>{{ c.sec_code }}</td>
+          <td class="num">{{ c.revenue }}</td>
+          <td class="num">{{ c.operating_income }}</td>
+          <td class="num">{{ c.net_income }}</td>
+          <td class="num">{{ c.operating_margin }}</td>
+          <td class="num">{{ c.roe }}</td>
+          <td class="num">{{ c.revenue_growth }}</td>
+          <td class="num">{{ c.per }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{% if chart_data %}
+<script id="industry-chart-data" type="application/json">{{ chart_data | tojson }}</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  function boot() {
+    if (!window.Chart || !window.EdinetCharts) { setTimeout(boot, 50); return; }
+    var el = document.getElementById('industry-chart-data');
+    if (!el) return;
+    var data = JSON.parse(el.textContent);
+    EdinetCharts.renderHorizontalBarChart('industry-revenue-chart', data.labels, data.revenues);
+    setTimeout(function () { EdinetCharts.resizeAll(); }, 100);
+  }
+  boot();
+});
+</script>
+{% endif %}
+{% endblock %}

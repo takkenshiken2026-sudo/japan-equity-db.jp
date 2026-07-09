@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}{{ site_name }}{% endblock %}</title>
+  <meta name="description" content="{% block description %}{% endblock %}" />
+  <meta name="robots" content="{% block robots %}index, follow{% endblock %}" />
+  <link rel="canonical" href="{% block canonical %}{% endblock %}" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <meta name="theme-color" content="#111827" />
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}" />
+  <meta property="og:title" content="{% block og_title %}{% endblock %}" />
+  <meta property="og:description" content="{% block og_description %}{% endblock %}" />
+  <meta property="og:url" content="{% block og_url %}{% endblock %}" />
+  <meta property="og:image" content="{% block og_image %}{{ og_image_url }}{% endblock %}" />
+  <meta property="og:locale" content="ja_JP" />
+  <meta property="og:site_name" content="{{ site_name }}" />
+  {% if google_site_verification %}
+  <meta name="google-site-verification" content="{{ google_site_verification }}" />
+  {% endif %}
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="{% block twitter_image %}{{ og_image_url }}{% endblock %}" />
+  <meta name="twitter:title" content="{% block twitter_title %}{% endblock %}" />
+  <meta name="twitter:description" content="{% block twitter_description %}{% endblock %}" />
+  {% block json_ld %}{% endblock %}
+  {% block head_extra %}{% endblock %}
+  <style>
+    :root {
+      --bg: #f3f4f6; --surface: #fff; --border: #e5e7eb; --text: #111827;
+      --muted: #6b7280; --accent: #1d4ed8; --green: #4b5563;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: "Hiragino Sans", "Noto Sans JP", sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.65;
+    }
+    a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+    a:hover { text-decoration: underline; }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 24px 20px 48px; }
+    header.site { border-bottom: 1px solid var(--border); background: #fff; }
+    header.site .wrap { padding-top: 14px; padding-bottom: 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .logo { font-weight: 700; color: var(--text); }
+    nav a { margin-left: 16px; font-size: 0.9rem; color: var(--muted); }
+    nav a:first-child { margin-left: 0; }
+    .breadcrumb { font-size: 0.82rem; color: var(--muted); margin-bottom: 12px; }
+    h1 { margin: 0 0 6px; font-size: 1.65rem; }
+    .subtitle { color: var(--muted); margin: 0 0 16px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .tag { font-size: 0.78rem; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); background: #fff; color: var(--muted); }
+    .tag.green { color: var(--muted); border-color: var(--border); background: #f9fafb; }
+    .card { background: #fff; border: 1px solid var(--border); border-radius: 2px; padding: 20px; margin-bottom: 16px; }
+    .card h2 { margin: 0 0 12px; font-size: 1.1rem; border-left: none; padding-left: 0; }
+    .intro { font-size: 0.95rem; color: #334155; margin: 0 0 16px; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+    .kpi { border: 1px solid var(--border); border-radius: 2px; padding: 12px; background: #f8fafc; }
+    .kpi .lbl { font-size: 0.72rem; color: var(--muted); }
+    .kpi .val { font-size: 1.05rem; font-weight: 700; margin-top: 4px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+    th { color: var(--muted); font-weight: 600; background: #f8fafc; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    tr.latest td { background: #f3f4f6; font-weight: 600; }
+    .business p { margin: 0 0 10px; white-space: pre-wrap; }
+    .cta { display: inline-block; margin-top: 8px; padding: 10px 18px; background: var(--accent); color: #fff !important; border-radius: 2px; font-weight: 600; font-size: 0.9rem; }
+    .cta:hover { text-decoration: none; opacity: 0.92; }
+    footer { margin-top: 32px; font-size: 0.78rem; color: var(--muted); text-align: center; }
+    .footer-source { margin: 0; }
+    .footer-source a { color: var(--muted); text-decoration: underline; }
+    .footer-source a:hover { color: var(--text); }
+    .industry-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+    .industry-card { display: block; padding: 14px 16px; border: 1px solid var(--border); border-radius: 2px; background: #fff; color: var(--text); }
+    .industry-card:hover { border-color: var(--accent); background: #eff6ff; text-decoration: none; }
+    .industry-card .count { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+    .company-list a { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); color: var(--text); }
+    .company-list a:hover { color: var(--accent); }
+    .company-list .rev { font-size: 0.82rem; color: var(--muted); }
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 12px 0 4px; }
+    .chart-box { border: 1px solid var(--border); border-radius: 2px; padding: 14px; background: #f8fafc; overflow: visible; }
+    .chart-box h3 { margin: 0 0 8px; font-size: 0.85rem; color: #475569; font-weight: 600; }
+    .chart-caption { font-size: 0.72rem; color: var(--muted); margin-top: 6px; }
+    .chart-canvas-wrap {
+      position: relative; width: 100%; height: 260px;
+      overflow: visible;
+    }
+    .chart-canvas-wrap.tall { height: 360px; }
+    .chart-canvas-wrap.with-legend { height: 300px; }
+    .chart-canvas-wrap > canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+    .chart-empty-note {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 0.85rem;
+      pointer-events: none;
+    }
+    .section-lead { margin: 0 0 12px; font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    @media (max-width: 720px) { .chart-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header class="site">
+    <div class="wrap">
+      <a class="logo" href="/">{{ site_name }}</a>
+      <nav aria-label="メインナビゲーション">
+        <a href="/">トップ</a>
+        <a href="/industries">業種一覧</a>
+        <a href="/#/screening">スクリーニング</a>
+        <a href="/#/search">企業検索</a>
+        <a href="/disclaimer">免責事項</a>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap">
+    {% block content %}{% endblock %}
+    <footer>
+      <p class="footer-source">{{ site_name }} — データ出典: EDINET / Yahoo Finance · <a href="/industries">業種一覧</a> · <a href="/disclaimer">免責事項</a></p>
+    </footer>
+  </main>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

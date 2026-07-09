@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% block head_extra %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+<script src="/assets/charts.js" defer></script>
+{% endblock %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block description %}{{ meta_description }}{% endblock %}
+{% block canonical %}{{ canonical_url }}{% endblock %}
+{% block og_title %}{{ page_title }}{% endblock %}
+{% block og_description %}{{ meta_description }}{% endblock %}
+{% block og_url %}{{ canonical_url }}{% endblock %}
+{% block twitter_title %}{{ page_title }}{% endblock %}
+{% block twitter_description %}{{ meta_description }}{% endblock %}
+{% block json_ld %}<script type="application/ld+json">{{ json_ld | tojson }}</script>{% endblock %}
+
+{% block content %}
+<article itemscope itemtype="https://schema.org/Corporation">
+  <nav class="breadcrumb" aria-label="パンくず">
+    <a href="/">トップ</a>
+    {% if company.industry and industry_url %} / <a href="{{ industry_url }}">{{ company.industry }}</a>{% endif %}
+    / <span>{{ company.name }}</span>
+  </nav>
+
+  <p style="color:var(--accent);font-size:0.82rem;font-weight:600;margin:0">{{ company.edinet_code }} · {{ sec_display }}</p>
+  <h1 itemprop="name">{{ company.name }}</h1>
+  <p class="subtitle">
+    {% if company.industry and industry_url %}<a href="{{ industry_url }}">{{ company.industry }}</a>{% else %}{{ company.industry or '-' }}{% endif %}
+    · {{ company.location or '-' }} · {{ company.listing_status or '-' }}
+  </p>
+
+  <div class="tags">
+    {% if company.fiscal_year_end %}<span class="tag">決算 {{ company.fiscal_year_end }}</span>{% endif %}
+    {% if quote and quote.ticker %}<span class="tag">{{ quote.ticker }}</span>{% endif %}
+    {% if real_estate %}<span class="tag green">不動産 {{ real_estate.count }}件 · {{ real_estate.total_book_value_m | million_yen }}</span>{% endif %}
+  </div>
+
+  {% if intro %}
+  <section class="card">
+    <h2>企業概要</h2>
+    <p class="intro">{{ intro }}</p>
+    {% if profile.employee_count %}
+    <p class="intro" style="margin-bottom:0">従業員数 {{ profile.employee_count | num }}人</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if latest %}
+  <section class="card">
+    <h2>直近期の財務（{{ latest.fiscal_year_end }}）</h2>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="lbl">売上高</div><div class="val">{{ latest.revenue | yen }}</div></div>
+      <div class="kpi"><div class="lbl">営業利益</div><div class="val">{{ latest.operating_income | yen }}</div></div>
+      <div class="kpi"><div class="lbl">純利益</div><div class="val">{{ latest.net_income | yen }}</div></div>
+      <div class="kpi"><div class="lbl">営業利益率</div><div class="val">{{ latest.operating_margin | pct }}</div></div>
+      <div class="kpi"><div class="lbl">ROE</div><div class="val">{{ latest.roe | pct }}</div></div>
+      <div class="kpi"><div class="lbl">売上成長率</div><div class="val">{{ latest.revenue_growth | pct_signed }}</div></div>
+      {% if quote and quote.price %}
+      <div class="kpi"><div class="lbl">株価</div><div class="val">{{ quote.price | num }}円</div></div>
+      {% endif %}
+      {% if quote and quote.market_cap %}
+      <div class="kpi"><div class="lbl">時価総額</div><div class="val">{{ quote.market_cap | yen }}</div></div>
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if chart_data %}
+  <section class="card">
+    <h2>財務の推移</h2>
+    <p class="section-lead">売上高・営業利益などの年次推移をグラフで確認できます（マウスオーバーで数値表示）。</p>
+    <div class="chart-box" style="margin-bottom:16px">
+      <h3>売上高・営業利益の推移</h3>
+      <div class="chart-canvas-wrap tall"><canvas id="chart-revenue-profit" aria-label="売上高と営業利益の推移"></canvas></div>
+      <div class="chart-caption">単位: 億円（有価証券報告書ベース）</div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-box">
+        <h3>売上高推移</h3>
+        <div class="chart-canvas-wrap"><canvas id="chart-revenue"></canvas></div>
+      </div>
+      <div class="chart-box">
+        <h3>営業利益推移</h3>
+        <div class="chart-canvas-wrap"><canvas id="chart-opincome"></canvas></div>
+      </div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-box">
+        <h3>純利益推移</h3>
+        <div class="chart-canvas-wrap"><canvas id="chart-netincome"></canvas></div>
+      </div>
+      <div class="chart-box">
+        <h3>ROE / 営業利益率</h3>
+        <div class="chart-canvas-wrap with-legend"><canvas id="chart-margins"></canvas></div>
+      </div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-box">
+        <h3>四半期売上 YoY</h3>
+        <div class="chart-canvas-wrap"><canvas id="chart-q-yoy"></canvas></div>
+        <div class="chart-caption">単位: %（前年同期比）</div>
+      </div>
+      <div class="chart-box">
+        <h3>営業CF推移</h3>
+        <div class="chart-canvas-wrap"><canvas id="chart-opcf"></canvas></div>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if business_excerpt %}
+  <section class="card">
+    <h2>事業の内容</h2>
+    <div class="business">{% for para in business_excerpt.split('\n\n') %}<p>{{ para }}</p>{% endfor %}</div>
+  </section>
+  {% endif %}
+
+  {% if profile.affiliates_summary %}
+  <section class="card">
+    <h2>主要関係会社</h2>
+    <p class="intro">{{ profile.affiliates_summary }}</p>
+  </section>
+  {% endif %}
+
+  {% if financials %}
+  <section class="card">
+    <h2>年次財務推移（直近8期）</h2>
+    <p class="section-lead">グラフと併せて、数値の詳細比較にも使えます。</p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>決算期</th><th class="num">売上高</th><th class="num">営業利益</th><th class="num">純利益</th>
+            <th class="num">営業CF</th><th class="num">総資産</th>
+            <th class="num">営業利益率</th><th class="num">ROE</th><th class="num">成長率</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in financials %}
+          <tr class="{{ 'latest' if loop.first else '' }}">
+            <td>{{ f.fiscal_year_end or '-' }}</td>
+            <td class="num">{{ f.revenue | yen }}</td>
+            <td class="num">{{ f.operating_income | yen }}</td>
+            <td class="num">{{ f.net_income | yen }}</td>
+            <td class="num">{{ f.operating_cf | yen }}</td>
+            <td class="num">{{ f.total_assets | yen }}</td>
+            <td class="num">{{ f.operating_margin | pct }}</td>
+            <td class="num">{{ f.roe | pct }}</td>
+            <td class="num">{{ f.revenue_growth | pct_signed }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if quarterly %}
+  <section class="card">
+    <h2>四半期業績推移</h2>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>四半期</th><th class="num">累計売上</th><th class="num">単期売上</th>
+            <th class="num">売上YoY</th><th class="num">営業利益YoY</th><th class="num">純利益YoY</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for q in quarterly %}
+          <tr class="{{ 'latest' if loop.first else '' }}">
+            <td>{% if q.quarter_number %}第{{ q.quarter_number }}四半期{% else %}{{ q.period_end or '-' }}{% endif %}</td>
+            <td class="num">{{ q.revenue_cumulative | yen }}</td>
+            <td class="num">{{ q.revenue_single | yen }}</td>
+            <td class="num">{{ q.revenue_yoy | chg }}</td>
+            <td class="num">{{ q.operating_income_yoy | chg }}</td>
+            <td class="num">{{ q.net_income_yoy | chg }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if real_estate %}
+  <section class="card">
+    <h2>保有不動産</h2>
+    <p>物件数 {{ real_estate.count }}件、帳簿価額合計 {{ real_estate.total_book_value_m | million_yen }}
+      {% if real_estate.assets_ratio %}（総資産比 {{ real_estate.assets_ratio | pct }}）{% endif %}
+    </p>
+  </section>
+  {% endif %}
+
+  {% if filings %}
+  <section class="card">
+    <h2>提出書類</h2>
+    <table>
+      <thead><tr><th>書類</th><th>期間</th><th>提出日</th></tr></thead>
+      <tbody>
+        {% for f in filings[:8] %}
+        <tr>
+          <td>{{ f.doc_description or f.doc_id }}</td>
+          <td>{{ f.period_start or '-' }} 〜 {{ f.period_end or '-' }}</td>
+          <td>{{ (f.submit_date_time or '-')[:10] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  <section class="card">
+    <h2>詳細分析</h2>
+    <p>不動産明細・銘柄比較・株価チャートはインタラクティブ版でご覧いただけます。</p>
+    <a class="cta" href="{{ analyzer_url }}">インタラクティブ分析を開く →</a>
+  </section>
+</article>
+{% endblock %}
+
+{% block scripts %}
+{% if chart_data %}
+<script id="company-chart-data" type="application/json">{{ chart_data | tojson }}</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  function boot() {
+    if (!window.Chart || !window.EdinetCharts) { setTimeout(boot, 50); return; }
+    var el = document.getElementById('company-chart-data');
+    if (!el) return;
+    EdinetCharts.renderCompanyCharts(JSON.parse(el.textContent));
+    setTimeout(function () { EdinetCharts.resizeAll(); }, 100);
+    window.addEventListener('resize', function () { EdinetCharts.resizeAll(); });
+  }
+  boot();
+});
+</script>
+{% endif %}
+{% endblock %}

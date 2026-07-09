@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}ページが見つかりません | {{ site_name }}{% endblock %}
+{% block description %}お探しのページは見つかりませんでした。{% endblock %}
+{% block canonical %}{{ canonical_url }}{% endblock %}
+{% block robots %}noindex, follow{% endblock %}
+{% block og_title %}ページが見つかりません{% endblock %}
+{% block og_description %}お探しのページは見つかりませんでした。{% endblock %}
+{% block og_url %}{{ canonical_url }}{% endblock %}
+{% block twitter_title %}ページが見つかりません{% endblock %}
+{% block twitter_description %}お探しのページは見つかりませんでした。{% endblock %}
+
+{% block content %}
+<h1>404 — ページが見つかりません</h1>
+<p class="subtitle">{{ message or '指定されたURLのページは存在しません。' }}</p>
+<div class="card">
+  <p>以下のリンクからお探しください。</p>
+  <ul>
+    <li><a href="/">トップページ</a></li>
+    <li><a href="/industries">業種別企業一覧</a></li>
+    <li><a href="/#/search">企業検索</a></li>
+  </ul>
+</div>
+{% endblock %}

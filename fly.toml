@@ -1,0 +1,31 @@
+app = 'japan-equity-db-jp'
+primary_region = 'nrt'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[env]
+  SITE_URL = 'https://japan-equity-db.jp'
+  DATABASE_URL = 'sqlite:///./data/edinet.db'
+
+[mounts]
+  source = 'edinet_data'
+  destination = '/app/data'
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = 'off'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+  [http_service.concurrency]
+    type = 'requests'
+    hard_limit = 25
+    soft_limit = 15
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
