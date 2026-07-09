@@ -5,16 +5,29 @@
 (function (global) {
   if (!global.Chart) return;
 
+  const FONT = '"Noto Sans JP", sans-serif';
+  const BRAND = '#0284c7';
+  const BRAND_LIGHT = '#38bdf8';
+
   const COLORS = {
     green: '#059669',
-    blue: '#2563eb',
+    blue: BRAND,
+    blueLight: BRAND_LIGHT,
     purple: '#7c3aed',
     cyan: '#0891b2',
     amber: '#d97706',
     red: '#dc2626',
     grid: '#e2e8f0',
     text: '#64748b',
+    ink: '#334155',
   };
+
+  Chart.defaults.font.family = FONT;
+  Chart.defaults.color = COLORS.text;
+  Chart.defaults.plugins.legend.labels.usePointStyle = true;
+  Chart.defaults.plugins.legend.labels.boxWidth = 8;
+  Chart.defaults.plugins.legend.labels.padding = 14;
+  Chart.defaults.plugins.legend.labels.font = { size: 11, family: FONT };
 
   const yenOku = (v) => {
     if (v == null || Number.isNaN(v)) return '-';
@@ -51,8 +64,8 @@
           if (!text || text === '-') return;
           const { x, y } = element.getProps(['x', 'y'], true);
           ctx.save();
-          ctx.font = 'bold 10px system-ui, sans-serif';
-          ctx.fillStyle = '#334155';
+          ctx.font = '600 11px "Noto Sans JP", sans-serif';
+          ctx.fillStyle = COLORS.ink;
           if (isHorizontal) {
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
@@ -128,13 +141,14 @@
 
   function scaleX() {
     return {
-      grid: { display: false },
+      grid: { color: COLORS.grid, drawBorder: false },
       border: { display: false },
       ticks: {
         color: COLORS.text,
-        font: { size: 11 },
+        font: { size: 11, family: FONT },
         autoSkip: true,
-        maxRotation: 0,
+        maxRotation: 45,
+        minRotation: 0,
         maxTicksLimit: 8,
         padding: 6,
       },
@@ -149,7 +163,7 @@
       border: { display: false },
       ticks: {
         color: COLORS.text,
-        font: { size: 10 },
+        font: { size: 11, family: FONT },
         maxTicksLimit: 6,
         padding: 6,
         callback: (v) => (pctAxis ? pct(v / 100) : yFmt(v)),
@@ -160,15 +174,22 @@
   function baseOptions(yFmt, { legend = false, pctAxis = false, labelFmt = null } = {}) {
     const plugins = {
       legend: legend
-        ? { display: true, position: 'bottom', labels: { boxWidth: 12, padding: 14, font: { size: 11 } } }
+        ? {
+            display: true,
+            position: 'top',
+            align: 'end',
+            labels: { boxWidth: 8, padding: 14, font: { size: 11, family: FONT }, usePointStyle: true },
+          }
         : { display: false },
       tooltip: {
         backgroundColor: '#fff',
         titleColor: '#0f172a',
-        bodyColor: '#334155',
-        borderColor: '#e2e8f0',
+        bodyColor: COLORS.ink,
+        borderColor: COLORS.grid,
         borderWidth: 1,
         padding: 10,
+        titleFont: { family: FONT, size: 12, weight: '600' },
+        bodyFont: { family: FONT, size: 11 },
         callbacks: {},
       },
     };
@@ -190,8 +211,8 @@
         y: scaleY(yFmt, { pctAxis }),
       },
       elements: {
-        line: { borderWidth: 2.5 },
-        point: { radius: 4, hoverRadius: 6, hitRadius: 8 },
+        line: { borderWidth: 2 },
+        point: { radius: 3, hoverRadius: 5, hitRadius: 8 },
       },
       datasets: {
         line: { clip: false },
@@ -201,19 +222,21 @@
   }
 
   function lineDataset(label, data, color) {
+    const c = color || BRAND;
     return {
       label,
       data,
-      borderColor: color,
-      backgroundColor: color + '22',
+      borderColor: c,
+      backgroundColor: c === BRAND ? 'rgba(2, 132, 199, 0.1)' : c + '18',
       fill: true,
       tension: 0.3,
       spanGaps: true,
-      pointRadius: 4,
-      pointHoverRadius: 6,
+      pointRadius: 3,
+      pointHoverRadius: 5,
       pointBackgroundColor: '#fff',
+      pointBorderColor: c,
       pointBorderWidth: 2,
-      borderWidth: 2.5,
+      borderWidth: 2,
       clip: false,
     };
   }
@@ -282,7 +305,9 @@
         datasets: [{
           label,
           data: data.map((v) => (v == null ? null : v * 100)),
-          backgroundColor: data.map((v) => (v != null && v < 0 ? COLORS.red + 'cc' : COLORS.green + 'cc')),
+          backgroundColor: data.map((v) => (v != null && v < 0 ? 'rgba(220, 38, 38, 0.65)' : 'rgba(5, 150, 105, 0.65)')),
+          borderColor: data.map((v) => (v != null && v < 0 ? COLORS.red : COLORS.green)),
+          borderWidth: 1,
           borderRadius: 4,
           maxBarThickness: 40,
           clip: false,
@@ -315,8 +340,12 @@
           label: datasetLabel,
           data,
           backgroundColor: signedPct
-            ? data.map((v) => (v != null && v < 0 ? COLORS.red + 'cc' : COLORS.blue + 'dd'))
-            : COLORS.blue + 'dd',
+            ? data.map((v) => (v != null && v < 0 ? 'rgba(220, 38, 38, 0.65)' : 'rgba(2, 132, 199, 0.65)'))
+            : 'rgba(2, 132, 199, 0.65)',
+          borderColor: signedPct
+            ? data.map((v) => (v != null && v < 0 ? COLORS.red : BRAND))
+            : BRAND,
+          borderWidth: 1,
           borderRadius: 4,
           maxBarThickness: 28,
           clip: false,
@@ -390,7 +419,9 @@
         datasets: [{
           label: datasetLabel,
           data,
-          backgroundColor: COLORS.blue + 'dd',
+          backgroundColor: 'rgba(2, 132, 199, 0.65)',
+          borderColor: BRAND,
+          borderWidth: 1,
           borderRadius: 4,
           barThickness: 16,
           clip: false,
@@ -926,7 +957,7 @@
   }
 
   function renderCompareCharts(items, priceByCode = {}) {
-    const COMPARE_COLORS = ['#2563eb', '#059669', '#d97706', '#dc2626'];
+    const COMPARE_COLORS = ['#0284c7', '#059669', '#d97706', '#dc2626'];
     const fiscalLabel = (fye) => String(fye || '').slice(0, 7);
     const shortName = (item) => (item.name || '').replace(/株式会社/g, '').trim() || item.edinet_code;
 

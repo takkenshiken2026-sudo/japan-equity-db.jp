@@ -150,7 +150,7 @@ def _write_llms_txt(listed_label: str) -> None:
 def _write_brand_assets(listed_label: str) -> None:
     (OUT / "favicon.svg").write_text(
         """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="6" fill="#111827"/>
+      <rect width="32" height="32" rx="8" fill="#0284c7"/>
   <text x="16" y="22" text-anchor="middle" fill="white" font-size="13" font-family="sans-serif" font-weight="700">株</text>
 </svg>""",
         encoding="utf-8",
