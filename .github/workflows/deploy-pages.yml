@@ -24,6 +24,10 @@ jobs:
         with:
           python-version: "3.12"
       - name: Build public_site
+        env:
+          SITE_URL: https://japan-equity-db.jp
+          GOOGLE_SITE_VERIFICATION: ${{ secrets.GOOGLE_SITE_VERIFICATION }}
+          GOOGLE_SITE_VERIFICATION_HTML: ${{ secrets.GOOGLE_SITE_VERIFICATION_HTML }}
         run: python3 tools/build_public_site.py
       - uses: actions/upload-pages-artifact@v5
         with:
