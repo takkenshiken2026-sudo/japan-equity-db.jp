@@ -51,17 +51,18 @@ jobs:
             echo "Restored $(wc -c < backend/data/edinet.db) bytes"
           else
             echo "No db-backup release — init empty schema"
-            cd backend && python -m app.sync_cli init-db
+            cd backend && DATABASE_URL=sqlite:///./data/edinet.db python -m app.sync_cli init-db
           fi
 
       - name: Daily sync
         if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.skip_sync != true)
-        working-directory: backend
         run: |
           if [ -z "$EDINET_API_KEY" ]; then
             echo "::warning::EDINET_API_KEY 未設定 — sync をスキップ"
             exit 0
           fi
+          cd backend
+          export DATABASE_URL=sqlite:///./data/edinet.db
           python -m app.sync_cli daily-sync
           python -m app.sync_cli sync-profiles --limit 50 --workers 4 || true
           python -m app.sync_cli seed-no-xbrl-profiles || true

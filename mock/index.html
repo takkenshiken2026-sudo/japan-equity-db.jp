@@ -93,6 +93,30 @@
     .freshness-banner { display: flex; align-items: flex-start; gap: 8px; }
     .table-hint { display: flex; align-items: center; gap: 6px; }
     .compare-chip button .ico svg { width: 12px; height: 12px; }
+    .chart-box h3[data-icon], #dash-chart-title[data-icon] {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .chart-box h3[data-icon] .ico, #dash-chart-title .ico { color: var(--accent); opacity: 0.88; }
+    .profile-block h3 .ico-label, .highlight-box h3 .ico-label, .theme-box-head h3 .ico-label {
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .profile-block h3 .ico, .highlight-box h3 .ico, .theme-box-head h3 .ico { color: var(--accent); opacity: 0.88; }
+    .preset[data-icon] .ico, .chip[data-icon] .ico { opacity: 0.75; }
+    .preset.active[data-icon] .ico, .chip:hover .ico { color: var(--accent); opacity: 1; }
+    .detail-tab[data-icon] { display: inline-flex; align-items: center; gap: 5px; }
+    .detail-tab[data-icon] .ico { opacity: 0.65; }
+    .detail-tab.active[data-icon] .ico { color: var(--accent); opacity: 1; }
+    .filter-section-title[data-icon] { display: flex; align-items: center; gap: 6px; }
+    .filter-section-title[data-icon] .ico { color: var(--muted); }
+    .co-metric .lbl .ico-label { gap: 4px; font-size: var(--fs-caption); }
+    .co-metric .lbl .ico-xs svg { width: 11px; height: 11px; }
+    .screening-idle[data-icon] { display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .screening-idle[data-icon] .ico { color: var(--muted); }
+    button.primary[data-icon], button.secondary[data-icon] {
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    button.primary[data-icon] .ico, button.secondary[data-icon] .ico { color: currentColor; }
+    .logo-mark svg { width: 15px; height: 15px; stroke: #fff; fill: none; stroke-width: 2.25; }
 
     body {
       margin: 0;
@@ -190,7 +214,7 @@
     .logo-mark {
       width: 26px; height: 26px; border-radius: var(--radius);
       background: var(--accent); color: #fff;
-      display: grid; place-items: center; font-size: var(--fs-caption); font-weight: 800;
+      display: grid; place-items: center;
       box-shadow: 0 2px 8px rgba(2, 132, 199, 0.22);
     }
     .global-search {
@@ -335,6 +359,7 @@
       padding: 6px 14px; border-radius: 999px; font-size: var(--fs-small); font-weight: 500;
       border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary);
       cursor: pointer; transition: all 0.15s;
+      display: inline-flex; align-items: center;
     }
     .preset:hover { border-color: var(--accent-border); color: var(--accent-hover); background: var(--accent-light); }
     .preset.active { border-color: var(--accent); color: var(--accent-hover); background: var(--accent-light); font-weight: 600; }
@@ -1524,7 +1549,7 @@
   <header>
     <div class="header-inner">
       <div class="nav-top">
-        <div class="logo"><span class="logo-mark">株</span><span class="logo-text">株チェック</span></div>
+        <div class="logo" aria-label="株チェック ホーム"><span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></span><span class="logo-text">株チェック</span></div>
         <nav class="nav-tabs">
           <button class="tab active" data-tab="dashboard" data-icon="layout">ダッシュボード</button>
           <button class="tab" data-tab="disclosures" data-icon="file">開示</button>
@@ -1534,7 +1559,7 @@
         </nav>
         <div id="header-recent-wrap" class="header-recent" hidden aria-label="最近見た銘柄">
           <span class="header-recent-label">最近見た銘柄</span>
-          <span class="header-recent-icon ico-label" data-icon="clock" aria-hidden="true"></span>
+          <span class="header-recent-icon" data-icon-only="clock" aria-hidden="true"></span>
           <div class="header-recent-scroll" id="header-recent"></div>
         </div>
         <div class="global-search">
@@ -1554,7 +1579,7 @@
         <div class="hero-intro">
           <div class="hero-intro-stack">
             <h1>財務データとオルタナティブデータで<br>気になる株をチェック</h1>
-            <p class="subtitle">有報・四半期の財務指標に加え、不動産保有・ニュース・検索トレンドなどで上場企業を分析できます。</p>
+            <p class="subtitle" id="hero-subtitle">__HERO_SUBTITLE__</p>
             <div class="global-search global-search--hero">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
               <input id="hero-search" type="search" placeholder="企業名・証券コードで検索…" autocomplete="off" />
@@ -1618,23 +1643,23 @@
       <div class="card dash-list-card">
         <div class="card-header">
           <div>
-            <h2 id="dash-top-title">売上高トップ（上場）</h2>
+            <h2 id="dash-top-title" data-icon="bar-chart">売上高トップ（上場）</h2>
             <span class="muted" id="dash-top-meta" style="font-size:var(--fs-small)"></span>
           </div>
           <button class="secondary" id="dash-screen-btn" data-icon-suffix="chevron">スクリーニングを開く</button>
         </div>
 
         <div class="filter-section dash-filters">
-          <div class="filter-section-title">並び替え・条件</div>
+          <div class="filter-section-title" data-icon="sliders">並び替え・条件</div>
           <div class="presets" id="dash-views">
-            <button type="button" class="preset dash-view active" data-dash-view="revenue">売上高</button>
-            <button type="button" class="preset dash-view" data-dash-view="roe">高ROE</button>
-            <button type="button" class="preset dash-view" data-dash-view="margin">営業利益率</button>
-            <button type="button" class="preset dash-view" data-dash-view="growth">高成長</button>
-            <button type="button" class="preset dash-view" data-dash-view="net_income">純利益</button>
-            <button type="button" class="preset dash-view" data-dash-view="market_cap">時価総額</button>
-            <button type="button" class="preset dash-view" data-dash-view="low_per">低PER</button>
-            <button type="button" class="preset dash-view" data-dash-view="realestate">不動産保有</button>
+            <button type="button" class="preset dash-view active" data-dash-view="revenue" data-icon="bar-chart">売上高</button>
+            <button type="button" class="preset dash-view" data-dash-view="roe" data-icon="percent">高ROE</button>
+            <button type="button" class="preset dash-view" data-dash-view="margin" data-icon="pie-chart">営業利益率</button>
+            <button type="button" class="preset dash-view" data-dash-view="growth" data-icon="trending-up">高成長</button>
+            <button type="button" class="preset dash-view" data-dash-view="net_income" data-icon="coins">純利益</button>
+            <button type="button" class="preset dash-view" data-dash-view="market_cap" data-icon="wallet">時価総額</button>
+            <button type="button" class="preset dash-view" data-dash-view="low_per" data-icon="tag">低PER</button>
+            <button type="button" class="preset dash-view" data-dash-view="realestate" data-icon="building">不動産保有</button>
           </div>
           <div class="filters" style="margin-top:12px">
             <div class="field">
@@ -1648,7 +1673,7 @@
         </div>
 
         <div class="chart-box" style="margin-bottom:16px">
-          <h3 id="dash-chart-title" style="margin:0 0 12px;font-size:var(--fs-body);color:var(--text-secondary)">売上高トップ30（棒グラフ）</h3>
+          <h3 id="dash-chart-title" data-icon="bar-chart" style="margin:0 0 12px;font-size:var(--fs-body);color:var(--text-secondary)">売上高トップ30（棒グラフ）</h3>
           <div class="chart-canvas-wrap"><canvas id="dash-revenue-chart"></canvas></div>
           <div class="chart-caption" id="dash-chart-caption">単位: 億円</div>
         </div>
@@ -1685,18 +1710,18 @@
         <div class="card-header"><h2 data-icon="filter">財務スクリーニング</h2></div>
 
         <div class="filter-section">
-          <div class="filter-section-title">クイック条件</div>
+          <div class="filter-section-title" data-icon="zap">クイック条件</div>
           <div class="presets" id="presets">
-            <button class="preset" data-preset="all">すべて</button>
-            <button class="preset" data-preset="high-roe">高ROE（10%以上）</button>
-            <button class="preset" data-preset="low-per">低PER（15倍以下）</button>
-            <button class="preset" data-preset="growth">高成長（10%以上）</button>
-            <button class="preset" data-preset="large">大型（売上1兆以上）</button>
-            <button class="preset" data-preset="realestate">不動産保有</button>
-            <button class="preset" data-preset="re-nav">不動産NAV割安</button>
-            <button class="preset" data-preset="value-growth">割安成長</button>
-            <button class="preset" data-preset="cf-positive">営業CF黒字</button>
-            <button class="preset" data-preset="quality">高品質</button>
+            <button class="preset" data-preset="all" data-icon="layers">すべて</button>
+            <button class="preset" data-preset="high-roe" data-icon="percent">高ROE（10%以上）</button>
+            <button class="preset" data-preset="low-per" data-icon="tag">低PER（15倍以下）</button>
+            <button class="preset" data-preset="growth" data-icon="trending-up">高成長（10%以上）</button>
+            <button class="preset" data-preset="large" data-icon="landmark">大型（売上1兆以上）</button>
+            <button class="preset" data-preset="realestate" data-icon="building">不動産保有</button>
+            <button class="preset" data-preset="re-nav" data-icon="target">不動産NAV割安</button>
+            <button class="preset" data-preset="value-growth" data-icon="sparkles">割安成長</button>
+            <button class="preset" data-preset="cf-positive" data-icon="activity">営業CF黒字</button>
+            <button class="preset" data-preset="quality" data-icon="award">高品質</button>
           </div>
         </div>
 
@@ -1787,14 +1812,14 @@
           </div>
 
           <div class="btn-row">
-            <button class="primary" id="screening-btn" type="submit">検索する</button>
-            <button class="secondary" id="screening-reset" type="button">条件をクリア</button>
+            <button class="primary" id="screening-btn" type="submit" data-icon="search">検索する</button>
+            <button class="secondary" id="screening-reset" type="button" data-icon="x">条件をクリア</button>
             <span class="result-count" id="screening-count"></span>
           </div>
         </form>
         <p class="error-msg" id="screening-error"></p>
         <p class="notice-msg" id="screening-notice"></p>
-        <div class="screening-idle" id="screening-idle">条件を選んで「検索する」を押すか、クイック条件から絞り込めます</div>
+        <div class="screening-idle" id="screening-idle" data-icon="filter">条件を選んで「検索する」を押すか、クイック条件から絞り込めます</div>
 
         <div class="table-wrap table-wrap--list table-scroll-hint desktop-table" style="margin-top:16px;display:none" id="screening-table-wrap">
           <table>
@@ -1887,7 +1912,7 @@
             <h2 data-icon="compare">銘柄比較</h2>
             <span class="muted" style="font-size:var(--fs-small)">最大4社まで指標・グラフを並べて比較</span>
           </div>
-          <button type="button" class="secondary" id="compare-clear-all-btn" style="padding:8px 14px;font-size:var(--fs-small)">すべてクリア</button>
+          <button type="button" class="secondary" id="compare-clear-all-btn" data-icon="x" style="padding:8px 14px;font-size:var(--fs-small)">すべてクリア</button>
         </div>
         <div class="compare-workspace-toolbar">
           <div class="global-search">
@@ -1905,19 +1930,19 @@
           <div class="compare-columns" id="compare-columns"></div>
           <div class="compare-charts-grid">
             <div class="chart-box">
-              <h3 style="margin:0 0 10px;font-size:var(--fs-body);color:var(--text-secondary)">売上高推移</h3>
+              <h3 data-icon="bar-chart" style="margin:0 0 10px;font-size:var(--fs-body);color:var(--text-secondary)">売上高推移</h3>
               <div class="chart-canvas-wrap"><canvas id="compare-chart-revenue"></canvas></div>
             </div>
             <div class="chart-box">
-              <h3 style="margin:0 0 10px;font-size:var(--fs-body);color:var(--text-secondary)">ROE推移</h3>
+              <h3 data-icon="percent" style="margin:0 0 10px;font-size:var(--fs-body);color:var(--text-secondary)">ROE推移</h3>
               <div class="chart-canvas-wrap"><canvas id="compare-chart-roe"></canvas></div>
             </div>
             <div class="chart-box">
-              <h3 style="margin:0 0 10px;font-size:var(--fs-body);color:var(--text-secondary)">営業利益率推移</h3>
+              <h3 data-icon="pie-chart" style="margin:0 0 10px;font-size:var(--fs-body);color:var(--text-secondary)">営業利益率推移</h3>
               <div class="chart-canvas-wrap"><canvas id="compare-chart-margin"></canvas></div>
             </div>
             <div class="chart-box">
-              <h3 style="margin:0 0 10px;font-size:var(--fs-body);color:var(--text-secondary)">株価推移（基準日=100）</h3>
+              <h3 data-icon="trending-up" style="margin:0 0 10px;font-size:var(--fs-body);color:var(--text-secondary)">株価推移（基準日=100）</h3>
               <div class="chart-canvas-wrap"><canvas id="compare-chart-price"></canvas></div>
             </div>
           </div>
@@ -1934,12 +1959,12 @@
         <div class="card detail-hero" id="detail-header"></div>
         <div class="detail-tabs-wrap">
         <div class="detail-tabs" id="detail-tabs">
-          <button class="detail-tab active" data-section="overview">概要</button>
-          <button class="detail-tab" data-section="analysis">詳細分析</button>
-          <button class="detail-tab" data-section="financials">年次財務</button>
-          <button class="detail-tab" data-section="quarterly">四半期</button>
-          <button class="detail-tab" data-section="realestate">不動産</button>
-          <button class="detail-tab" data-section="filings">書類</button>
+          <button class="detail-tab active" data-section="overview" data-icon="layout">概要</button>
+          <button class="detail-tab" data-section="analysis" data-icon="line-chart">詳細分析</button>
+          <button class="detail-tab" data-section="financials" data-icon="calendar">年次財務</button>
+          <button class="detail-tab" data-section="quarterly" data-icon="calendar">四半期</button>
+          <button class="detail-tab" data-section="realestate" data-icon="building">不動産</button>
+          <button class="detail-tab" data-section="filings" data-icon="file">書類</button>
         </div>
         </div>
 
@@ -2003,7 +2028,7 @@
               <p class="section-lead" id="company-news-lead">Google News から取得した関連記事です。</p>
             </div>
             <div class="chart-box" id="company-news-chart-wrap" style="display:none;margin-bottom:12px">
-              <h3>月別の掲載件数</h3>
+              <h3 data-icon="newspaper">月別の掲載件数</h3>
               <div class="chart-canvas-wrap"><canvas id="company-news-chart"></canvas></div>
               <div class="chart-caption" id="company-news-chart-caption">過去12か月の公開月別件数（RSS最大100件）</div>
             </div>
@@ -2021,7 +2046,7 @@
               <button type="button" class="secondary" data-trend-days="90">90日</button>
             </div>
             <div class="chart-box" style="margin-bottom:0">
-              <h3>日別の検索関心度</h3>
+              <h3 data-icon="trending-up">日別の検索関心度</h3>
               <div class="chart-canvas-wrap"><canvas id="company-trend-chart"></canvas></div>
               <div class="chart-caption" id="company-trend-chart-caption">0〜100の相対指数（100＝期間内最大）</div>
             </div>
@@ -2034,7 +2059,7 @@
               <p class="section-lead">売上高と営業利益の推移です。詳細チャートは「年次財務」タブで確認できます。</p>
             </div>
           <div class="chart-box" style="margin-bottom:12px">
-            <h3>売上高・営業利益の推移</h3>
+            <h3 data-icon="bar-chart">売上高・営業利益の推移</h3>
             <div class="chart-canvas-wrap tall"><canvas id="chart-revenue-profit"></canvas></div>
             <div class="chart-caption">単位: 億円</div>
           </div>
@@ -2043,7 +2068,7 @@
 
           <div class="card section-card" id="quarterly-highlight" style="display:none">
             <div class="section-head">
-              <h2>直近四半期の動き</h2>
+              <h2 data-icon="calendar">直近四半期の動き</h2>
               <p class="section-lead">最新四半期の業績と前年比の変化です。</p>
             </div>
             <div id="quarterly-highlight-body"></div>
@@ -2053,7 +2078,7 @@
           <div class="card re-overview-card section-card" id="re-overview-card" style="display:none">
             <div class="section-head re-overview-head">
               <div>
-                <h2>保有不動産</h2>
+                <h2 data-icon="building">保有不動産</h2>
                 <p class="section-lead">有価証券報告書から抽出した主要設備の概要です。</p>
               </div>
               <button type="button" class="re-link-btn" id="re-goto-tab" data-icon-suffix="chevron">すべて見る</button>
@@ -2061,11 +2086,11 @@
             <div class="re-summary" id="re-overview-stats"></div>
             <div class="chart-grid" style="margin-top:0">
               <div>
-                <div class="filter-section-title">都道府県別（帳簿価額）</div>
+                <div class="filter-section-title" data-icon="map-pin">都道府県別（帳簿価額）</div>
                 <div class="re-pref-chart" id="re-overview-pref"></div>
               </div>
               <div>
-                <div class="filter-section-title">主要物件 TOP5</div>
+                <div class="filter-section-title" data-icon="building">主要物件 TOP5</div>
                 <div class="re-top-list" id="re-overview-top"></div>
               </div>
             </div>
@@ -2075,40 +2100,40 @@
         <div class="detail-section" id="sec-analysis">
           <div class="card section-card">
             <div class="section-head">
-              <h2>財務健全性・キャッシュフロー</h2>
+              <h2 data-icon="activity">財務健全性・キャッシュフロー</h2>
               <p class="section-lead">有報データから算出したFCF、負債、配当などの詳細指標です。</p>
             </div>
             <div class="analysis-kpi" id="analysis-kpi"></div>
             <div class="chart-grid">
-              <div class="chart-box"><h3>キャッシュフロー3区分</h3><div class="chart-canvas-wrap"><canvas id="chart-cf-trio"></canvas></div><div class="chart-caption">単位: 億円</div></div>
-              <div class="chart-box"><h3>フリーキャッシュフロー</h3><div class="chart-canvas-wrap"><canvas id="chart-fcf"></canvas></div><div class="chart-caption">営業CF + 投資CF（単位: 億円）</div></div>
+              <div class="chart-box"><h3 data-icon="activity">キャッシュフロー3区分</h3><div class="chart-canvas-wrap"><canvas id="chart-cf-trio"></canvas></div><div class="chart-caption">単位: 億円</div></div>
+              <div class="chart-box"><h3 data-icon="activity">フリーキャッシュフロー</h3><div class="chart-canvas-wrap"><canvas id="chart-fcf"></canvas></div><div class="chart-caption">営業CF + 投資CF（単位: 億円）</div></div>
             </div>
             <div class="chart-grid">
-              <div class="chart-box"><h3>自己資本比率 / D/Eレシオ</h3><div class="chart-canvas-wrap with-legend"><canvas id="chart-equity-debt"></canvas></div></div>
-              <div class="chart-box"><h3>EPS / 1株配当</h3><div class="chart-canvas-wrap with-legend"><canvas id="chart-dividend-eps"></canvas></div><div class="chart-caption">単位: 円</div></div>
+              <div class="chart-box"><h3 data-icon="percent">自己資本比率 / D/Eレシオ</h3><div class="chart-canvas-wrap with-legend"><canvas id="chart-equity-debt"></canvas></div></div>
+              <div class="chart-box"><h3 data-icon="tag">EPS / 1株配当</h3><div class="chart-canvas-wrap with-legend"><canvas id="chart-dividend-eps"></canvas></div><div class="chart-caption">単位: 円</div></div>
             </div>
           </div>
           <div class="card section-card">
             <div class="section-head">
-              <h2>株価・バリュエーション</h2>
+              <h2 data-icon="tag">株価・バリュエーション</h2>
               <p class="section-lead">52週レンジ内の現在位置と、決算期末ベースの配当利回り推移です。</p>
             </div>
             <div id="analysis-stock-range"></div>
             <div class="chart-box" style="margin-top:12px">
-              <h3>PER / PBR 推移（決算期末ベース）</h3>
+              <h3 data-icon="tag">PER / PBR 推移（決算期末ベース）</h3>
               <div class="chart-canvas-wrap" style="height:280px"><canvas id="chart-valuation"></canvas></div>
               <div class="chart-caption">EDINET の EPS/BPS と期末近傍株価から算出</div>
             </div>
-            <div class="chart-box" style="margin-top:12px"><h3>配当利回り推移（決算期末株価ベース）</h3><div class="chart-canvas-wrap"><canvas id="chart-dividend-yield"></canvas></div></div>
+            <div class="chart-box" style="margin-top:12px"><h3 data-icon="percent">配当利回り推移（決算期末株価ベース）</h3><div class="chart-canvas-wrap"><canvas id="chart-dividend-yield"></canvas></div></div>
           </div>
           <div class="card section-card">
             <div class="section-head">
-              <h2>四半期ディープダイブ</h2>
+              <h2 data-icon="calendar">四半期ディープダイブ</h2>
               <p class="section-lead">単期利益の季節性と、前四半期比（QoQ）の変化を確認できます。</p>
             </div>
             <div class="chart-grid">
-              <div class="chart-box"><h3>単期営業利益・純利益</h3><div class="chart-canvas-wrap"><canvas id="chart-q-single"></canvas></div><div class="chart-caption">単位: 億円</div></div>
-              <div class="chart-box"><h3>売上・営業利益 QoQ</h3><div class="chart-canvas-wrap with-legend"><canvas id="chart-q-qoq"></canvas></div><div class="chart-caption">単位: %</div></div>
+              <div class="chart-box"><h3 data-icon="bar-chart">単期営業利益・純利益</h3><div class="chart-canvas-wrap"><canvas id="chart-q-single"></canvas></div><div class="chart-caption">単位: 億円</div></div>
+              <div class="chart-box"><h3 data-icon="trending-up">売上・営業利益 QoQ</h3><div class="chart-canvas-wrap with-legend"><canvas id="chart-q-qoq"></canvas></div><div class="chart-caption">単位: %</div></div>
             </div>
             <div class="table-hint">横にスクロールできます</div>
             <div class="table-wrap table-scroll-hint">
@@ -2133,19 +2158,19 @@
             <p class="section-lead" style="margin:-8px 0 16px">有価証券報告書の連結・単体財務から抽出した年次データです。上段が直近期です。</p>
             <div id="fin-highlight"></div>
             <div class="chart-grid" style="margin-bottom:16px">
-              <div class="chart-box"><h3>売上高推移</h3><div class="chart-canvas-wrap"><canvas id="fin-chart-revenue"></canvas></div></div>
-              <div class="chart-box"><h3>営業利益推移</h3><div class="chart-canvas-wrap"><canvas id="fin-chart-opincome"></canvas></div></div>
+              <div class="chart-box"><h3 data-icon="bar-chart">売上高推移</h3><div class="chart-canvas-wrap"><canvas id="fin-chart-revenue"></canvas></div></div>
+              <div class="chart-box"><h3 data-icon="pie-chart">営業利益推移</h3><div class="chart-canvas-wrap"><canvas id="fin-chart-opincome"></canvas></div></div>
             </div>
             <div class="chart-grid" style="margin-bottom:16px">
-              <div class="chart-box"><h3>純利益推移</h3><div class="chart-canvas-wrap"><canvas id="fin-chart-netincome"></canvas></div></div>
-              <div class="chart-box"><h3>営業CF推移</h3><div class="chart-canvas-wrap"><canvas id="fin-chart-opcf"></canvas></div></div>
+              <div class="chart-box"><h3 data-icon="coins">純利益推移</h3><div class="chart-canvas-wrap"><canvas id="fin-chart-netincome"></canvas></div></div>
+              <div class="chart-box"><h3 data-icon="activity">営業CF推移</h3><div class="chart-canvas-wrap"><canvas id="fin-chart-opcf"></canvas></div></div>
             </div>
             <div class="chart-grid" style="margin-bottom:16px">
               <div class="chart-box">
-                <h3>ROE / 営業利益率</h3>
+                <h3 data-icon="percent">ROE / 営業利益率</h3>
                 <div class="chart-canvas-wrap with-legend"><canvas id="fin-chart-margins"></canvas></div>
               </div>
-              <div class="chart-box"><h3>総資産推移</h3><div class="chart-canvas-wrap"><canvas id="fin-chart-assets"></canvas></div></div>
+              <div class="chart-box"><h3 data-icon="database">総資産推移</h3><div class="chart-canvas-wrap"><canvas id="fin-chart-assets"></canvas></div></div>
             </div>
             <div class="table-hint">横にスクロールできます</div>
             <div class="table-wrap table-scroll-hint">
@@ -2160,7 +2185,7 @@
                 <tbody id="detail-fin-table"></tbody>
               </table>
             </div>
-            <h3 style="margin:20px 0 12px;font-size:var(--fs-subhead)">詳細財務指標</h3>
+            <h3 data-icon="database" style="margin:20px 0 12px;font-size:var(--fs-subhead)">詳細財務指標</h3>
             <div class="table-hint">横にスクロールできます</div>
             <div class="table-wrap table-scroll-hint">
               <table>
@@ -2179,12 +2204,12 @@
 
         <div class="detail-section" id="sec-quarterly">
           <div class="card">
-            <div class="card-header"><h2>四半期業績</h2><span class="muted" id="quarterly-meta"></span></div>
+            <div class="card-header"><h2 data-icon="calendar">四半期業績</h2><span class="muted" id="quarterly-meta"></span></div>
             <p class="section-lead" style="margin:-8px 0 16px">四半期報告書ベースの累計・単期売上と前年比（YoY）・前四半期比（QoQ）です。</p>
             <div id="quarterly-tab-highlight"></div>
             <div class="chart-grid" style="margin-bottom:16px">
-              <div class="chart-box"><h3>四半期売上 YoY</h3><div class="chart-canvas-wrap"><canvas id="qtab-chart-yoy"></canvas></div></div>
-              <div class="chart-box"><h3>営業利益 YoY</h3><div class="chart-canvas-wrap"><canvas id="qtab-chart-op-yoy"></canvas></div></div>
+              <div class="chart-box"><h3 data-icon="trending-up">四半期売上 YoY</h3><div class="chart-canvas-wrap"><canvas id="qtab-chart-yoy"></canvas></div></div>
+              <div class="chart-box"><h3 data-icon="trending-up">営業利益 YoY</h3><div class="chart-canvas-wrap"><canvas id="qtab-chart-op-yoy"></canvas></div></div>
             </div>
             <div class="table-hint">横にスクロールできます</div>
             <div class="table-wrap table-scroll-hint">
@@ -2206,7 +2231,7 @@
         <div class="detail-section" id="sec-realestate">
           <div class="card">
             <div class="card-header">
-              <h2>保有不動産（主要設備の状況）</h2>
+              <h2 data-icon="building">保有不動産（主要設備の状況）</h2>
               <span class="muted" id="re-meta"></span>
             </div>
             <p class="section-lead" style="margin:-8px 0 16px">有価証券報告書「主要設備の状況」から抽出した物件明細です。帳簿価額は百万円単位で記載されています。</p>
@@ -2215,11 +2240,11 @@
             <div id="re-by-section" class="re-section-grid" style="margin-bottom:16px"></div>
             <div class="chart-grid" style="margin-bottom:20px">
               <div>
-                <div class="filter-section-title">都道府県別内訳</div>
+                <div class="filter-section-title" data-icon="map-pin">都道府県別内訳</div>
                 <div class="re-pref-chart" id="re-pref-chart"></div>
               </div>
               <div>
-                <div class="filter-section-title">構成比（土地 / 建物 / その他）</div>
+                <div class="filter-section-title" data-icon="pie-chart">構成比（土地 / 建物 / その他）</div>
                 <svg id="re-composition-chart" viewBox="0 0 400 160" style="width:100%;height:160px"></svg>
               </div>
             </div>
@@ -2276,6 +2301,39 @@
     const STATIC_MODE = __STATIC_MODE__;
     const API = '';
 
+    function formatListedCountLabel(count) {
+      const n = Number(count) || 0;
+      if (n >= 100) return `${Math.floor(n / 100) * 100}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      return n.toLocaleString('ja-JP');
+    }
+
+    function buildHeroSubtitle(count) {
+      const label = formatListedCountLabel(count);
+      return `約${label}社の上場企業について、有報・四半期の財務指標・不動産明細を収録。ニュースや検索トレンドとあわせてスクリーニング・分析できます。`;
+    }
+
+    async function applyDataVolumeCopy() {
+      const el = document.getElementById('hero-subtitle');
+      if (!el) return;
+      if (el.textContent.trim() === '__HERO_SUBTITLE__') {
+        el.textContent = buildHeroSubtitle(3800);
+      }
+      let count = null;
+      try {
+        if (STATIC_MODE) {
+          const res = await fetch('/data/manifest.json');
+          if (res.ok) {
+            const manifest = await res.json();
+            count = manifest?.screening_count ?? manifest?.search_catalog ?? null;
+          }
+        } else {
+          const data = await api('/api/screening?limit=1&listing=上場');
+          count = data?.total ?? null;
+        }
+      } catch {}
+      if (count) el.textContent = buildHeroSubtitle(count);
+    }
+
     const ICON_PATHS = {
       layout: '<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
       file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
@@ -2310,6 +2368,51 @@
       'pie-chart': '<path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>',
       newspaper: '<path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8z"/>',
       'external-link': '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>',
+      wallet: '<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>',
+      coins: '<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/>',
+      activity: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+      'line-chart': '<path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>',
+      layers: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+      landmark: '<line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/>',
+      target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+      award: '<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>',
+      briefcase: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>',
+      'map-pin': '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+    };
+
+    const METRIC_ICON = {
+      revenue: 'bar-chart',
+      roe: 'percent',
+      operating_margin: 'pie-chart',
+      revenue_growth: 'trending-up',
+      per: 'tag',
+      pbr: 'tag',
+      market_cap: 'wallet',
+      net_income: 'coins',
+      roa: 'percent',
+      operating_cf: 'activity',
+      real_estate: 'building',
+      real_estate_nav: 'target',
+    };
+
+    const PRESET_ICON = {
+      all: 'layers',
+      'high-roe': 'percent',
+      'low-per': 'tag',
+      growth: 'trending-up',
+      large: 'landmark',
+      realestate: 'building',
+      're-nav': 'target',
+      'value-growth': 'sparkles',
+      'cf-positive': 'activity',
+      quality: 'award',
+    };
+
+    const PROFILE_BLOCK_ICON = {
+      '事業の内容': 'briefcase',
+      '沿革': 'clock',
+      '従業員の状況': 'users',
+      '主要関係会社': 'users',
     };
 
     function icon(name, size = 'md', extraClass = '') {
@@ -2331,6 +2434,17 @@
       return `<span class="ico-label ico-label-end">${icon(name, size)}<span>${text}</span></span>`;
     }
 
+    function setHeadingIcon(el, iconName, text) {
+      if (!el) return;
+      const size = el.tagName === 'H2' ? 'md' : 'sm';
+      el.innerHTML = iconLabel(iconName, text, size);
+      el.dataset.icon = iconName;
+    }
+
+    function metricLabel(key, text) {
+      return iconLabel(METRIC_ICON[key] || 'bar-chart', text, 'xs');
+    }
+
     function renderStarRating(count, max = 5) {
       return Array.from({ length: max }, (_, i) => icon('star', 'sm', i < count ? 'ico-star-on' : 'ico-star-off')).join('');
     }
@@ -2349,11 +2463,21 @@
     }
 
     function decorateStaticIcons(root = document) {
+      root.querySelectorAll('[data-icon-only]').forEach(el => {
+        if (el.dataset.iconOnlyDecorated) return;
+        const name = el.dataset.iconOnly;
+        const size = el.dataset.iconSize || 'sm';
+        el.innerHTML = icon(name, size);
+        el.dataset.iconOnlyDecorated = '1';
+      });
       root.querySelectorAll('[data-icon]').forEach(el => {
         if (el.dataset.iconDecorated) return;
         const name = el.dataset.icon;
         const label = el.textContent.trim();
-        el.innerHTML = iconLabel(name, label, el.classList.contains('tab') ? 'sm' : 'sm');
+        const size = el.classList.contains('tab') || el.classList.contains('preset') || el.classList.contains('detail-tab')
+          ? 'xs'
+          : (el.tagName === 'H2' ? 'md' : 'sm');
+        el.innerHTML = iconLabel(name, label, size);
         el.dataset.iconDecorated = '1';
       });
       root.querySelectorAll('[data-icon-suffix]').forEach(el => {
@@ -2411,6 +2535,7 @@
     let dashState = { view: 'revenue', industry: '' };
     const DASH_VIEWS = {
       revenue: {
+        icon: 'bar-chart',
         title: '売上高トップ（上場）',
         chartTitle: '売上高トップ30',
         chartCaption: '単位: 億円',
@@ -2421,6 +2546,7 @@
         order: 'desc',
       },
       roe: {
+        icon: 'percent',
         title: 'ROEランキング（10%以上）',
         chartTitle: 'ROEトップ30',
         chartCaption: '単位: %',
@@ -2432,6 +2558,7 @@
         min_roe: '0.1',
       },
       margin: {
+        icon: 'pie-chart',
         title: '営業利益率ランキング',
         chartTitle: '営業利益率トップ30',
         chartCaption: '単位: %',
@@ -2442,6 +2569,7 @@
         order: 'desc',
       },
       growth: {
+        icon: 'trending-up',
         title: '売上成長率ランキング（10%以上）',
         chartTitle: '成長率トップ30',
         chartCaption: '単位: %（前年比）',
@@ -2453,6 +2581,7 @@
         min_revenue_growth: '0.1',
       },
       net_income: {
+        icon: 'coins',
         title: '純利益ランキング',
         chartTitle: '純利益トップ30',
         chartCaption: '単位: 億円',
@@ -2463,6 +2592,7 @@
         order: 'desc',
       },
       market_cap: {
+        icon: 'wallet',
         title: '時価総額ランキング',
         chartTitle: '時価総額トップ30',
         chartCaption: '単位: 億円',
@@ -2473,6 +2603,7 @@
         order: 'desc',
       },
       low_per: {
+        icon: 'tag',
         title: '低PERランキング（20倍以下）',
         chartTitle: 'PERトップ30',
         chartCaption: '単位: 倍',
@@ -2484,6 +2615,7 @@
         max_per: '20',
       },
       realestate: {
+        icon: 'building',
         title: '不動産保有ランキング',
         chartTitle: '不動産帳簿価額トップ30',
         chartCaption: '帳簿価額合計',
@@ -2896,9 +3028,10 @@
     function renderProfileBlock(title, text, id, collapsed = true) {
       if (!text) return '';
       const long = text.length > 280 || text.split('\n').length > 5;
+      const iconName = PROFILE_BLOCK_ICON[title] || 'file';
       return `
         <div class="profile-block">
-          <h3>${title}</h3>
+          <h3>${iconLabel(iconName, title, 'sm')}</h3>
           <div class="profile-text ${long && collapsed ? 'collapsed' : ''}" id="${id}">${formatProse(text)}</div>
           ${long ? `<button type="button" class="profile-toggle" data-target="${id}">続きを読む</button>` : ''}
         </div>`;
@@ -3124,7 +3257,7 @@
       const q = qtr.items[0];
       el.innerHTML = `
         <div class="highlight-box">
-          <h3>${quarterLabel(q)}（${q.period_end ?? ''}）</h3>
+          <h3>${iconLabel('calendar', `${quarterLabel(q)}（${q.period_end ?? ''}）`, 'sm')}</h3>
           <p>累計売上${formatYen(q.revenue_cumulative)}、単期売上${formatYen(q.revenue_single)}。
             売上の前年比は${formatChg(q.revenue_yoy)}、前四半期比は${formatChg(q.revenue_qoq)}です。</p>
           <div class="highlight-metrics">
@@ -3143,7 +3276,7 @@
       if (!latest) { el.innerHTML = ''; return; }
       el.innerHTML = `
         <div class="highlight-box">
-          <h3>${latest.fiscal_year_end}期（直近期）</h3>
+          <h3>${iconLabel('bar-chart', `${latest.fiscal_year_end}期（直近期）`, 'sm')}</h3>
           <p>売上${formatYen(latest.revenue)}、営業利益${formatYen(latest.operating_income)}、純利益${formatYen(latest.net_income)}。
             営業利益率${formatPct(latest.operating_margin)}、ROE${formatPct(latest.roe)}、自己資本比率${formatPct(latest.equity_ratio)}です。</p>
           <div class="highlight-metrics">
@@ -3186,7 +3319,7 @@
         </div>
         ${profile.affiliates_summary ? `
           <div class="profile-block" style="margin-top:0;padding-top:0;border-top:none">
-            <h3>主要関係会社</h3>
+            <h3>${iconLabel('users', '主要関係会社', 'sm')}</h3>
             <div class="profile-text" style="margin:0">${formatProse(profile.affiliates_summary)}</div>
           </div>` : ''}
         ${renderProfileBlock('事業の内容', profile.business_description, 'profile-business')}
@@ -3255,14 +3388,15 @@
     function renderDashIndustryChips(industries) {
       const wrap = document.getElementById('dash-industry-chips');
       if (!wrap) return;
-      const chips = ['<button type="button" class="preset dash-industry active" data-industry="">すべて</button>'];
+      const chips = ['<button type="button" class="preset dash-industry active" data-industry="" data-icon="layers">すべて</button>'];
       industries.slice(0, DASH_INDUSTRY_CHIP_LIMIT).forEach(ind => {
-        chips.push(`<button type="button" class="preset dash-industry" data-industry="${ind}">${ind}</button>`);
+        chips.push(`<button type="button" class="preset dash-industry" data-industry="${ind}" data-icon="briefcase">${ind}</button>`);
       });
       if (industries.length > DASH_INDUSTRY_CHIP_LIMIT) {
         chips.push('<span class="muted" style="font-size:var(--fs-small);align-self:center">ほかはプルダウンから選択</span>');
       }
       wrap.innerHTML = chips.join('');
+      decorateStaticIcons(wrap);
       wrap.querySelectorAll('.dash-industry').forEach(btn => {
         btn.addEventListener('click', () => applyDashIndustry(btn.dataset.industry || ''));
       });
@@ -3885,7 +4019,7 @@
         </div>
         ${item.industry ? `<div class="co-card-industry">${item.industry}</div>` : ''}
         <div class="co-card-metrics">
-          ${metrics.map(m => `<div class="co-metric${hiField === m.key ? ' highlight' : ''}"><div class="lbl">${m.lbl}</div><div class="val">${m.val}</div></div>`).join('')}
+          ${metrics.map(m => `<div class="co-metric${hiField === m.key ? ' highlight' : ''}"><div class="lbl">${metricLabel(m.key, m.lbl)}</div><div class="val">${m.val}</div></div>`).join('')}
         </div>
       </div>`;
     }
@@ -4125,8 +4259,9 @@
       body.innerHTML = renderSkeletonRows(9, 12);
       cards.innerHTML = '';
       if (meta) meta.textContent = '読み込み中…';
-      if (title) title.textContent = dashState.industry ? `${dashState.industry}（${view.title}）` : view.title;
-      if (chartTitle) chartTitle.textContent = `${view.chartTitle}（棒グラフ）`;
+      const titleText = dashState.industry ? `${dashState.industry}（${view.title}）` : view.title;
+      if (title) setHeadingIcon(title, view.icon || 'bar-chart', titleText);
+      if (chartTitle) setHeadingIcon(chartTitle, view.icon || 'bar-chart', `${view.chartTitle}（棒グラフ）`);
       if (chartCaption) chartCaption.textContent = view.chartCaption;
       try {
         const q = new URLSearchParams(buildDashQueryParams());
@@ -4610,7 +4745,7 @@
         el.innerHTML = `<div class="theme-weekly-grid">${(data.themes || []).map(theme => `
           <div class="theme-box">
             <div class="theme-box-head">
-              <h3>${theme.title}</h3>
+              <h3>${iconLabel(PRESET_ICON[theme.preset] || 'sparkles', theme.title, 'sm')}</h3>
               <span class="theme-meta">${theme.count}社</span>
             </div>
             <div class="desc">${theme.description}${theme.id === 're_nav' && !theme.count ? '（時価総額データ更新後に表示）' : ''}</div>
@@ -5293,6 +5428,7 @@
       document.getElementById('engagement-updates-all')?.addEventListener('click', () => showTab('disclosures'));
       try {
         if (STATIC_MODE && globalThis.staticApiReady) await globalThis.staticApiReady;
+        await applyDataVolumeCopy();
         engagementStore.touchSession();
         await Promise.all([loadIndustries(), loadDashList(), loadHomeTrending(), loadWeeklyThemes(), renderCompareBar(), renderCompareWorkspaceChips(), renderEngagementHome()]);
         loadPopularSearchSuggestions();

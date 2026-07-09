@@ -14,10 +14,8 @@ OUT = ROOT / "public_site"
 MOCK = ROOT / "mock"
 SEO = ROOT / "seo"
 SITE_URL = (os.environ.get("SITE_URL") or "https://japan-equity-db.jp").rstrip("/")
-META_DESCRIPTION = (
-    "有報・四半期の財務データとニュース・検索トレンドで上場企業を分析できる株チェック。"
-)
 SITE_NAME = "株チェック"
+DEFAULT_LISTED_COUNT = 3800
 SITE_TITLE_TAGLINE = "有報・四半期データで銘柄分析"
 
 
@@ -28,7 +26,35 @@ def _google_verification_tag() -> str:
     return f'<meta name="google-site-verification" content="{code}" />'
 
 
-def _replace_placeholders(text: str, *, listed_label: str = "3,800", static_mode: bool = True) -> str:
+def _listed_count_label(count: int) -> str:
+    if count >= 100:
+        return f"{(count // 100) * 100:,}"
+    return f"{count:,}"
+
+
+def _build_meta_description(count: int) -> str:
+    label = _listed_count_label(count)
+    return (
+        f"{SITE_NAME}は有価証券報告書から売上高・ROE・保有不動産を分析。"
+        f"約{label}社の上場企業をスクリーニング・検索できます。"
+    )
+
+
+def _build_hero_subtitle(count: int) -> str:
+    label = _listed_count_label(count)
+    return (
+        f"約{label}社の上場企業について、有報・四半期の財務指標・不動産明細を収録。"
+        f"ニュースや検索トレンドとあわせてスクリーニング・分析できます。"
+    )
+
+
+def _replace_placeholders(
+    text: str,
+    *,
+    listed_label: str = "3,800",
+    listed_count: int = DEFAULT_LISTED_COUNT,
+    static_mode: bool = True,
+) -> str:
     ld = json.dumps(
         {"@context": "https://schema.org", "@type": "WebSite", "name": SITE_NAME, "url": SITE_URL},
         ensure_ascii=False,
@@ -38,18 +64,13 @@ def _replace_placeholders(text: str, *, listed_label: str = "3,800", static_mode
     )
     return (
         text.replace("__SITE_URL__", SITE_URL)
-        .replace("__META_DESCRIPTION__", META_DESCRIPTION)
+        .replace("__META_DESCRIPTION__", _build_meta_description(listed_count))
+        .replace("__HERO_SUBTITLE__", _build_hero_subtitle(listed_count))
         .replace("__GOOGLE_VERIFICATION__", _google_verification_tag())
         .replace("__SITE_JSON_LD__", ld)
         .replace("__STATIC_MODE__", "true" if static_mode else "false")
         .replace("__STATIC_API_SCRIPT__", static_script)
     )
-
-
-def _listed_count_label(count: int) -> str:
-    if count >= 100:
-        return f"{(count // 100) * 100:,}"
-    return f"{count:,}"
 
 
 def _sitemap_from_db() -> tuple[str, int] | None:
@@ -183,10 +204,12 @@ def main() -> None:
     OUT.mkdir(parents=True)
     SEO.mkdir(parents=True, exist_ok=True)
 
-    listed_label = "3,800"
+    listed_label = _listed_count_label(DEFAULT_LISTED_COUNT)
+    listed_count = DEFAULT_LISTED_COUNT
     sitemap_result = _sitemap_from_db()
     if sitemap_result:
         sitemap_xml, company_count = sitemap_result
+        listed_count = company_count
         listed_label = _listed_count_label(company_count)
         (SEO / "sitemap.xml").write_text(sitemap_xml, encoding="utf-8")
         print(f"Sitemap from DB: {company_count} companies")
@@ -194,35 +217,45 @@ def main() -> None:
         sitemap_xml = _sitemap_from_repo() or _minimal_sitemap()
         print("Sitemap from repo or minimal fallback")
 
-    for name in ("index.html", "disclaimer.html"):
-        target = OUT / name
-        target.write_text(
-            _replace_placeholders((MOCK / name).read_text(encoding="utf-8"), listed_label=listed_label),
-            encoding="utf-8",
-        )
-    assets_dir = OUT / "assets"
-    assets_dir.mkdir(parents=True, exist_ok=True)
-    (assets_dir / "charts.js").write_text(
-        _replace_placeholders((MOCK / "charts.js").read_text(encoding="utf-8"), listed_label=listed_label),
-        encoding="utf-8",
-    )
-    (assets_dir / "static-api.js").write_text(
-        (MOCK / "static-api.js").read_text(encoding="utf-8"),
-        encoding="utf-8",
-    )
-
     sys.path.insert(0, str(ROOT / "tools"))
     try:
         from export_static_data import export_static_data
 
         manifest = export_static_data(OUT)
         if manifest.get("screening_count"):
+            listed_count = int(manifest["screening_count"])
+            listed_label = _listed_count_label(listed_count)
             print(
-                f"Static data: {manifest['screening_count']} screening, "
+                f"Static data: {listed_count} screening, "
                 f"{manifest.get('company_bundles', 0)} bundles"
             )
     except Exception as exc:  # noqa: BLE001
         print(f"Static export failed: {exc}")
+
+    for name in ("index.html", "disclaimer.html"):
+        target = OUT / name
+        target.write_text(
+            _replace_placeholders(
+                (MOCK / name).read_text(encoding="utf-8"),
+                listed_label=listed_label,
+                listed_count=listed_count,
+            ),
+            encoding="utf-8",
+        )
+    assets_dir = OUT / "assets"
+    assets_dir.mkdir(parents=True, exist_ok=True)
+    (assets_dir / "charts.js").write_text(
+        _replace_placeholders(
+            (MOCK / "charts.js").read_text(encoding="utf-8"),
+            listed_label=listed_label,
+            listed_count=listed_count,
+        ),
+        encoding="utf-8",
+    )
+    (assets_dir / "static-api.js").write_text(
+        (MOCK / "static-api.js").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
 
     _write_brand_assets(listed_label)
     _write_robots_txt()

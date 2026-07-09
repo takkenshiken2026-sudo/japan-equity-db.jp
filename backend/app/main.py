@@ -16,7 +16,7 @@ from app.collection_log import collection_log_root, read_collection_manifest
 from app.db import Company, Filing, Financial, QuarterlyFinancial, RealEstateProperty, RealEstateSync, SessionLocal, StockQuote, init_db
 from app.db_maintenance import checkpoint_sqlite_wal
 from app.routers import calendar, companies, screening, themes, trending
-from app.seo.helpers import build_home_meta_description, build_website_json_ld
+from app.seo.helpers import build_home_hero_subtitle, build_home_meta_description, build_website_json_ld
 from app.seo.canonical_host import CanonicalHostMiddleware
 from app.seo.middleware import TechSEOMiddleware
 from app.seo.routes import render_404, router as seo_router
@@ -157,6 +157,8 @@ def _render_mock_html(filename: str, request: Request) -> HTMLResponse:
     text = text.replace("__SITE_URL__", site)
     if "__META_DESCRIPTION__" in text:
         text = text.replace("__META_DESCRIPTION__", build_home_meta_description(_listed_count()))
+    if "__HERO_SUBTITLE__" in text:
+        text = text.replace("__HERO_SUBTITLE__", build_home_hero_subtitle(_listed_count()))
     if "__GOOGLE_VERIFICATION__" in text:
         tag = (
             f'<meta name="google-site-verification" content="{settings.google_site_verification}" />'
