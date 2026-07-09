@@ -311,7 +311,6 @@
     .card .trending-rank-item,
     .card .theme-item,
     .card .disclosure-feed .feed-item,
-    .card .engagement-update-item,
     .card .compare-workspace-toolbar,
     .card .compare-col-head,
     .card .co-card-metrics,
@@ -1503,14 +1502,7 @@
       background: var(--surface2); border-color: var(--border); color: var(--text-secondary);
     }
 
-    /* ── Engagement / retention ── */
-    .engagement-panel { margin-bottom: 16px; display: grid; gap: 12px; }
-    .engagement-panel:empty { display: none !important; margin: 0; }
-    .engagement-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
-    .engagement-scroll {
-      display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px;
-      -webkit-overflow-scrolling: touch; scrollbar-width: thin;
-    }
+    /* ── Engagement chips (header recent) ── */
     .engagement-chip {
       flex: 0 0 auto; min-width: 148px; max-width: 200px;
       border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px;
@@ -1522,13 +1514,6 @@
     .engagement-chip .stat { font-size: var(--fs-small); font-weight: 600; margin-top: 6px; color: var(--text-secondary); }
     .engagement-chip .when { font-size: var(--fs-caption); color: var(--muted); margin-top: 4px; }
     .engagement-chip.watch .star { color: var(--text-secondary); }
-    .engagement-update-item {
-      display: flex; justify-content: space-between; gap: 10px; padding: 10px 0;
-      font-size: var(--fs-body); cursor: pointer;
-    }
-    .engagement-update-item:hover { color: var(--text); }
-    .engagement-update-item .doc { color: var(--text-secondary); font-size: var(--fs-small); margin-top: 2px; }
-    .engagement-update-item .date { font-size: var(--fs-small); color: var(--muted); white-space: nowrap; }
     .watch-btn {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 8px 14px; font-size: var(--fs-small);
@@ -1614,24 +1599,6 @@
           </div>
         </div>
         <p class="trending-home-note" id="trending-home-note" hidden></p>
-      </div>
-      <div id="engagement-panel" class="engagement-panel" style="display:none">
-        <div class="engagement-grid">
-          <div class="card engagement-block" id="engagement-watch-wrap" style="display:none">
-            <div class="card-header">
-              <h2 data-icon="star">ウォッチリスト</h2>
-              <span class="muted" style="font-size:var(--fs-small)">銘柄詳細から追加</span>
-            </div>
-            <div class="engagement-scroll" id="engagement-watch"></div>
-          </div>
-        </div>
-        <div class="card" id="engagement-updates-wrap" style="display:none">
-          <div class="card-header">
-            <h2 data-icon="bell">前回以降の更新</h2>
-            <button type="button" class="secondary" id="engagement-updates-all" data-icon-suffix="chevron" style="padding:6px 12px;font-size:var(--fs-small)">開示タブで全部見る</button>
-          </div>
-          <div id="engagement-updates"></div>
-        </div>
       </div>
       <div class="card" id="weekly-themes-card" style="margin-bottom:16px">
         <div class="card-header">
@@ -3692,22 +3659,15 @@
     }
 
     async function renderEngagementHome() {
-      const panel = document.getElementById('engagement-panel');
       const headerRecentWrap = document.getElementById('header-recent-wrap');
       const headerRecentEl = document.getElementById('header-recent');
-      if (!panel || !headerRecentWrap || !headerRecentEl) return;
+      if (!headerRecentWrap || !headerRecentEl) return;
 
       const recent = engagementStore.getRecentViews();
-      const watch = engagementStore.getWatchlist();
-      const session = engagementStore._load();
-
-      const watchWrap = document.getElementById('engagement-watch-wrap');
-      const watchEl = document.getElementById('engagement-watch');
-
-      const allCodes = [...new Set([...recent.map(r => r.code), ...watch.map(w => w.code)])];
+      const codes = recent.map(r => r.code);
       let snapByCode = {};
-      if (allCodes.length) {
-        const data = await api(`/api/companies/compare/batch?codes=${allCodes.join(',')}`).catch(() => ({ items: [] }));
+      if (codes.length) {
+        const data = await api(`/api/companies/compare/batch?codes=${codes.join(',')}`).catch(() => ({ items: [] }));
         snapByCode = Object.fromEntries((data.items || []).map(i => [i.edinet_code, i]));
       }
 
@@ -3726,71 +3686,6 @@
       } else {
         headerRecentWrap.hidden = true;
         headerRecentEl.innerHTML = '';
-      }
-
-      if (watch.length) {
-        watchWrap.style.display = 'block';
-        watchEl.innerHTML = watch.map(w => {
-          const snap = snapByCode[w.code] || {};
-          return engagementChipHtml({
-            code: w.code,
-            name: snap.name || w.name,
-            sec_code: snap.sec_code,
-            industry: snap.industry,
-            when: `追加 ${relativeTime(w.addedAt)}`,
-          }, ' watch');
-        }).join('');
-        bindEngagementChips(watchEl);
-      } else {
-        watchWrap.style.display = 'none';
-      }
-
-      await loadEngagementUpdates(session.previousVisitAt || session.lastVisitAt);
-
-      const updatesVisible = document.getElementById('engagement-updates-wrap')?.style.display === 'block';
-      const panelVisible = watchWrap.style.display === 'block' || updatesVisible;
-      panel.style.display = panelVisible ? 'grid' : 'none';
-      decorateStaticIcons(panel);
-    }
-
-    async function loadEngagementUpdates(sinceIso) {
-      const wrap = document.getElementById('engagement-updates-wrap');
-      const el = document.getElementById('engagement-updates');
-      if (!wrap || !el) return;
-
-      const tracked = engagementStore.trackedCodes();
-      if (!sinceIso || !tracked.length) {
-        wrap.style.display = 'none';
-        return;
-      }
-
-      const sinceDate = sinceIso.slice(0, 10);
-      const params = new URLSearchParams({
-        since: sinceDate,
-        codes: tracked.join(','),
-        limit: '20',
-      });
-      try {
-        const data = await api(`/api/calendar/disclosures?${params}`);
-        const items = data.items || [];
-        if (!items.length) {
-          wrap.style.display = 'none';
-          return;
-        }
-        wrap.style.display = 'block';
-        el.innerHTML = items.slice(0, 8).map(item => `
-          <div class="engagement-update-item" data-code="${item.edinet_code}">
-            <div class="ico-label">${icon('file', 'sm')}<div>
-              <strong>${item.company_name || item.edinet_code}</strong>
-              <div class="doc">${item.doc_description || '提出書類'}</div>
-            </div></div>
-            <span class="date">${(item.submit_date_time || '').slice(0, 10)}</span>
-          </div>`).join('');
-        el.querySelectorAll('[data-code]').forEach(node => {
-          node.addEventListener('click', () => loadDetail(node.dataset.code));
-        });
-      } catch {
-        wrap.style.display = 'none';
       }
     }
 
@@ -5434,7 +5329,6 @@
         if (disclosuresState.offset < disclosuresState.total) loadDisclosuresFeed({ append: true });
       });
       document.getElementById('compare-clear-all-btn')?.addEventListener('click', () => compareStore.clear());
-      document.getElementById('engagement-updates-all')?.addEventListener('click', () => showTab('disclosures'));
       try {
         await waitForStaticApi();
         if (STATIC_MODE && globalThis.staticApiReady) await globalThis.staticApiReady;
