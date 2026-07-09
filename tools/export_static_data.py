@@ -178,6 +178,17 @@ def export_static_data(out_dir: Path) -> dict:
     }
     _json_dump(data_dir / "manifest.json", manifest)
     print(f"Exported {exported} company bundles, manifest written")
+
+    from synthesize_trending import write_synthesized_trending
+
+    home_path = data_dir / "trending/home.json"
+    try:
+        home = json.loads(home_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        home = {}
+    if not home.get("search_trending") and not home.get("news_trending"):
+        write_synthesized_trending(data_dir)
+
     return manifest
 
 

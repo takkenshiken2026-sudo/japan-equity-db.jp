@@ -71,6 +71,11 @@ def mirror_live_data(out_dir: Path, site_url: str, *, workers: int = 24) -> dict
                 print(f"  companies {i}/{len(codes)}")
 
     print(f"Mirrored {ok} company bundles ({failed} missing)")
+
+    from synthesize_trending import write_synthesized_trending
+
+    write_synthesized_trending(data_dir)
+
     return {
         "screening_count": len(codes),
         "company_bundles": ok,
