@@ -125,6 +125,12 @@ def charts_js():
     return FileResponse(path, media_type="application/javascript", headers={"Cache-Control": "public, max-age=3600"})
 
 
+@app.get("/assets/static-api.js", response_model=None)
+def static_api_js():
+    path = MOCK_DIR / "static-api.js"
+    return FileResponse(path, media_type="application/javascript", headers={"Cache-Control": "public, max-age=3600"})
+
+
 def _site_url(request: Request) -> str:
     if settings.site_url:
         return settings.site_url.rstrip("/")
@@ -161,6 +167,8 @@ def _render_mock_html(filename: str, request: Request) -> HTMLResponse:
     if "__SITE_JSON_LD__" in text:
         ld = json.dumps(build_website_json_ld(site), ensure_ascii=False)
         text = text.replace("__SITE_JSON_LD__", ld)
+    text = text.replace("__STATIC_MODE__", "false")
+    text = text.replace("__STATIC_API_SCRIPT__", "")
     return HTMLResponse(text)
 
 

@@ -1,7 +1,4 @@
-# GitHub Pages は本番では使いません（API が動かないため）。
-# 本番は Render モノリス（deploy-production.yml / render.yaml）を使用してください。
-# 静的プレビューが必要な場合のみ手動実行してください。
-
+# 本番は static-site.yml（GitHub Pages）を使用。プレビューのみ手動実行可。
 name: Deploy GitHub Pages (preview only)
 
 on:
@@ -25,6 +22,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+      - name: Restore database
+        run: |
+          mkdir -p backend/data
+          if gh release view db-backup &>/dev/null; then
+            gh release download db-backup -p edinet.db.gz -D /tmp
+            gunzip -c /tmp/edinet.db.gz > backend/data/edinet.db
+          fi
       - name: Build public_site
         env:
           SITE_URL: https://japan-equity-db.jp

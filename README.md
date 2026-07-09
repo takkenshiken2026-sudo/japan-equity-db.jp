@@ -92,22 +92,26 @@ sqlite3 data/edinet.db "PRAGMA wal_checkpoint(TRUNCATE);"
 ./scripts/seo-verify.sh http://127.0.0.1:8000
 ```
 
-## デプロイ（本番）
+## デプロイ（本番・完全無料）
 
-**本番は Render モノリス**（UI + API + SEO + SQLite）です。詳細は [docs/PRODUCTION.md](docs/PRODUCTION.md) を参照。
+**GitHub Pages 静的サイト** + 日次 GitHub Actions で DB 同期・JSON 書き出し。
+
+詳細: [docs/FREE-HOSTING.md](docs/FREE-HOSTING.md)
 
 ```bash
-# 初回: DB バックアップを Release にアップロード → Render の DB_BACKUP_URL に設定
-./scripts/publish-db-backup.sh
-
-# 日常: main に push すると Render へ自動デプロイ
+# 日常: main に push → Static Site workflow がビルド・デプロイ
 git push origin main
+
+# ローカル静的ビルド確認
+pip install -r backend/requirements.txt
+python3 tools/build_public_site.py
 ```
 
 - 本番 URL: https://japan-equity-db.jp
-- GitHub Pages は API 非対応のため **本番では使用しません**（プレビューのみ手動可）
+- 月額: **¥0**（GitHub Pages + Actions）
+- データ: **1日1回**更新（ニュース RSS・トレンド含む）
 
-### ローカル Docker（開発用）
+### ローカル API 開発
 
 ```bash
 docker compose up -d --build

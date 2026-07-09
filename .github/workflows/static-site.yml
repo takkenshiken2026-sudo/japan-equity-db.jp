@@ -1,0 +1,103 @@
+# 静的サイト（GitHub Pages）: DB 同期 → JSON 書き出し → デプロイ
+name: Static Site
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 22 * * *"
+  workflow_dispatch:
+    inputs:
+      skip_sync:
+        description: Skip daily sync (build only from Release DB)
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: static-site
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      DATABASE_URL: sqlite:///./backend/data/edinet.db
+      EDINET_API_KEY: ${{ secrets.EDINET_API_KEY }}
+      SITE_URL: https://japan-equity-db.jp
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Restore database from Release
+        run: |
+          mkdir -p backend/data
+          if gh release view db-backup &>/dev/null; then
+            gh release download db-backup -p edinet.db.gz -D /tmp
+            gunzip -c /tmp/edinet.db.gz > backend/data/edinet.db
+            echo "Restored $(wc -c < backend/data/edinet.db) bytes"
+          else
+            echo "No db-backup release — init empty schema"
+            cd backend && python -m app.sync_cli init-db
+          fi
+
+      - name: Daily sync
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.skip_sync != true)
+        working-directory: backend
+        run: |
+          if [ -z "$EDINET_API_KEY" ]; then
+            echo "::warning::EDINET_API_KEY 未設定 — sync をスキップ"
+            exit 0
+          fi
+          python -m app.sync_cli daily-sync
+          python -m app.sync_cli sync-profiles --limit 50 --workers 4 || true
+          python -m app.sync_cli seed-no-xbrl-profiles || true
+          python -m app.sync_cli collect-external-media --limit 120 || true
+          DOW=$(date -u +%u)
+          if [ "$DOW" = "7" ]; then
+            python -m app.sync_cli collect-quarterly --years 2024,2025,2026 --parse-limit 1000 --parse-workers 8 || true
+            python -m app.sync_cli sync-quarterly --limit 1000 --reparse-stale --workers 8 || true
+          fi
+          python -c "from app.db_maintenance import checkpoint_sqlite_wal; checkpoint_sqlite_wal('TRUNCATE')"
+
+      - name: Publish database backup
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.skip_sync != true)
+        run: |
+          if [ ! -f backend/data/edinet.db ]; then exit 0
+          gzip -c backend/data/edinet.db > /tmp/edinet.db.gz
+          if ! gh release view db-backup &>/dev/null; then
+            gh release create db-backup --title "Production DB backup" --notes "Auto-updated by Static Site workflow."
+          fi
+          gh release upload db-backup /tmp/edinet.db.gz --clobber
+
+      - name: Build static site
+        env:
+          GOOGLE_SITE_VERIFICATION: ${{ secrets.GOOGLE_SITE_VERIFICATION }}
+          GOOGLE_SITE_VERIFICATION_HTML: ${{ secrets.GOOGLE_SITE_VERIFICATION_HTML }}
+        run: python3 tools/build_public_site.py
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: public_site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

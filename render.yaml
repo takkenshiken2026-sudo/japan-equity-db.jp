@@ -1,12 +1,12 @@
-# Render Blueprint: https://dashboard.render.com/select-repo?type=blueprint
-# 本番: UI + API + SEO + SQLite を単一サービスで提供します。
-# DNS (japan-equity-db.jp) は Render のカスタムドメインに向けてください（GitHub Pages は使いません）。
+# Render Blueprint（無料枠）: https://dashboard.render.com/select-repo?type=blueprint
+# DB は GitHub Release に保存し、起動時に DB_BACKUP_URL から復元します。
+# 日次更新は GitHub Actions (.github/workflows/daily-sync-db.yml) が担当します。
 services:
   - type: web
     name: japan-equity-db
     runtime: docker
     dockerfilePath: ./Dockerfile
-    plan: starter
+    plan: free
     region: singapore
     healthCheckPath: /api/health
     autoDeploy: true
@@ -21,14 +21,8 @@ services:
       - key: COLLECTION_LOG_DIR
         value: /app/data/collection-logs
       - key: ENABLE_DAILY_CRON
-        value: "true"
-      - key: EDINET_API_KEY
-        sync: false
+        value: "false"
+      - key: DB_BACKUP_URL
+        value: https://github.com/takkenshiken2026-sudo/japan-equity-db.jp/releases/download/db-backup/edinet.db.gz
       - key: GOOGLE_SITE_VERIFICATION
         sync: false
-      - key: DB_BACKUP_URL
-        sync: false
-    disk:
-      name: edinet-data
-      mountPath: /app/data
-      sizeGB: 2

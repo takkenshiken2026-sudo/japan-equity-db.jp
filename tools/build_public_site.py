@@ -28,16 +28,21 @@ def _google_verification_tag() -> str:
     return f'<meta name="google-site-verification" content="{code}" />'
 
 
-def _replace_placeholders(text: str, *, listed_label: str = "3,800") -> str:
+def _replace_placeholders(text: str, *, listed_label: str = "3,800", static_mode: bool = True) -> str:
     ld = json.dumps(
         {"@context": "https://schema.org", "@type": "WebSite", "name": SITE_NAME, "url": SITE_URL},
         ensure_ascii=False,
+    )
+    static_script = (
+        '<script src="/assets/static-api.js" defer></script>' if static_mode else ""
     )
     return (
         text.replace("__SITE_URL__", SITE_URL)
         .replace("__META_DESCRIPTION__", META_DESCRIPTION)
         .replace("__GOOGLE_VERIFICATION__", _google_verification_tag())
         .replace("__SITE_JSON_LD__", ld)
+        .replace("__STATIC_MODE__", "true" if static_mode else "false")
+        .replace("__STATIC_API_SCRIPT__", static_script)
     )
 
 
@@ -201,6 +206,23 @@ def main() -> None:
         _replace_placeholders((MOCK / "charts.js").read_text(encoding="utf-8"), listed_label=listed_label),
         encoding="utf-8",
     )
+    (assets_dir / "static-api.js").write_text(
+        (MOCK / "static-api.js").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    sys.path.insert(0, str(ROOT / "tools"))
+    try:
+        from export_static_data import export_static_data
+
+        manifest = export_static_data(OUT)
+        if manifest.get("screening_count"):
+            print(
+                f"Static data: {manifest['screening_count']} screening, "
+                f"{manifest.get('company_bundles', 0)} bundles"
+            )
+    except Exception as exc:  # noqa: BLE001
+        print(f"Static export failed: {exc}")
 
     _write_brand_assets(listed_label)
     _write_robots_txt()

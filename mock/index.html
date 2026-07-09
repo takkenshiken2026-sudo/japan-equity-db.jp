@@ -27,6 +27,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
   <script src="/assets/charts.js" defer></script>
+  __STATIC_API_SCRIPT__
   <style>
     :root {
       --bg: #f4f7fc;
@@ -2270,6 +2271,7 @@
   </footer>
 
   <script>
+    const STATIC_MODE = __STATIC_MODE__;
     const API = '';
 
     const ICON_PATHS = {
@@ -3200,6 +3202,9 @@
     }
 
     async function api(path) {
+      if (STATIC_MODE && typeof staticApiFetch === 'function') {
+        return staticApiFetch(path);
+      }
       const res = await fetch(`${API}${path}`);
       if (!res.ok) throw new Error(`${res.status}`);
       return res.json();
@@ -5285,6 +5290,7 @@
       document.getElementById('compare-clear-all-btn')?.addEventListener('click', () => compareStore.clear());
       document.getElementById('engagement-updates-all')?.addEventListener('click', () => showTab('disclosures'));
       try {
+        if (STATIC_MODE && globalThis.staticApiReady) await globalThis.staticApiReady;
         engagementStore.touchSession();
         await Promise.all([loadIndustries(), loadDashList(), loadHomeTrending(), loadWeeklyThemes(), renderCompareBar(), renderCompareWorkspaceChips(), renderEngagementHome()]);
         loadPopularSearchSuggestions();
