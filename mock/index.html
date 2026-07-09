@@ -5400,6 +5400,15 @@
     }
     window.addEventListener('hashchange', handleHash);
 
+    async function waitForStaticApi() {
+      if (!STATIC_MODE) return;
+      for (let i = 0; i < 80; i++) {
+        if (typeof globalThis.staticApiFetch === 'function') return;
+        await new Promise(r => setTimeout(r, 40));
+      }
+      throw new Error('static-api.js の読み込みに失敗しました');
+    }
+
     async function init() {
       decorateStaticIcons();
       setToggleAdvLabel(document.getElementById('filters-adv')?.classList.contains('open'));
@@ -5427,6 +5436,7 @@
       document.getElementById('compare-clear-all-btn')?.addEventListener('click', () => compareStore.clear());
       document.getElementById('engagement-updates-all')?.addEventListener('click', () => showTab('disclosures'));
       try {
+        await waitForStaticApi();
         if (STATIC_MODE && globalThis.staticApiReady) await globalThis.staticApiReady;
         await applyDataVolumeCopy();
         engagementStore.touchSession();

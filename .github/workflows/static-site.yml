@@ -79,7 +79,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if [ ! -f backend/data/edinet.db ]; then exit 0
+          if [ ! -f backend/data/edinet.db ]; then exit 0; fi
           gzip -c backend/data/edinet.db > /tmp/edinet.db.gz
           if ! gh release view db-backup &>/dev/null; then
             gh release create db-backup --title "Production DB backup" --notes "Auto-updated by Static Site workflow."
