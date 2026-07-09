@@ -41,10 +41,12 @@ jobs:
         run: pip install -r backend/requirements.txt
 
       - name: Restore database from Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DB_BACKUP_URL: https://github.com/takkenshiken2026-sudo/japan-equity-db.jp/releases/download/db-backup/edinet.db.gz
         run: |
           mkdir -p backend/data
-          if gh release view db-backup &>/dev/null; then
-            gh release download db-backup -p edinet.db.gz -D /tmp
+          if curl -fsSL -L "$DB_BACKUP_URL" -o /tmp/edinet.db.gz; then
             gunzip -c /tmp/edinet.db.gz > backend/data/edinet.db
             echo "Restored $(wc -c < backend/data/edinet.db) bytes"
           else
@@ -73,6 +75,8 @@ jobs:
 
       - name: Publish database backup
         if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.skip_sync != true)
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           if [ ! -f backend/data/edinet.db ]; then exit 0
           gzip -c backend/data/edinet.db > /tmp/edinet.db.gz
