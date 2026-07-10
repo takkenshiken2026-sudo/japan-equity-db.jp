@@ -354,6 +354,30 @@
       text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px;
     }
     .presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .presets-more { display: none; gap: 8px; flex-wrap: wrap; width: 100%; margin-top: 8px; }
+    .presets-more.open { display: flex; }
+    .presets-toggle {
+      border: 1px dashed var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: var(--fs-small);
+      padding: 6px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .presets-toggle:hover { color: var(--accent-hover); border-color: var(--accent-border); background: var(--accent-light); }
+    .presets-scroll {
+      position: relative;
+    }
+    .presets-scroll.can-scroll::after {
+      content: "";
+      position: absolute;
+      top: 0; right: 0; bottom: 4px; width: 28px;
+      pointer-events: none;
+      background: linear-gradient(90deg, transparent, var(--surface));
+      border-radius: 0 2px 2px 0;
+      opacity: 1;
+    }
     .preset {
       padding: 6px 14px; border-radius: 999px; font-size: var(--fs-small); font-weight: 500;
       border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary);
@@ -492,6 +516,7 @@
       background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(8px);
       padding: 12px 0 0; margin: 0 0 16px;
     }
+    .breadcrumb-mid { color: var(--muted); }
     .breadcrumb {
       font-size: var(--fs-small); color: var(--muted); margin-bottom: 12px;
       display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
@@ -885,8 +910,23 @@
       text-align: center; padding: 40px 20px; color: var(--muted); font-size: var(--fs-body);
       background: var(--surface2); border: 1px dashed var(--border-strong); border-radius: var(--radius);
     }
+    .chart-loading {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 200px; color: var(--muted); font-size: var(--fs-body);
+    }
+    .verdict-score {
+      display: inline-flex; align-items: center; gap: 8px;
+      margin-top: 6px; font-size: var(--fs-small); color: var(--muted);
+    }
+    .verdict-score-bar {
+      width: 88px; height: 6px; border-radius: 999px; background: var(--surface2); overflow: hidden;
+    }
+    .verdict-score-bar > span {
+      display: block; height: 100%; border-radius: 999px; background: var(--accent);
+    }
     .loading {
       display: flex; align-items: center; gap: 12px; color: var(--muted);
+    }
       padding: 60px; justify-content: center; background: #fff;
       border: 1px solid var(--border); border-radius: var(--radius);
     }
@@ -933,7 +973,7 @@
       margin-bottom: 28px;
     }
     #dashboard .hero-intro {
-      padding: clamp(48px, 8vh, 88px) clamp(24px, 5vw, 72px) clamp(44px, 7vh, 72px);
+      padding: clamp(28px, 4vh, 48px) clamp(24px, 5vw, 72px) clamp(24px, 4vh, 40px);
       position: relative;
       overflow: hidden;
       background: var(--hero-gradient);
@@ -943,7 +983,7 @@
       box-shadow: none;
       max-width: none;
       margin: 0;
-      min-height: clamp(260px, 34vh, 380px);
+      min-height: 0;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -963,28 +1003,28 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: clamp(20px, 3vh, 28px);
+      gap: clamp(12px, 2vh, 18px);
       width: 100%;
       max-width: min(var(--hero-width), calc(100vw - 48px));
       margin-inline: auto;
       text-align: center;
     }
     #dashboard .hero-intro-stack h1 {
-      font-size: clamp(1.85rem, 3.8vw, 2.85rem);
+      font-size: clamp(1.45rem, 2.8vw, 2.1rem);
       font-weight: 800;
       margin: 0;
       letter-spacing: -0.03em;
-      line-height: 1.3;
+      line-height: 1.35;
       text-align: center;
-      max-width: 20em;
+      max-width: 22em;
       color: var(--hero-text);
     }
     #dashboard .hero-intro-stack .subtitle {
-      max-width: 42em;
+      max-width: 36em;
       margin: 0;
-      font-size: 1.125rem;
+      font-size: var(--fs-body);
       font-weight: 400;
-      line-height: 1.65;
+      line-height: 1.55;
       text-align: center;
       color: var(--hero-subtitle);
     }
@@ -1699,7 +1739,9 @@
       .re-comp { flex-direction: column; }
       .re-comp-item { min-width: 0; }
       .presets { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+      .presets-more.open { flex-wrap: nowrap; }
       .preset { flex: 0 0 auto; min-width: auto; white-space: nowrap; }
+      .presets-toggle { flex: 0 0 auto; }
       .detail-section .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
       .detail-section .table-hint {
         display: flex; font-size: var(--fs-caption); color: var(--muted); margin-bottom: 8px; gap: 6px; align-items: center;
@@ -1716,7 +1758,7 @@
       .stat .value { font-size: var(--fs-value); }
       .kpi-group-grid { grid-template-columns: 1fr 1fr; }
       .re-summary { grid-template-columns: 1fr; }
-      .preset { flex: 1 1 100%; min-width: 100%; }
+      .preset { flex: 0 0 auto; min-width: auto; }
       #dashboard .hero-intro {
         padding-top: 28px;
         padding-bottom: 22px;
@@ -1810,24 +1852,16 @@
 
   <main>
     <!-- Dashboard -->
-    <section id="dashboard" class="panel active">
+    <section id="dashboard" class="panel active" aria-hidden="false">
       <div class="dash-hero">
         <div class="hero-intro">
           <div class="hero-intro-stack">
-            <h1>財務データとオルタナティブデータで<br>気になる株をチェック</h1>
+            <h1>気になる株を、財務データでチェック</h1>
             <p class="subtitle" id="hero-subtitle">__HERO_SUBTITLE__</p>
             <div class="global-search global-search--hero">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
               <input id="hero-search" type="search" placeholder="企業名・証券コードで検索…" autocomplete="off" />
               <div id="hero-search-dropdown" class="search-dropdown"></div>
-            </div>
-            <div class="feature-chips">
-              <span class="chip" data-go="dashboard" data-dash-view="revenue" data-icon="bar-chart">売上高順</span>
-              <span class="chip" data-go="dashboard" data-dash-view="roe" data-icon="percent">高ROE</span>
-              <span class="chip" data-go="dashboard" data-dash-view="growth" data-icon="trending-up">高成長</span>
-              <span class="chip" data-go="dashboard" data-dash-view="realestate" data-icon="building">不動産保有</span>
-              <span class="chip" data-go="dashboard" data-dash-view="low_per" data-icon="tag">低PER</span>
-              <span class="chip" data-go="screening" data-icon="sliders">詳細スクリーニング</span>
             </div>
           </div>
         </div>
@@ -1851,19 +1885,24 @@
 
         <div class="filter-section dash-filters">
           <div class="filter-section-title" data-icon="sliders">並び替え・条件</div>
+          <div class="presets-scroll" id="dash-views-scroll">
           <div class="presets" id="dash-views">
             <button type="button" class="preset dash-view active" data-dash-view="revenue" data-icon="bar-chart">売上高</button>
             <button type="button" class="preset dash-view" data-dash-view="roe" data-icon="percent">高ROE</button>
-            <button type="button" class="preset dash-view" data-dash-view="margin" data-icon="pie-chart">営業利益率</button>
             <button type="button" class="preset dash-view" data-dash-view="growth" data-icon="trending-up">高成長</button>
-            <button type="button" class="preset dash-view" data-dash-view="net_income" data-icon="coins">純利益</button>
-            <button type="button" class="preset dash-view" data-dash-view="market_cap" data-icon="wallet">時価総額</button>
             <button type="button" class="preset dash-view" data-dash-view="low_per" data-icon="tag">低PER</button>
             <button type="button" class="preset dash-view" data-dash-view="net_cash" data-icon="wallet">ネットキャッシュ</button>
             <button type="button" class="preset dash-view" data-dash-view="dividend" data-icon="coins">高配当</button>
-            <button type="button" class="preset dash-view" data-dash-view="q_momentum" data-icon="trending-up">四半期モメンタム</button>
-            <button type="button" class="preset dash-view" data-dash-view="realestate" data-icon="building">不動産保有</button>
-            <button type="button" class="preset dash-view" data-dash-view="prefecture" data-icon="map-pin">都道府県別不動産</button>
+            <button type="button" class="presets-toggle" id="dash-views-more-btn" aria-expanded="false">もっと見る</button>
+            <div class="presets-more" id="dash-views-more">
+              <button type="button" class="preset dash-view" data-dash-view="margin" data-icon="pie-chart">営業利益率</button>
+              <button type="button" class="preset dash-view" data-dash-view="net_income" data-icon="coins">純利益</button>
+              <button type="button" class="preset dash-view" data-dash-view="market_cap" data-icon="wallet">時価総額</button>
+              <button type="button" class="preset dash-view" data-dash-view="q_momentum" data-icon="trending-up">四半期モメンタム</button>
+              <button type="button" class="preset dash-view" data-dash-view="realestate" data-icon="building">不動産保有</button>
+              <button type="button" class="preset dash-view" data-dash-view="prefecture" data-icon="map-pin">都道府県別不動産</button>
+            </div>
+          </div>
           </div>
           <div class="filters" style="margin-top:12px">
             <div class="field">
@@ -1878,7 +1917,10 @@
 
         <div class="chart-box" style="margin-bottom:16px">
           <h3 id="dash-chart-title" data-icon="bar-chart" style="margin:0 0 12px;font-size:var(--fs-body);color:var(--text-secondary)">売上高トップ30（棒グラフ）</h3>
-          <div class="chart-canvas-wrap"><canvas id="dash-revenue-chart"></canvas></div>
+          <div class="chart-canvas-wrap" id="dash-chart-wrap" style="min-height:220px">
+            <div class="chart-loading" id="dash-chart-loading"><span class="spinner"></span>チャートを読み込み中…</div>
+            <canvas id="dash-revenue-chart" style="display:none"></canvas>
+          </div>
           <div class="chart-caption" id="dash-chart-caption">単位: 億円</div>
         </div>
 
@@ -1929,28 +1971,33 @@
     </section>
 
     <!-- Screening -->
-    <section id="screening" class="panel">
+    <section id="screening" class="panel" aria-hidden="true">
       <div class="card" id="screening-anchor">
         <div class="card-header"><h2 data-icon="filter">財務スクリーニング</h2></div>
 
         <div class="filter-section">
           <div class="filter-section-title" data-icon="zap">クイック条件</div>
+          <div class="presets-scroll" id="screening-presets-scroll">
           <div class="presets" id="presets">
             <button class="preset" data-preset="all" data-icon="layers">すべて</button>
             <button class="preset" data-preset="high-roe" data-icon="percent">高ROE（10%以上）</button>
             <button class="preset" data-preset="low-per" data-icon="tag">低PER（15倍以下）</button>
             <button class="preset" data-preset="growth" data-icon="trending-up">高成長（10%以上）</button>
             <button class="preset" data-preset="net-cash" data-icon="wallet">ネットキャッシュ</button>
-            <button class="preset" data-preset="high-equity" data-icon="shield">高自己資本（50%以上）</button>
-            <button class="preset" data-preset="low-de" data-icon="activity">低D/E（0.5以下）</button>
             <button class="preset" data-preset="high-dividend" data-icon="coins">高配当（3%以上）</button>
-            <button class="preset" data-preset="q-momentum" data-icon="trending-up">四半期モメンタム</button>
-            <button class="preset" data-preset="large" data-icon="landmark">大型（売上1兆以上）</button>
             <button class="preset" data-preset="realestate" data-icon="building">不動産保有</button>
-            <button class="preset" data-preset="re-nav" data-icon="target">不動産NAV割安</button>
-            <button class="preset" data-preset="value-growth" data-icon="sparkles">割安成長</button>
-            <button class="preset" data-preset="cf-positive" data-icon="activity">営業CF黒字</button>
-            <button class="preset" data-preset="quality" data-icon="award">高品質</button>
+            <button type="button" class="presets-toggle" id="screening-presets-more-btn" aria-expanded="false">もっと見る</button>
+            <div class="presets-more" id="screening-presets-more">
+              <button class="preset" data-preset="high-equity" data-icon="shield">高自己資本（50%以上）</button>
+              <button class="preset" data-preset="low-de" data-icon="activity">低D/E（0.5以下）</button>
+              <button class="preset" data-preset="q-momentum" data-icon="trending-up">四半期モメンタム</button>
+              <button class="preset" data-preset="large" data-icon="landmark">大型（売上1兆以上）</button>
+              <button class="preset" data-preset="re-nav" data-icon="target">不動産NAV割安</button>
+              <button class="preset" data-preset="value-growth" data-icon="sparkles">割安成長</button>
+              <button class="preset" data-preset="cf-positive" data-icon="activity">営業CF黒字</button>
+              <button class="preset" data-preset="quality" data-icon="award">高品質</button>
+            </div>
+          </div>
           </div>
         </div>
 
@@ -2099,7 +2146,7 @@
     </section>
 
     <!-- Disclosures & Calendar -->
-    <section id="disclosures" class="panel">
+    <section id="disclosures" class="panel" aria-hidden="true">
       <div class="card" style="margin-bottom:16px">
         <div class="card-header"><h2 data-icon="calendar">有報提出履歴（過去1年）</h2></div>
         <p class="subtitle" style="margin:0 0 12px">過去1年に提出された有報・四半期報告書（上場企業・提出日順）</p>
@@ -2122,7 +2169,7 @@
     </section>
 
     <!-- Search -->
-    <section id="search" class="panel">
+    <section id="search" class="panel" aria-hidden="true">
       <div class="card">
         <div class="card-header"><h2 data-icon="search">企業検索</h2></div>
         <form id="search-form" class="filters filters-search">
@@ -2158,7 +2205,7 @@
     </section>
 
     <!-- Compare workspace -->
-    <section id="compare" class="panel">
+    <section id="compare" class="panel" aria-hidden="true">
       <div class="card">
         <div class="card-header">
           <div>
@@ -2204,7 +2251,7 @@
     </section>
 
     <!-- Detail -->
-    <section id="detail" class="panel">
+    <section id="detail" class="panel" aria-hidden="true">
       <nav class="breadcrumb" id="detail-breadcrumb" aria-label="パンくず"></nav>
       <div class="compare-bar" id="compare-bar" style="display:none"></div>
       <div id="detail-loading" class="loading" style="display:none"><span class="spinner"></span>企業データを読み込んでいます…</div>
@@ -2270,7 +2317,9 @@
               <div class="profile-loading"><span class="spinner" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:8px"></span>読み込み中…</div>
             </div>
           </div>
+        </div>
 
+        <div class="detail-section" id="sec-analysis">
           <div class="media-insights-row" id="company-media-row" style="display:none">
           <div class="card section-card" id="company-news-card" style="display:none">
             <div class="section-head">
@@ -2301,50 +2350,6 @@
           </div>
           </div>
 
-          <div class="card section-card">
-            <div class="section-head">
-              <h2 data-icon="bar-chart">財務サマリー（年次）</h2>
-              <p class="section-lead">売上高と営業利益の推移です。詳細チャートは「年次財務」タブで確認できます。</p>
-            </div>
-          <div class="chart-box" style="margin-bottom:12px">
-            <h3 data-icon="bar-chart">売上高・営業利益の推移</h3>
-            <div class="chart-canvas-wrap tall"><canvas id="chart-revenue-profit"></canvas></div>
-            <div class="chart-caption">単位: 億円</div>
-          </div>
-          <button type="button" class="re-link-btn" data-goto-section="financials" style="margin-top:4px" data-icon-suffix="chevron">年次財務の詳細を見る</button>
-          </div>
-
-          <div class="card section-card" id="quarterly-highlight" style="display:none">
-            <div class="section-head">
-              <h2 data-icon="calendar">直近四半期の動き</h2>
-              <p class="section-lead">最新四半期の業績と前年比の変化です。</p>
-            </div>
-            <div id="quarterly-highlight-body"></div>
-            <button type="button" class="re-link-btn" data-goto-section="quarterly" style="margin-top:8px" data-icon-suffix="chevron">四半期の詳細を見る</button>
-          </div>
-
-          <div class="card re-overview-card section-card" id="re-overview-card" style="display:none">
-            <div class="section-head re-overview-head">
-              <div>
-                <h2 data-icon="building">保有不動産</h2>
-              </div>
-              <button type="button" class="re-link-btn" id="re-goto-tab" data-icon-suffix="chevron">すべて見る</button>
-            </div>
-            <div class="re-summary" id="re-overview-stats"></div>
-            <div class="chart-grid" style="margin-top:0">
-              <div>
-                <div class="filter-section-title" data-icon="map-pin">都道府県別（帳簿価額）</div>
-                <div class="re-pref-chart" id="re-overview-pref"></div>
-              </div>
-              <div>
-                <div class="filter-section-title" data-icon="building">主要物件 TOP5</div>
-                <div class="re-top-list" id="re-overview-top"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="detail-section" id="sec-analysis">
           <div class="card section-card">
             <div class="section-head">
               <h2 data-icon="activity">財務健全性・キャッシュフロー</h2>
@@ -2552,7 +2557,7 @@
 
     function buildHeroSubtitle(count) {
       const label = formatListedCountLabel(count);
-      return `約${label}社の上場企業について、有報・四半期の財務指標・不動産明細を収録。ニュースや検索トレンドとあわせてスクリーニング・分析できます。`;
+      return `約${label}社の上場企業の有報・四半期データ。銘柄を検索するか、下のランキングから探せます。`;
     }
 
     async function applyDataVolumeCopy() {
@@ -2942,8 +2947,11 @@
     function showTab(name) {
       if (name !== 'detail') lastTab = name;
       tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === name));
-      panels.forEach(p => p.classList.remove('active'));
-      document.getElementById(name).classList.add('active');
+      panels.forEach(p => {
+        const active = p.id === name;
+        p.classList.toggle('active', active);
+        p.setAttribute('aria-hidden', active ? 'false' : 'true');
+      });
       history.replaceState(null, '', name === 'detail' ? `#/company/${currentCode}` : `#/${name}`);
       sessionStorage.setItem('lastTab', name === 'detail' ? lastTab : name);
       if (name === 'screening' && !screeningLoaded) ensureScreeningLoaded();
@@ -2958,20 +2966,6 @@
     }
 
     document.querySelector('.logo').addEventListener('click', () => showTab('dashboard'));
-    document.querySelectorAll('.feature-chips .chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        const dest = chip.dataset.go || 'screening';
-        showTab(dest);
-        if (chip.dataset.dashView) {
-          applyDashView(chip.dataset.dashView);
-          requestAnimationFrame(() => scrollToAnchor('dash-top-anchor'));
-        } else if (chip.dataset.preset) {
-          applyPreset(chip.dataset.preset);
-        } else if (dest === 'screening') {
-          requestAnimationFrame(() => scrollToAnchor('screening-anchor'));
-        } else if (dest === 'search') ensureSearchLoaded(true);
-      });
-    });
     tabs.forEach(tab => tab.addEventListener('click', () => showTab(tab.dataset.tab)));
     document.getElementById('dash-screen-btn').addEventListener('click', () => showTab('screening'));
     document.querySelectorAll('.detail-tab').forEach(btn => {
@@ -3334,7 +3328,7 @@
 
       if (!re?.items?.length) {
         if (tabRe) tabRe.textContent = '不動産';
-        overviewCard.style.display = 'none';
+        if (overviewCard) overviewCard.style.display = 'none';
         document.getElementById('re-summary').innerHTML = '';
         document.getElementById('re-composition').innerHTML = '';
         document.getElementById('re-pref-chart').innerHTML = '';
@@ -3365,20 +3359,18 @@
       document.getElementById('re-sort').value = 'total_desc';
       applyReFilters();
 
-      overviewCard.style.display = 'block';
-      document.getElementById('re-overview-stats').innerHTML = renderReSummaryHtml(s, re.sync, ratio) + fyWarn;
-      renderPrefChart('re-overview-pref', re.by_prefecture, 5);
-      document.getElementById('re-overview-top').innerHTML = (re.top_properties || []).map((p, i) => `
-        <div class="re-top-item" data-goto-re>
-          <div style="display:flex;gap:10px;align-items:center">
-            <span class="rank">${i + 1}</span>
-            <div><div class="name">${p.facility_name}</div><div class="loc">${p.prefecture ?? ''} ${p.location}</div></div>
-          </div>
-          <span class="val">${formatMillionYen(p.total_book_value)}</span>
-        </div>`).join('');
-      document.querySelectorAll('[data-goto-re]').forEach(el => {
-        el.addEventListener('click', () => showDetailSection('realestate'));
-      });
+      if (overviewCard) {
+        overviewCard.style.display = 'block';
+        const stats = document.getElementById('re-overview-stats');
+        if (stats) stats.innerHTML = renderReSummaryHtml(s, re.sync, ratio) + fyWarn;
+        if (document.getElementById('re-overview-pref')) renderPrefChart('re-overview-pref', re.by_prefecture, 5);
+        const topEl = document.getElementById('re-overview-top');
+        if (topEl) {
+          topEl.innerHTML = (re.top_properties || []).map((p, i) => `
+            <div class="re-top-item"><span class="rank">${i + 1}</span><span class="name">${p.facility_name || '-'}</span><span class="val">${formatMillionYen(p.total_book_value_m)}</span></div>
+          `).join('');
+        }
+      }
     }
 
     function renderProfileBlock(title, text, id, collapsed = true) {
@@ -3589,7 +3581,7 @@
 
     function renderOverviewNav(re, qtr, fin) {
       const items = [
-        { section: 'analysis', label: '詳細分析', show: fin?.length },
+        { section: 'analysis', label: '詳細分析', show: true },
         { section: 'financials', label: '年次財務', show: fin?.length },
         { section: 'quarterly', label: '四半期', show: qtr?.items?.length },
         { section: 'realestate', label: '不動産', show: re?.items?.length },
@@ -3603,9 +3595,10 @@
     function renderQuarterlyHighlight(qtr, targetId) {
       const el = document.getElementById(targetId);
       if (!el) return;
+      const overviewCard = document.getElementById('quarterly-highlight');
       if (!qtr?.items?.length) {
-        if (targetId === 'quarterly-highlight-body') {
-          document.getElementById('quarterly-highlight').style.display = 'none';
+        if (targetId === 'quarterly-highlight-body' && overviewCard) {
+          overviewCard.style.display = 'none';
         }
         el.innerHTML = '';
         return;
@@ -3622,8 +3615,8 @@
             <span>営業利益YoY ${formatChg(q.operating_income_yoy)}</span>
           </div>
         </div>`;
-      if (targetId === 'quarterly-highlight-body') {
-        document.getElementById('quarterly-highlight').style.display = 'block';
+      if (targetId === 'quarterly-highlight-body' && overviewCard) {
+        overviewCard.style.display = 'block';
       }
     }
 
@@ -3753,10 +3746,27 @@
     function applyDashView(viewKey) {
       if (!DASH_VIEWS[viewKey]) return;
       dashState.view = viewKey;
+      const moreBtn = document.getElementById('dash-views-more-btn');
+      const more = document.getElementById('dash-views-more');
+      const activeInMore = more?.querySelector(`.dash-view[data-dash-view="${viewKey}"]`);
+      if (activeInMore && more && !more.classList.contains('open')) {
+        more.classList.add('open');
+        if (moreBtn) {
+          moreBtn.setAttribute('aria-expanded', 'true');
+          moreBtn.textContent = '閉じる';
+        }
+      }
       document.querySelectorAll('#dash-views .dash-view').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.dashView === viewKey);
       });
       loadDashList();
+    }
+
+    function setDashChartLoading(loading) {
+      const spinner = document.getElementById('dash-chart-loading');
+      const canvas = document.getElementById('dash-revenue-chart');
+      if (spinner) spinner.style.display = loading ? 'flex' : 'none';
+      if (canvas) canvas.style.display = loading ? 'none' : 'block';
     }
 
     function getDashViewConfig() {
@@ -3842,6 +3852,16 @@
 
     function applyPreset(name) {
       activePreset = name;
+      const moreBtn = document.getElementById('screening-presets-more-btn');
+      const more = document.getElementById('screening-presets-more');
+      const activeInMore = more?.querySelector(`.preset[data-preset="${name}"]`);
+      if (activeInMore && more && !more.classList.contains('open')) {
+        more.classList.add('open');
+        if (moreBtn) {
+          moreBtn.setAttribute('aria-expanded', 'true');
+          moreBtn.textContent = '閉じる';
+        }
+      }
       document.querySelectorAll('#presets .preset').forEach(p => p.classList.toggle('active', p.dataset.preset === name));
       const form = document.getElementById('screening-form');
       form.reset();
@@ -4540,6 +4560,7 @@
       const view = getDashViewConfig();
       body.innerHTML = renderSkeletonRows(9, 12);
       cards.innerHTML = '';
+      setDashChartLoading(true);
       if (meta) meta.textContent = '読み込み中…';
       const titleText = dashState.industry ? `${dashState.industry}（${view.title}）` : view.title;
       if (title) setHeadingIcon(title, view.icon || 'bar-chart', titleText);
@@ -4588,6 +4609,7 @@
           if (meta) meta.textContent = `${items.length}都道府県`;
           whenChartsReady(() => {
             const chartItems = items.slice(0, DASH_CHART_LIMIT);
+            setDashChartLoading(false);
             EdinetCharts.renderVerticalBarChart(
               'dash-revenue-chart',
               chartItems.map(i => i.prefecture),
@@ -4622,6 +4644,7 @@
           const chartItems = data.items.slice(0, DASH_CHART_LIMIT);
           const labels = chartItems.map(i => i.name.replace(/株式会社/g, '').trim().slice(0, 12));
           const values = chartItems.map(i => dashChartValue(i, view));
+          setDashChartLoading(false);
           EdinetCharts.renderVerticalBarChart('dash-revenue-chart', labels, values, {
             datasetLabel: view.chartTitle,
             formatValue: (v) => formatDashChartValue(v, view),
@@ -4632,6 +4655,7 @@
         bindRowClicks(cards);
         updateTableScrollHints();
       } catch {
+        setDashChartLoading(false);
         body.innerHTML = emptyRow(9, 'データ取得に失敗しました');
       }
     }
@@ -4906,11 +4930,15 @@
       }
     });
 
-    function updateBreadcrumb(companyName) {
-      const tabLabel = { dashboard: 'ダッシュボード', screening: 'スクリーニング', search: '企業検索' }[lastTab] || '一覧';
+    function updateBreadcrumb(companyName, industry) {
+      const tabLabel = { dashboard: 'ダッシュボード', screening: 'スクリーニング', search: '企業検索', compare: '銘柄比較', disclosures: '開示' }[lastTab] || '一覧';
       const el = document.getElementById('detail-breadcrumb');
+      const mid = industry
+        ? `<span class="breadcrumb-sep">/</span><span class="breadcrumb-mid">${industry}</span>`
+        : '';
       el.innerHTML = `
         <button type="button" class="breadcrumb-link" data-back-tab="${lastTab}">${tabLabel}</button>
+        ${mid}
         <span class="breadcrumb-sep">/</span>
         <span>${companyName}</span>`;
       el.querySelector('[data-back-tab]')?.addEventListener('click', () => showTab(lastTab));
@@ -4925,6 +4953,18 @@
       return '';
     }
 
+    const VERDICT_RATING_LABELS = {
+      '強い買い寄り': '注目ポイント多め',
+      '買い寄り': '注目ポイントあり',
+      '様子見': '中立',
+      '慎重': '要確認',
+      '注目ポイント多め': '注目ポイント多め',
+      '注目ポイントあり': '注目ポイントあり',
+      '中立': '中立',
+      '要確認': '要確認',
+    };
+    const VERDICT_POSITIVE = new Set(['注目ポイント多め', '注目ポイントあり', '強い買い寄り', '買い寄り']);
+
     function renderVerdictCard(verdict) {
       const card = document.getElementById('verdict-card');
       const body = document.getElementById('verdict-body');
@@ -4935,26 +4975,30 @@
       }
       card.style.display = 'block';
       card.classList.remove('verdict-positive', 'verdict-neutral', 'verdict-negative');
-      if (verdict.rating === '強い買い寄り' || verdict.rating === '買い寄り') {
+      const ratingLabel = VERDICT_RATING_LABELS[verdict.rating] || verdict.rating || 'チェックポイント';
+      if (VERDICT_POSITIVE.has(verdict.rating) || VERDICT_POSITIVE.has(ratingLabel)) {
         card.classList.add('verdict-positive');
-      } else if (verdict.rating === 'データ不足' || (verdict.bears?.length > 2 && !verdict.bulls?.length)) {
+      } else if (verdict.rating === 'データ不足' || ratingLabel === '要確認' || (verdict.bears?.length > 2 && !verdict.bulls?.length)) {
         card.classList.add('verdict-negative');
       } else {
         card.classList.add('verdict-neutral');
       }
-      const stars = renderStarRating(verdict.stars || 0);
+      const score = Math.max(0, Math.min(100, Number(verdict.score) || 0));
       const bears = (verdict.bears || []).filter((t) => !/データ信頼度|未取得|判断材料/.test(t));
       body.innerHTML = `
         <div class="verdict-head">
           <div>
-            <div class="verdict-rating">${verdict.rating}</div>
-            <div class="verdict-stars">${stars}</div>
+            <div class="verdict-rating">${ratingLabel}</div>
+            <div class="verdict-score" title="公開データから自動算出した相対スコア（投資助言ではありません）">
+              <span>相対スコア ${score}</span>
+              <span class="verdict-score-bar" aria-hidden="true"><span style="width:${score}%"></span></span>
+            </div>
           </div>
         </div>
-        <p class="verdict-summary">${verdict.summary}</p>
+        <p class="verdict-summary">${verdict.summary || ''}</p>
         <div class="verdict-columns">
           <div class="verdict-list bull">
-            <h4>${iconLabel('check-circle', '買い材料', 'sm')}</h4>
+            <h4>${iconLabel('check-circle', 'プラス材料', 'sm')}</h4>
             <ul>${(verdict.bulls || []).map(t => `<li>${t}</li>`).join('') || '<li>特になし</li>'}</ul>
           </div>
           <div class="verdict-list bear">
@@ -5466,7 +5510,7 @@
         const fin = data.financials;
         const latest = fin[0];
 
-        updateBreadcrumb(c.name);
+        updateBreadcrumb(c.name, c.industry);
 
         document.getElementById('detail-header').innerHTML = `
           <div class="detail-hero-layout">
@@ -5504,7 +5548,6 @@
         renderDataInsights({ latest, stock: s, re, qtr, benchmark: data.industry_benchmark });
         renderOverviewNav(re, qtr, fin);
         renderCompanyProfile(profile || data.profile, c);
-        renderQuarterlyHighlight(qtr, 'quarterly-highlight-body');
         renderQuarterlyHighlight(qtr, 'quarterly-tab-highlight');
         renderFinHighlight(latest);
 
@@ -5524,7 +5567,6 @@
         ]);
         whenChartsReady(() => {
           EdinetCharts.renderFromFinancials(fin, qtr?.items, {
-            combo: 'chart-revenue-profit',
             revenue: 'fin-chart-revenue',
             operating_income: 'fin-chart-opincome',
             net_income: 'fin-chart-netincome',
@@ -5691,6 +5733,30 @@
       });
       document.querySelectorAll('#dash-views .dash-view').forEach(btn => {
         btn.addEventListener('click', () => applyDashView(btn.dataset.dashView));
+      });
+      const bindPresetsMore = (btnId, moreId) => {
+        const btn = document.getElementById(btnId);
+        const more = document.getElementById(moreId);
+        if (!btn || !more) return;
+        btn.addEventListener('click', () => {
+          const open = more.classList.toggle('open');
+          btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+          btn.textContent = open ? '閉じる' : 'もっと見る';
+        });
+      };
+      bindPresetsMore('dash-views-more-btn', 'dash-views-more');
+      bindPresetsMore('screening-presets-more-btn', 'screening-presets-more');
+      const updatePresetsScrollHint = (scrollId) => {
+        const wrap = document.getElementById(scrollId);
+        const presets = wrap?.querySelector('.presets');
+        if (!wrap || !presets) return;
+        const can = presets.scrollWidth > presets.clientWidth + 8;
+        wrap.classList.toggle('can-scroll', can);
+      };
+      ['dash-views-scroll', 'screening-presets-scroll'].forEach(updatePresetsScrollHint);
+      window.addEventListener('resize', () => {
+        updatePresetsScrollHint('dash-views-scroll');
+        updatePresetsScrollHint('screening-presets-scroll');
       });
       document.getElementById('dash-industry-select')?.addEventListener('change', (e) => {
         applyDashIndustry(e.target.value);

@@ -47,8 +47,8 @@ def build_home_meta_description(listed_count: int) -> str:
 def build_home_hero_subtitle(listed_count: int) -> str:
     label = format_listed_count_label(listed_count)
     return (
-        f"約{label}社の上場企業について、有報・四半期の財務指標・不動産明細を収録。"
-        f"ニュースや検索トレンドとあわせてスクリーニング・分析できます。"
+        f"約{label}社の上場企業の有報・四半期データ。"
+        f"銘柄を検索するか、下のランキングから探せます。"
     )
 
 

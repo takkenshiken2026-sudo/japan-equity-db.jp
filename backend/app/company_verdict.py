@@ -25,7 +25,9 @@ BUY_RATING_RISKS = [
     "市場全体・金利・為替の影響で個別材料と無関係に株価が下落する可能性があります",
 ]
 
-BUY_RATINGS = frozenset({"強い買い寄り", "買い寄り"})
+# Positive-leaning labels (not investment advice). Used to attach extra risk copy.
+POSITIVE_RATINGS = frozenset({"注目ポイント多め", "注目ポイントあり"})
+BUY_RATINGS = POSITIVE_RATINGS  # backward-compatible alias
 
 
 def _pct(v: float | None, signed: bool = False) -> str | None:
@@ -57,11 +59,11 @@ def _trust_score(data_freshness: dict | None) -> int:
 
 
 def _merge_risk_factors(rating: str, bears: list[str]) -> tuple[list[str], list[str]]:
-    """銘柄固有リスクと、買い寄り系評価時に必ず示す一般リスクを返す。"""
+    """銘柄固有リスクと、ポジティブ寄り評価時に必ず示す一般リスクを返す。"""
     specific = list(bears)
     general = list(GENERAL_RISKS)
 
-    if rating in BUY_RATINGS:
+    if rating in POSITIVE_RATINGS:
         for item in BUY_RATING_RISKS:
             if item not in specific and len(specific) < 5:
                 specific.append(item)
@@ -216,16 +218,16 @@ def build_company_verdict(
 
     score = max(0, min(85, score))
     if score >= 72:
-        rating = "強い買い寄り"
+        rating = "注目ポイント多め"
         stars = 4
     elif score >= 58:
-        rating = "買い寄り"
+        rating = "注目ポイントあり"
         stars = 3
     elif score >= 45:
-        rating = "様子見"
+        rating = "中立"
         stars = 2
     else:
-        rating = "慎重"
+        rating = "要確認"
         stars = 1
 
     parts: list[str] = []
@@ -235,11 +237,13 @@ def build_company_verdict(
         parts.append(f"営業利益率{_pct(latest.operating_margin)}")
     if per is not None and is_sane_per(per):
         parts.append(f"PER {per:.1f}倍")
-    summary = f"【参考情報】{rating} — " + ("、".join(parts) if parts else "主要指標を確認してください")
+    summary = "【参考情報・投資助言ではありません】" + (
+        "、".join(parts) if parts else "主要指標を確認してください"
+    )
     if benchmark and benchmark.get("industry"):
         summary += f"（{benchmark['industry']}比較済み）"
-    if rating in BUY_RATINGS:
-        summary += "。好材料とあわせて下記リスクも必ず確認してください"
+    if rating in POSITIVE_RATINGS:
+        summary += "。プラス材料とあわせて下記リスクも必ず確認してください"
 
     bears_out, general_risks = _merge_risk_factors(rating, bears)
 

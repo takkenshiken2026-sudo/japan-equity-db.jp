@@ -43,8 +43,8 @@ def _build_meta_description(count: int) -> str:
 def _build_hero_subtitle(count: int) -> str:
     label = _listed_count_label(count)
     return (
-        f"約{label}社の上場企業について、有報・四半期の財務指標・不動産明細を収録。"
-        f"ニュースや検索トレンドとあわせてスクリーニング・分析できます。"
+        f"約{label}社の上場企業の有報・四半期データ。"
+        f"銘柄を検索するか、下のランキングから探せます。"
     )
 
 
