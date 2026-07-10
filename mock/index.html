@@ -1293,6 +1293,10 @@
     .theme-item span:first-child {
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
     }
+    .theme-item .theme-metric {
+      font-size: var(--fs-caption); color: var(--muted); font-weight: 600;
+      font-variant-numeric: tabular-nums; white-space: nowrap; flex-shrink: 0;
+    }
     .theme-item:hover { color: var(--text); }
     .theme-more { margin-top: auto; padding: 4px 8px; font-size: var(--fs-caption); width: 100%; }
     #weekly-themes-card.card { padding: 16px 18px; }
@@ -2943,6 +2947,37 @@
     function formatPer(v) {
       if (v == null || isNaN(v)) return '-';
       return `${Number(v).toFixed(1)}倍`;
+    }
+    function formatThemeItemMetric(themeId, item) {
+      switch (themeId) {
+        case 're_nav':
+          if (item.real_estate_nav_ratio != null) {
+            return `NAV ${(item.real_estate_nav_ratio * 100).toFixed(0)}%`;
+          }
+          break;
+        case 'value_growth': {
+          const parts = [];
+          const per = item.per_edinet ?? item.per;
+          if (per != null) parts.push(formatPer(per));
+          if (item.revenue_growth != null) parts.push(formatChg(item.revenue_growth));
+          if (parts.length) return parts.join(' ');
+          break;
+        }
+        case 'cf_positive':
+          if (item.operating_cf != null) return formatYen(item.operating_cf);
+          break;
+        case 'quality':
+          if (item.roe != null) return `ROE ${formatPct(item.roe)}`;
+          if (item.operating_margin != null) return formatPct(item.operating_margin);
+          break;
+      }
+      if (item.real_estate_nav_ratio != null) {
+        return `NAV ${(item.real_estate_nav_ratio * 100).toFixed(0)}%`;
+      }
+      if (item.revenue_growth != null) return formatChg(item.revenue_growth);
+      const per = item.per_edinet ?? item.per;
+      if (per != null) return formatPer(per);
+      return '';
     }
     function formatValuationPlain(item, kind = 'per') {
       const ed = kind === 'per' ? item.per_edinet : item.pbr_edinet;
@@ -4853,10 +4888,14 @@
               </div>
               <span class="theme-meta">${theme.count}社</span>
             </div>
-            ${(theme.items || []).slice(0, 5).map(item => `
+            ${(theme.items || []).slice(0, 5).map(item => {
+              const metric = formatThemeItemMetric(theme.id, item);
+              return `
               <div class="theme-item" data-code="${item.edinet_code}">
                 <span>${item.name.replace(/株式会社/g, '').trim()}</span>
-              </div>`).join('')}
+                ${metric ? `<span class="theme-metric">${metric}</span>` : ''}
+              </div>`;
+            }).join('')}
             <button type="button" class="secondary theme-more" data-preset="${theme.preset}">${iconLabelEnd('chevron', 'すべて見る', 'sm')}</button>
           </div>`;
         }).join('')}</div>`;
