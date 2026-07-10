@@ -1048,6 +1048,20 @@
     #dashboard .dash-trending-side .trending-rank-list {
       max-height: 220px;
     }
+    #dashboard .dash-trending-side .trending-rank-item {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      padding: 4px 0;
+    }
+    #dashboard .dash-trending-side .trending-rank-name {
+      font-size: var(--fs-caption);
+      font-weight: 600;
+    }
+    #dashboard .dash-trending-side .trending-rank-badge {
+      font-size: var(--fs-caption);
+      padding: 2px 6px;
+      white-space: nowrap;
+    }
     .feature-chips {
       display: flex; flex-wrap: nowrap; justify-content: center; align-items: center;
       gap: 10px; margin-top: 0; overflow-x: auto; padding-bottom: 2px;
@@ -4778,6 +4792,33 @@
       const searchPanel = document.getElementById('search-trending-panel');
       const trendCard = document.getElementById('trending-home-card');
       if (!searchEl || !newsEl) return;
+
+      const formatDayOverDayRate = (today, prior) => {
+        const t = today ?? 0;
+        const p = prior ?? 0;
+        if (p > 0) {
+          const pct = Math.round(((t - p) / p) * 1000) / 10;
+          return pct > 0 ? `+${pct}%` : `${pct}%`;
+        }
+        if (t > 0) return '—';
+        return '0%';
+      };
+
+      const formatSearchDayOverDayRate = (item, isMomentum) => {
+        if (isMomentum) {
+          const spike = item.spike ?? 0;
+          return spike > 0 ? `+${spike}%` : `${spike}%`;
+        }
+        const prior = item.prior_avg ?? 0;
+        const recent = item.recent_avg ?? 0;
+        if (prior > 0) {
+          const pct = Math.round(((recent - prior) / prior) * 1000) / 10;
+          return pct > 0 ? `+${pct}%` : `${pct}%`;
+        }
+        const spike = item.spike ?? 0;
+        return spike > 0 ? `+${spike}%` : `${spike}%`;
+      };
+
       try {
         const data = await api('/api/trending/home?limit=5');
         searchEl.classList.remove('trending-loading');
@@ -4793,49 +4834,26 @@
           searchPanel.classList.toggle('trending-panel--provisional', searchIsMomentum);
         }
 
-        const formatNewsDelta = (item) => {
-          const delta = item.delta ?? 0;
-          const today = item.today_count ?? item.article_count ?? 0;
-          if (delta > 0) return `+${delta}`;
-          if (delta < 0) return `${delta}`;
-          return `${today}件`;
-        };
+        const formatNewsDelta = (item) => formatDayOverDayRate(item.today_count ?? item.article_count, item.prior_count);
+        const formatSearchBadge = (item) => formatSearchDayOverDayRate(item, searchIsMomentum);
 
-        const formatSearchBadge = (item) => {
-          const spike = item.spike ?? 0;
-          if (searchIsMomentum) {
-            return spike > 0 ? `+${spike}%` : `${spike}%`;
-          }
-          return spike > 0 ? `+${spike}` : `${spike}`;
-        };
+        const renderTrendingItem = (item, rate, rateClass = 'trending-rank-badge') => `
+              <div class="trending-rank-item" data-code="${item.edinet_code}" role="button" tabindex="0">
+                <div class="trending-rank-name">${(item.name || '').replace(/株式会社/g, '').trim()}</div>
+                <span class="${rateClass}">${rate}</span>
+              </div>`;
 
         searchEl.innerHTML = searchItems.length
-          ? `<div class="trending-rank-list">${searchItems.map((item, i) => `
-              <div class="trending-rank-item" data-code="${item.edinet_code}" role="button" tabindex="0">
-                <span class="trending-rank-num">${i + 1}</span>
-                <div class="trending-rank-body">
-                  <div class="trending-rank-name">${(item.name || '').replace(/株式会社/g, '').trim()}</div>
-                  <div class="trending-rank-sub">${item.sec_code || '-'}</div>
-                </div>
-                <span class="trending-rank-badge">${formatSearchBadge(item)}</span>
-              </div>`).join('')}</div>`
+          ? `<div class="trending-rank-list">${searchItems.map((item) =>
+              renderTrendingItem(item, formatSearchBadge(item))
+            ).join('')}</div>`
           : `<p class="trending-empty">検索急上昇データを収集中です（Google トレンドは日次バッチで取得しています）。</p>`;
 
         newsEl.innerHTML = newsItems.length
-          ? `<div class="trending-rank-list">${newsItems.map((item, i) => {
+          ? `<div class="trending-rank-list">${newsItems.map((item) => {
               const delta = item.delta ?? 0;
               const badgeClass = delta < 0 ? 'trending-rank-badge trending-rank-badge--down' : 'trending-rank-badge';
-              const prior = item.prior_count ?? 0;
-              const today = item.today_count ?? item.article_count ?? 0;
-              return `
-              <div class="trending-rank-item" data-code="${item.edinet_code}" role="button" tabindex="0">
-                <span class="trending-rank-num">${i + 1}</span>
-                <div class="trending-rank-body">
-                  <div class="trending-rank-name">${(item.name || '').replace(/株式会社/g, '').trim()}</div>
-                  <div class="trending-rank-sub">${item.sec_code || '-'} · 今日${today}件 / 昨日${prior}件</div>
-                </div>
-                <span class="${badgeClass}">${formatNewsDelta(item)}</span>
-              </div>`;
+              return renderTrendingItem(item, formatNewsDelta(item), badgeClass);
             }).join('')}</div>`
           : `<p class="trending-empty">本日のニュース急上昇銘柄はありません。</p>`;
 
