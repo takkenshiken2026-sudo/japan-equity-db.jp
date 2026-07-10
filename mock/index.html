@@ -4831,7 +4831,6 @@
             ${(theme.items || []).slice(0, 5).map(item => `
               <div class="theme-item" data-code="${item.edinet_code}">
                 <span>${item.name.replace(/株式会社/g, '').trim()}</span>
-                <span class="muted">${item.real_estate_nav_ratio != null ? `NAV ${(item.real_estate_nav_ratio * 100).toFixed(0)}%` : item.revenue_growth != null ? formatChg(item.revenue_growth) : formatPer(item.per_edinet ?? item.per)}</span>
               </div>`).join('')}
             <button type="button" class="secondary theme-more" data-preset="${theme.preset}">${iconLabelEnd('chevron', 'すべて見る', 'sm')}</button>
           </div>`;
