@@ -1608,6 +1608,15 @@
       display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; min-height: 0;
     }
     .compare-workspace-chips:empty { display: none; }
+    .dash-compare-results {
+      padding: var(--space-4);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface2);
+    }
+    .dash-compare-results .card-header h2 {
+      padding-left: 0; border-left: none;
+    }
     .compare-add-btn {
       flex: 0 0 auto; width: 28px; height: 28px; padding: 0;
       border-radius: 50%; border: 1px solid var(--brand-100);
@@ -2093,7 +2102,41 @@
 
         <div class="compare-workspace-toolbar" id="dash-compare-toolbar" style="display:none;margin-bottom:var(--space-3)">
           <div class="compare-workspace-chips" id="dash-compare-chips"></div>
-          <button type="button" class="secondary" id="dash-open-compare-btn" style="display:none;padding:var(--space-2) var(--space-4);font-size:var(--fs-small);align-self:flex-start" data-icon="compare">比較画面を開く</button>
+          <button type="button" class="secondary" id="dash-open-compare-btn" style="display:none;padding:var(--space-2) var(--space-4);font-size:var(--fs-small);align-self:flex-start" data-icon="compare">比較結果を表示</button>
+        </div>
+
+        <div id="dash-compare-results" class="dash-compare-results" style="display:none;margin-bottom:var(--space-4)">
+          <div class="card-header" style="margin-bottom:var(--space-3)">
+            <div>
+              <h2 data-icon="compare" style="margin:0">銘柄比較</h2>
+              <span class="muted" style="font-size:var(--fs-small)">選択中の銘柄をこの場で比較</span>
+            </div>
+            <button type="button" class="secondary" id="dash-compare-hide-btn" style="padding:var(--space-2) var(--space-4);font-size:var(--fs-small)">閉じる</button>
+          </div>
+          <div id="dash-compare-empty" class="compare-empty">
+            比較する銘柄を2社以上追加してください。
+          </div>
+          <div id="dash-compare-body" style="display:none">
+            <div class="compare-columns" id="dash-compare-columns"></div>
+            <div class="compare-charts-grid">
+              <div class="chart-box">
+                <h3 data-icon="bar-chart" style="margin:0 0 var(--space-3);font-size:var(--fs-small);color:var(--text-secondary)">売上高推移</h3>
+                <div class="chart-canvas-wrap"><canvas id="dash-compare-chart-revenue"></canvas></div>
+              </div>
+              <div class="chart-box">
+                <h3 data-icon="percent" style="margin:0 0 var(--space-3);font-size:var(--fs-small);color:var(--text-secondary)">ROE推移</h3>
+                <div class="chart-canvas-wrap"><canvas id="dash-compare-chart-roe"></canvas></div>
+              </div>
+              <div class="chart-box">
+                <h3 data-icon="pie-chart" style="margin:0 0 var(--space-3);font-size:var(--fs-small);color:var(--text-secondary)">営業利益率推移</h3>
+                <div class="chart-canvas-wrap"><canvas id="dash-compare-chart-margin"></canvas></div>
+              </div>
+              <div class="chart-box">
+                <h3 data-icon="trending-up" style="margin:0 0 var(--space-3);font-size:var(--fs-small);color:var(--text-secondary)">株価推移（基準日=100）</h3>
+                <div class="chart-canvas-wrap"><canvas id="dash-compare-chart-price"></canvas></div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="filter-section dash-filters">
@@ -3227,7 +3270,7 @@
       if (name === 'disclosures') ensureDisclosuresLoaded();
       if (name === 'compare') {
         ensureComparePickerLoaded();
-        renderCompareWorkspace();
+        renderCompareWorkspace({ target: 'compare' });
       }
     }
     function scrollToAnchor(id) {
@@ -3253,7 +3296,8 @@
     });
     tabs.forEach(tab => tab.addEventListener('click', () => showTab(tab.dataset.tab)));
     document.getElementById('dash-screen-btn').addEventListener('click', () => showTab('screening'));
-    document.getElementById('dash-open-compare-btn')?.addEventListener('click', () => showTab('compare'));
+    document.getElementById('dash-open-compare-btn')?.addEventListener('click', () => showDashCompareResults());
+    document.getElementById('dash-compare-hide-btn')?.addEventListener('click', () => hideDashCompareResults());
     document.querySelectorAll('.detail-tab').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.detail-tab').forEach(b => b.classList.remove('active'));
@@ -4506,7 +4550,14 @@
         renderCompareWorkspaceChips();
         refreshCompareAddButtons();
         updateCompareMeta();
-        if (document.getElementById('compare')?.classList.contains('active')) renderCompareWorkspace();
+        if (!codes.length) hideDashCompareResults();
+        if (document.getElementById('compare')?.classList.contains('active')) {
+          renderCompareWorkspace({ target: 'compare' });
+        }
+        const dashResults = document.getElementById('dash-compare-results');
+        if (dashResults && dashResults.style.display !== 'none') {
+          renderCompareWorkspace({ target: 'dash' });
+        }
       },
       add(code) {
         const codes = this.load();
@@ -4736,10 +4787,27 @@
       }).catch(() => {});
     }
 
-    async function renderCompareWorkspace() {
+    function getCompareWorkspaceEls(target = 'compare') {
+      if (target === 'dash') {
+        return {
+          emptyEl: document.getElementById('dash-compare-empty'),
+          bodyEl: document.getElementById('dash-compare-body'),
+          columnsId: 'dash-compare-columns',
+          chartPrefix: 'dash-compare-chart',
+        };
+      }
+      return {
+        emptyEl: document.getElementById('compare-workspace-empty'),
+        bodyEl: document.getElementById('compare-workspace-body'),
+        columnsId: 'compare-columns',
+        chartPrefix: 'compare-chart',
+      };
+    }
+
+    async function renderCompareWorkspace(opts = {}) {
+      const target = opts.target || 'compare';
       const codes = compareStore.load();
-      const emptyEl = document.getElementById('compare-workspace-empty');
-      const bodyEl = document.getElementById('compare-workspace-body');
+      const { emptyEl, bodyEl, columnsId, chartPrefix } = getCompareWorkspaceEls(target);
       updateCompareMeta();
       renderCompareWorkspaceChips();
 
@@ -4760,16 +4828,30 @@
           codes.map((c) => api(`/api/companies/${c}/price-history?range=1y`).catch(() => ({ points: [] })))
         );
         const priceByCode = Object.fromEntries(codes.map((c, i) => [c, priceResults[i].points || []]));
-        renderCompareColumns(detail.items || []);
-        window.EdinetCharts?.renderCompareCharts(detail.items || [], priceByCode);
+        renderCompareColumns(detail.items || [], columnsId);
+        window.EdinetCharts?.renderCompareCharts(detail.items || [], priceByCode, { prefix: chartPrefix });
         setTimeout(() => window.EdinetCharts?.resizeAll?.(), 80);
       } finally {
         bodyEl.classList.remove('loading');
       }
     }
 
-    function renderCompareColumns(items) {
-      const el = document.getElementById('compare-columns');
+    async function showDashCompareResults() {
+      const panel = document.getElementById('dash-compare-results');
+      if (!panel) return;
+      panel.style.display = '';
+      decorateStaticIcons(panel);
+      await renderCompareWorkspace({ target: 'dash' });
+      requestAnimationFrame(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }
+
+    function hideDashCompareResults() {
+      const panel = document.getElementById('dash-compare-results');
+      if (panel) panel.style.display = 'none';
+    }
+
+    function renderCompareColumns(items, containerId = 'compare-columns') {
+      const el = document.getElementById(containerId);
       if (!el) return;
       el.style.setProperty('--compare-cols', String(Math.max(items.length, 1)));
       el.innerHTML = items.map((item, idx) => {
@@ -5456,7 +5538,7 @@
       {
         onPick(code) {
           compareStore.add(code);
-          if (compareStore.load().length >= 2) renderCompareWorkspace();
+          if (compareStore.load().length >= 2) renderCompareWorkspace({ target: 'compare' });
         },
       }
     );

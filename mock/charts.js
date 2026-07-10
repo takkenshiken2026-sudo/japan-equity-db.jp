@@ -956,8 +956,9 @@
     renderQuarterlyQoqChart('chart-q-qoq', qtrItems);
   }
 
-  function renderCompareCharts(items, priceByCode = {}) {
+  function renderCompareCharts(items, priceByCode = {}, opts = {}) {
     const COMPARE_COLORS = ['#0284c7', '#059669', '#d97706', '#dc2626'];
+    const prefix = opts.prefix || 'compare-chart';
     const fiscalLabel = (fye) => String(fye || '').slice(0, 7);
     const shortName = (item) => (item.name || '').replace(/株式会社/g, '').trim() || item.edinet_code;
 
@@ -983,13 +984,13 @@
     }
 
     const revenue = buildSeries('revenue');
-    renderMultiLineChart('compare-chart-revenue', revenue.labels, revenue.series, { yFmt: yenOku });
+    renderMultiLineChart(`${prefix}-revenue`, revenue.labels, revenue.series, { yFmt: yenOku });
 
     const roe = buildSeries('roe');
-    renderMultiLineChart('compare-chart-roe', roe.labels, roe.series, { yFmt: (v) => pct(v) });
+    renderMultiLineChart(`${prefix}-roe`, roe.labels, roe.series, { yFmt: (v) => pct(v) });
 
     const margin = buildSeries('operating_margin');
-    renderMultiLineChart('compare-chart-margin', margin.labels, margin.series, { yFmt: (v) => pct(v) });
+    renderMultiLineChart(`${prefix}-margin`, margin.labels, margin.series, { yFmt: (v) => pct(v) });
 
     const priceSeries = items.map((item, idx) => {
       const points = priceByCode[item.edinet_code] || [];
@@ -1004,13 +1005,13 @@
     }).filter(Boolean);
 
     if (!priceSeries.length) {
-      showEmptyChart('compare-chart-price', '株価データがありません');
+      showEmptyChart(`${prefix}-price`, '株価データがありません');
       return;
     }
     const maxLen = Math.max(...priceSeries.map((s) => s.data.length));
     const labels = priceSeries[0].labels.slice(-maxLen).map((d) => String(d).slice(5));
     renderMultiLineChart(
-      'compare-chart-price',
+      `${prefix}-price`,
       labels,
       priceSeries.map((s) => ({
         label: s.label,
