@@ -2930,7 +2930,7 @@
       'high-dividend': { min_dividend_yield_pct: '3', has_operating_cf: 'true', sort_by: 'dividend_yield', order: 'desc' },
       'q-momentum': { _special: 'q-momentum' },
     };
-    const DASH_TOP_LIMIT = 100;
+    const DASH_TOP_LIMIT = 50;
     const DASH_CHART_LIMIT = 30;
     const SEARCH_DEFAULT_LIMIT = 100;
     const DASH_INDUSTRY_CHIP_LIMIT = 14;
@@ -5965,13 +5965,25 @@
       try {
         await waitForStaticApi();
         if (STATIC_MODE && globalThis.staticApiReady) await globalThis.staticApiReady;
-        await applyDataVolumeCopy();
         engagementStore.touchSession();
-        await Promise.all([loadIndustries(), loadDashList(), loadHomeTrending(), loadWeeklyThemes(), renderCompareBar(), renderCompareWorkspaceChips(), renderEngagementHome()]);
-        loadPopularSearchSuggestions();
+        // トップの主要ブロックを先に描画（重い screening/catalog は触らない）
+        await Promise.all([
+          applyDataVolumeCopy(),
+          loadIndustries(),
+          loadDashList(),
+          loadHomeTrending(),
+          loadWeeklyThemes(),
+        ]);
         setStatus(true);
         handleHash();
         updateTableScrollHints();
+        // 比較バー・最近閲覧・人気検索は後回し
+        Promise.all([
+          renderCompareBar(),
+          renderCompareWorkspaceChips(),
+          renderEngagementHome(),
+        ]).catch(() => {});
+        loadPopularSearchSuggestions();
       } catch {
         setStatus(false, 'データを取得できません');
       }

@@ -159,6 +159,11 @@ def export_static_data(out_dir: Path) -> dict:
     )
     print(f"  screening index: {len(screening_items)} companies")
 
+    from build_dashboard_home import write_dashboard_home
+
+    dash_path = write_dashboard_home(data_dir, screening_items, limit=100)
+    print(f"  dashboard home: {dash_path}")
+
     codes = sorted({row["edinet_code"] for row in screening_items if row.get("edinet_code")})
     companies_dir = data_dir / "companies"
     companies_dir.mkdir(parents=True, exist_ok=True)

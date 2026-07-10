@@ -12,8 +12,22 @@
 
   let screeningIndex = null;
   let searchCatalog = null;
+  let dashboardHome = null;
   let globalsCache = {};
   const companyCache = new Map();
+
+  const DASH_VIEW_SIGNATURES = {
+    revenue: 'sort_by=revenue&order=desc',
+    roe: 'sort_by=roe&order=desc&min_roe=0.1',
+    margin: 'sort_by=operating_margin&order=desc',
+    growth: 'sort_by=revenue_growth&order=desc&min_revenue_growth=0.1',
+    net_income: 'sort_by=net_income&order=desc',
+    market_cap: 'sort_by=market_cap&order=desc',
+    low_per: 'sort_by=per&order=asc&max_per=20',
+    realestate: 'sort_by=real_estate_book&order=desc&has_real_estate=true',
+    net_cash: 'sort_by=net_cash&order=desc&has_net_cash=true',
+    dividend: 'sort_by=dividend_yield&order=desc&min_dividend_yield=0.03',
+  };
 
   function parsePath(path) {
     const q = path.indexOf('?');
@@ -53,6 +67,37 @@
       searchCatalog = await fetchJson('/data/search/catalog.json');
     }
     return searchCatalog;
+  }
+
+  async function loadDashboardHome() {
+    if (!dashboardHome) {
+      try {
+        dashboardHome = await fetchJson('/data/dashboard/home.json');
+      } catch {
+        dashboardHome = { views: {} };
+      }
+    }
+    return dashboardHome;
+  }
+
+  function matchDashboardView(params) {
+    if (params.get('industry')) return null;
+    if (params.get('listing') && params.get('listing') !== '上場') return null;
+    for (const [view, expected] of Object.entries(DASH_VIEW_SIGNATURES)) {
+      const exp = new URLSearchParams(expected);
+      let ok = true;
+      for (const [k, v] of exp.entries()) {
+        if ((params.get(k) || '') !== v) { ok = false; break; }
+      }
+      if (!ok) continue;
+      const allowed = new Set(['listing', 'limit', 'offset', ...exp.keys()]);
+      for (const [k, v] of params.entries()) {
+        if (!v) continue;
+        if (!allowed.has(k)) { ok = false; break; }
+      }
+      if (ok) return view;
+    }
+    return null;
   }
 
   async function loadCompanyBundle(code) {
@@ -335,6 +380,22 @@
       return loadGlobal('explore/prefectures.json');
     }
     if (pathname === '/api/screening') {
+      const viewKey = matchDashboardView(params);
+      if (viewKey) {
+        const home = await loadDashboardHome();
+        const cached = home.views && home.views[viewKey];
+        if (cached && Array.isArray(cached.items) && cached.items.length) {
+          const limit = Math.min(num(params.get('limit')) || 100, 500);
+          const offset = num(params.get('offset')) || 0;
+          const slice = cached.items.slice(offset, offset + limit);
+          return {
+            total: cached.total ?? cached.items.length,
+            items: slice,
+            count: slice.length,
+            offset,
+          };
+        }
+      }
       const idx = await loadScreeningIndex();
       const filtered = filterScreening(idx.items || [], params);
       return paginate(filtered, params);
@@ -386,9 +447,12 @@
   }
 
   global.staticApiFetch = staticApiFetch;
+  // トップ表示に必要な軽量JSONのみ先行ロード（screening/catalog は遅延）
   global.staticApiReady = Promise.all([
-    loadScreeningIndex().catch(() => { screeningIndex = { items: [] }; }),
-    loadSearchCatalog().catch(() => { searchCatalog = { items: [] }; }),
     fetchJson('/data/manifest.json').catch(() => null),
+    loadDashboardHome(),
+    loadGlobal('themes/weekly.json').catch(() => null),
+    loadGlobal('trending/home.json').catch(() => null),
+    loadGlobal('industries.json').catch(() => null),
   ]);
 })(typeof window !== 'undefined' ? window : globalThis);

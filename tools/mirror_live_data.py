@@ -55,6 +55,12 @@ def mirror_live_data(out_dir: Path, site_url: str, *, workers: int = 24) -> dict
 
     screening = json.loads((data_dir / "screening/index.json").read_text(encoding="utf-8"))
     codes = sorted({row["edinet_code"] for row in screening.get("items", []) if row.get("edinet_code")})
+
+    from build_dashboard_home import write_dashboard_home
+
+    dash_path = write_dashboard_home(data_dir, screening.get("items") or [], limit=100)
+    print(f"  dashboard home: {dash_path}")
+
     companies_dir = data_dir / "companies"
     companies_dir.mkdir(parents=True, exist_ok=True)
 
