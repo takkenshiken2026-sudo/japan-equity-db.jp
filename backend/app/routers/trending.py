@@ -8,11 +8,6 @@ from app.external_media.trending import list_news_trending, list_search_trending
 
 router = APIRouter(prefix="/trending", tags=["trending"])
 
-MEDIA_DISCLAIMER = (
-    "Google トレンド・Google News の公開データに基づく参考情報です。"
-    "検索関心度や報道件数は実際の投資判断材料として十分ではありません。"
-)
-
 
 @router.get("/home")
 def home_trending(
@@ -30,5 +25,4 @@ def home_trending(
         "search_trending": search_items,
         "search_trending_source": search_source,
         "news_trending": list_news_trending(db, limit=limit, days=days),
-        "disclaimer": MEDIA_DISCLAIMER,
     }

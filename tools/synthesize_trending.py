@@ -7,10 +7,6 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 JST = ZoneInfo("Asia/Tokyo")
-DISCLAIMER = (
-    "Google トレンド・Google News の公開データに基づく参考情報です。"
-    "検索関心度や報道件数は実際の投資判断材料として十分ではありません。"
-)
 
 
 def _jst_today() -> date:
@@ -67,7 +63,6 @@ def synthesize_trending_home(data_dir: Path, *, limit: int = 8) -> dict:
             "search_trending": [],
             "search_trending_source": "unavailable",
             "news_trending": [],
-            "disclaimer": DISCLAIMER,
             "synthesized": True,
         }
 
@@ -215,7 +210,6 @@ def synthesize_trending_home(data_dir: Path, *, limit: int = 8) -> dict:
         "search_trending": search_trending,
         "search_trending_source": search_source,
         "news_trending": news_trending,
-        "disclaimer": DISCLAIMER,
         "synthesized": True,
     }
 
