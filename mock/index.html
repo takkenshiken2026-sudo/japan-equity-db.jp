@@ -1800,7 +1800,6 @@
           <input id="global-search" type="search" placeholder="企業名・証券コードで検索…" autocomplete="off" />
           <div id="search-dropdown" class="search-dropdown"></div>
         </div>
-        <div id="conn-status" class="conn-status" hidden aria-live="polite"><span class="conn-dot"></span><span id="conn-label"></span></div>
       </div>
     </div>
   </header>
@@ -1834,7 +1833,6 @@
       <div class="card" id="weekly-themes-card" style="margin-bottom:0">
         <div class="card-header">
           <h2 data-icon="sparkles">今週のテーマ株</h2>
-          <span class="muted" style="font-size:var(--fs-small)">データから自動抽出</span>
         </div>
         <div id="weekly-themes" class="loading" style="padding:10px 0"><span class="spinner"></span>テーマ株を読み込み中…</div>
       </div>
@@ -1907,19 +1905,16 @@
               <div class="trending-panel" id="search-trending-panel">
                 <div class="trending-panel-head">
                   <h3 data-icon="trending-up">検索急上昇</h3>
-                  <span class="muted">Googleトレンド取得待ち</span>
                 </div>
                 <div id="search-trending-list" class="trending-loading"><span class="spinner"></span></div>
               </div>
               <div class="trending-panel" id="news-trending-panel">
                 <div class="trending-panel-head">
                   <h3 data-icon="newspaper">ニュース急上昇</h3>
-                  <span class="muted">Google News</span>
                 </div>
                 <div id="news-trending-list" class="trending-loading"><span class="spinner"></span></div>
               </div>
             </div>
-            <p class="trending-home-note" id="trending-home-note" hidden></p>
           </div>
         </aside>
       </div>
@@ -2096,7 +2091,7 @@
         <form id="search-form" class="filters filters-search">
           <div class="field">
             <label>キーワード</label>
-            <input name="q" id="search-q" placeholder="企業名 / 証券コード / EDINETコード" />
+            <input name="q" id="search-q" placeholder="企業名 / 証券コード" />
           </div>
           <div class="field">
             <label>上場区分</label>
@@ -2114,7 +2109,7 @@
         </form>
         <div class="search-list" id="search-list" style="margin-top:16px">
           <div class="search-hint" id="search-hint">
-            <strong>企業名・証券コード・EDINETコード</strong>で検索できます<br>
+            <strong>企業名・証券コード</strong>で検索できます<br>
             <span class="muted">2文字以上入力するか、上場企業一覧を表示します</span>
           </div>
         </div>
@@ -2210,7 +2205,6 @@
           <div class="card section-card" id="insights-card">
             <div class="section-head">
               <h2 data-icon="sparkles">この銘柄のポイント</h2>
-              <p class="section-lead">EDINET・株価・不動産データから読み取れる要点をまとめています。</p>
             </div>
             <div class="insight-grid" id="data-insights"></div>
             <nav class="overview-nav" id="overview-nav" aria-label="詳細セクションへ"></nav>
@@ -2219,7 +2213,6 @@
           <div class="card section-card">
             <div class="section-head">
               <h2 data-icon="trending-up">株価チャート</h2>
-              <p class="section-lead">Yahoo Finance から取得した日足終値。</p>
             </div>
             <div class="chart-range-btns" id="price-range-btns">
               <button type="button" data-range="1mo">1M</button>
@@ -2235,10 +2228,9 @@
           <div class="card company-profile-card section-card" id="company-profile-card">
             <div class="card-header">
               <h2 data-icon="building">企業概要・事業内容</h2>
-              <span class="muted" id="profile-source"></span>
             </div>
             <div id="profile-body">
-              <div class="profile-loading"><span class="spinner" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:8px"></span>有価証券報告書から概要を読み込んでいます…</div>
+              <div class="profile-loading"><span class="spinner" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:8px"></span>読み込み中…</div>
             </div>
           </div>
 
@@ -2246,12 +2238,11 @@
           <div class="card section-card" id="company-news-card" style="display:none">
             <div class="section-head">
               <h2 data-icon="newspaper">関連ニュース</h2>
-              <p class="section-lead" id="company-news-lead">Google News から取得した関連記事です。</p>
             </div>
             <div class="chart-box" id="company-news-chart-wrap" style="display:none;margin-bottom:12px">
               <h3 data-icon="newspaper">月別の掲載件数</h3>
               <div class="chart-canvas-wrap"><canvas id="company-news-chart"></canvas></div>
-              <div class="chart-caption" id="company-news-chart-caption">過去12か月の公開月別件数（RSS最大100件）</div>
+              <div class="chart-caption" id="company-news-chart-caption"></div>
             </div>
             <div id="company-news-feed" class="disclosure-feed news-feed"></div>
           </div>
@@ -2259,7 +2250,6 @@
           <div class="card section-card" id="company-trend-card" style="display:none">
             <div class="section-head">
               <h2 data-icon="trending-up">検索トレンド</h2>
-              <p class="section-lead" id="company-trend-lead">Google トレンドの検索関心度（相対値）です。</p>
             </div>
             <div class="chart-range-btns" id="company-trend-range-btns">
               <button type="button" class="secondary active" data-trend-days="7">7日</button>
@@ -2269,7 +2259,7 @@
             <div class="chart-box" style="margin-bottom:0">
               <h3 data-icon="trending-up">日別の検索関心度</h3>
               <div class="chart-canvas-wrap"><canvas id="company-trend-chart"></canvas></div>
-              <div class="chart-caption" id="company-trend-chart-caption">0〜100の相対指数（100＝期間内最大）</div>
+              <div class="chart-caption" id="company-trend-chart-caption"></div>
             </div>
           </div>
           </div>
@@ -2300,7 +2290,6 @@
             <div class="section-head re-overview-head">
               <div>
                 <h2 data-icon="building">保有不動産</h2>
-                <p class="section-lead">有価証券報告書から抽出した主要設備の概要です。</p>
               </div>
               <button type="button" class="re-link-btn" id="re-goto-tab" data-icon-suffix="chevron">すべて見る</button>
             </div>
@@ -2322,7 +2311,6 @@
           <div class="card section-card">
             <div class="section-head">
               <h2 data-icon="activity">財務健全性・キャッシュフロー</h2>
-              <p class="section-lead">有報データから算出したFCF、負債、配当などの詳細指標です。</p>
             </div>
             <div class="analysis-kpi" id="analysis-kpi"></div>
             <div class="chart-grid">
@@ -2343,7 +2331,6 @@
             <div class="chart-box" style="margin-top:12px">
               <h3 data-icon="tag">PER / PBR 推移（決算期末ベース）</h3>
               <div class="chart-canvas-wrap" style="height:280px"><canvas id="chart-valuation"></canvas></div>
-              <div class="chart-caption">EDINET の EPS/BPS と期末近傍株価から算出</div>
             </div>
             <div class="chart-box" style="margin-top:12px"><h3 data-icon="percent">配当利回り推移（決算期末株価ベース）</h3><div class="chart-canvas-wrap"><canvas id="chart-dividend-yield"></canvas></div></div>
           </div>
@@ -2376,7 +2363,6 @@
         <div class="detail-section" id="sec-financials">
           <div class="card">
             <div class="card-header"><h2 data-icon="bar-chart">年次財務（直近12期）</h2></div>
-            <p class="section-lead" style="margin:-8px 0 16px">有価証券報告書の連結・単体財務から抽出した年次データです。上段が直近期です。</p>
             <div id="fin-highlight"></div>
             <div class="chart-grid" style="margin-bottom:16px">
               <div class="chart-box"><h3 data-icon="bar-chart">売上高推移</h3><div class="chart-canvas-wrap"><canvas id="fin-chart-revenue"></canvas></div></div>
@@ -2426,7 +2412,7 @@
         <div class="detail-section" id="sec-quarterly">
           <div class="card">
             <div class="card-header"><h2 data-icon="calendar">四半期業績</h2><span class="muted" id="quarterly-meta"></span></div>
-            <p class="section-lead" style="margin:-8px 0 16px">四半期報告書ベースの累計・単期売上と前年比（YoY）・前四半期比（QoQ）です。</p>
+            <p class="section-lead" style="margin:-8px 0 16px">累計・単期売上と前年比（YoY）・前四半期比（QoQ）です。</p>
             <div id="quarterly-tab-highlight"></div>
             <div class="chart-grid" style="margin-bottom:16px">
               <div class="chart-box"><h3 data-icon="trending-up">四半期売上 YoY</h3><div class="chart-canvas-wrap"><canvas id="qtab-chart-yoy"></canvas></div></div>
@@ -2455,7 +2441,7 @@
               <h2 data-icon="building">保有不動産（主要設備の状況）</h2>
               <span class="muted" id="re-meta"></span>
             </div>
-            <p class="section-lead" style="margin:-8px 0 16px">有価証券報告書「主要設備の状況」から抽出した物件明細です。帳簿価額は百万円単位で記載されています。</p>
+            <p class="section-lead" style="margin:-8px 0 16px">帳簿価額は百万円単位で記載されています。</p>
             <div class="re-summary" id="re-summary"></div>
             <div class="re-comp" id="re-composition"></div>
             <div id="re-by-section" class="re-section-grid" style="margin-bottom:16px"></div>
@@ -2499,7 +2485,6 @@
         <div class="detail-section" id="sec-filings">
           <div class="card">
             <div class="card-header"><h2 data-icon="file">提出書類</h2></div>
-            <p class="section-lead" style="margin:-8px 0 16px">EDINETに提出された有価証券報告書・四半期報告書などの一覧です。</p>
             <div class="table-wrap">
               <table>
                 <thead><tr><th>書類</th><th>期間</th><th>提出日</th><th>形式</th></tr></thead>
@@ -2514,7 +2499,7 @@
 
   <footer>
     <div class="site-footer-inner">
-      <p class="footer-source">株チェック — データソース: EDINET / Yahoo Finance · <a href="/industries">業種一覧</a> · <a href="/disclaimer">免責事項</a></p>
+      <p class="footer-source">株チェック · <a href="/industries">業種一覧</a> · <a href="/disclaimer">免責事項</a></p>
     </div>
   </footer>
 
@@ -2966,9 +2951,8 @@
       if (v == null || isNaN(v)) return '-';
       return formatPer(v);
     }
-    function valuationSource(item, kind = 'per') {
-      if (kind === 'per') return item.per_edinet != null ? '有報EPS' : (item.per != null ? '株価ベース' : '');
-      return item.pbr_edinet != null ? '有報BPS' : (item.pbr != null ? '株価ベース' : '');
+    function valuationSource() {
+      return '';
     }
     function formatValuationCell(item, kind = 'per', { detail = false } = {}) {
       const ed = kind === 'per' ? item.per_edinet : item.pbr_edinet;
@@ -3123,9 +3107,8 @@
       svg.innerHTML = slices.join('') + sliceLabels.join('') + center + legend;
     }
 
-    function renderReFyWarning(reFye, financialFye) {
-      if (!reFye || !financialFye || reFye === financialFye) return '';
-      return `<div class="freshness-banner warn">不動産データの決算期（${reFye}）は財務の直近期（${financialFye}）と異なります</div>`;
+    function renderReFyWarning() {
+      return '';
     }
 
     function renderReSummaryHtml(summary, sync, assetsRatio) {
@@ -3227,7 +3210,7 @@
         document.getElementById('re-composition-chart').innerHTML = '';
         document.getElementById('re-meta').textContent = '';
         document.getElementById('re-by-section').innerHTML = '';
-        document.getElementById('detail-realestate').innerHTML = emptyRow(9, '不動産明細なし（有報XBRLに主要設備の記載がない場合があります）');
+        document.getElementById('detail-realestate').innerHTML = emptyRow(9, '不動産明細なし');
         document.getElementById('re-filter-count').textContent = '';
         return;
       }
@@ -3530,23 +3513,16 @@
 
     function renderCompanyProfile(profile, company) {
       const el = document.getElementById('profile-body');
-      const sourceEl = document.getElementById('profile-source');
       if (!profile) {
         el.innerHTML = '<p class="muted">企業概要を取得できませんでした。</p>';
-        sourceEl.textContent = '';
         return;
       }
-      sourceEl.textContent = profile.source === 'edinet'
-        ? `有報 ${profile.fiscal_year_end ?? ''}`
-        : '基本情報';
 
       const facts = [
         ['業種', company.industry],
         ['所在地', company.location],
         ['上場区分', company.listing_status],
         ['決算期', company.fiscal_year_end],
-        ['EDINET', company.edinet_code],
-        ['法人番号', company.jcn],
         ['従業員数', profile.employee_count ? `${formatNum(profile.employee_count, 0)}人` : null],
         ['資本金', profile.capital_stock_m ? formatBookValueM(profile.capital_stock_m) : null],
         ['発行済株式', profile.issued_shares],
@@ -3587,18 +3563,7 @@
       return res.json();
     }
 
-    function setStatus(ok, msg) {
-      const el = document.getElementById('conn-status');
-      if (!el) return;
-      if (ok) {
-        el.className = 'conn-status';
-        el.hidden = true;
-        return;
-      }
-      el.hidden = false;
-      el.className = 'conn-status err is-visible';
-      document.getElementById('conn-label').textContent = msg || 'データを取得できません';
-    }
+    function setStatus() {}
 
     function whenChartsReady(fn) {
       (function wait() {
@@ -4063,7 +4028,7 @@
       }
       bar.style.display = 'flex';
       bar.innerHTML = `
-        <span class="ico-label" style="font-size:var(--fs-small);font-weight:600;color:var(--text-secondary)">${icon('compare', 'sm')}<span>${codes.length}社を比較リストに追加中</span></span>
+        <span class="ico-label" style="font-size:var(--fs-small);font-weight:600;color:var(--text-secondary)">${icon('compare', 'sm')}<span>${codes.length}社を比較</span></span>
         <button type="button" class="secondary" id="compare-open-btn" style="padding:6px 12px;font-size:var(--fs-small);margin-left:auto">比較画面を開く</button>
         <button type="button" class="secondary" id="compare-clear-btn" style="padding:6px 12px;font-size:var(--fs-small)">クリア</button>`;
       document.getElementById('compare-clear-btn')?.addEventListener('click', () => compareStore.clear());
@@ -4394,15 +4359,7 @@
       if (index >= 0 && items[index]) items[index].scrollIntoView({ block: 'nearest' });
     }
 
-    function screeningNoticeFor(params, total) {
-      if (params.min_real_estate_nav_ratio || params.sort_by === 'real_estate_nav') {
-        if (!total) {
-          return '不動産NAV条件に一致する銘柄がありません。時価総額は株価×発行株式数で算出しています。株価データの更新をお待ちください。';
-        }
-      }
-      if (params.sort_by === 'market_cap' && total === 0) {
-        return '時価総額データがある銘柄が見つかりません。';
-      }
+    function screeningNoticeFor() {
       return '';
     }
 
@@ -4413,7 +4370,7 @@
         await loadScreening(getFormParams());
         setStatus(true);
       } catch {
-        document.getElementById('screening-error').textContent = 'データ取得に失敗しました。サーバーが起動しているか確認してください。';
+        document.getElementById('screening-error').textContent = 'データ取得に失敗しました。';
         setStatus(false, 'データを取得できません');
       }
     }
@@ -4747,26 +4704,8 @@
       return String(s).slice(0, 16).replace('T', ' ');
     }
 
-    function renderTrustBadges(fresh, verdict) {
-      if (!fresh) return '';
-      const f = fresh.financial || {};
-      const parseOk = !f.parse_version || !f.parse_version_current || f.parse_version >= f.parse_version_current;
-      const badges = [
-        { lbl: '営業CF', ok: !!f.has_operating_cf },
-        { lbl: '財務解析', ok: parseOk },
-        { lbl: '四半期', ok: (fresh.quarterly?.row_count || 0) > 0 },
-        { lbl: '株価', ok: !!fresh.stock?.updated_at },
-        { lbl: '不動産', ok: fresh.real_estate?.parse_status === 'ok' },
-      ].filter(b => b.lbl !== '不動産' || fresh.real_estate);
-      const trust = verdict?.trust_score;
-      const trustHtml = trust != null
-        ? `<span class="trust-score-badge ${trust >= 70 ? 'ok' : 'warn'}">データ信頼度 ${trust}%</span>`
-        : '';
-      if (!badges.length && !trustHtml) return '';
-      return `<div class="trust-meta-row">${trustHtml}<div class="trust-badges">${badges.map(b => {
-        const cls = b.ok ? 'ok' : 'miss';
-        return `<span class="trust-badge ${cls}">${b.lbl}${b.ok ? '' : '（未取得）'}</span>`;
-      }).join('')}</div></div>`;
+    function renderTrustBadges() {
+      return '';
     }
 
     function renderVerdictCard(verdict) {
@@ -4787,38 +4726,35 @@
         card.classList.add('verdict-neutral');
       }
       const stars = renderStarRating(verdict.stars || 0);
-      const isBuyish = verdict.rating === '強い買い寄り' || verdict.rating === '買い寄り';
+      const bears = (verdict.bears || []).filter((t) => !/データ信頼度|未取得|判断材料/.test(t));
       body.innerHTML = `
         <div class="verdict-head">
           <div>
-            <div class="verdict-rating">${verdict.rating}${isBuyish ? ' <span style="font-size:var(--fs-caption);font-weight:600;color:var(--muted)">（参考評価）</span>' : ''}</div>
+            <div class="verdict-rating">${verdict.rating}</div>
             <div class="verdict-stars">${stars}</div>
           </div>
-          <div class="verdict-score">${verdict.trust_score != null ? `データ信頼度 ${verdict.trust_score}%` : '公開データに基づく参考評価'}</div>
         </div>
         <p class="verdict-summary">${verdict.summary}</p>
         <div class="verdict-columns">
           <div class="verdict-list bull">
-            <h4>${iconLabel('check-circle', '買い材料（Bull）', 'sm')}</h4>
+            <h4>${iconLabel('check-circle', '買い材料', 'sm')}</h4>
             <ul>${(verdict.bulls || []).map(t => `<li>${t}</li>`).join('') || '<li>特になし</li>'}</ul>
           </div>
           <div class="verdict-list bear">
-            <h4>${iconLabel('x-circle', 'リスク・懸念（Bear）', 'sm')}</h4>
-            <ul>${(verdict.bears || []).map(t => `<li>${t}</li>`).join('') || '<li>銘柄固有の懸念は限定的です</li>'}</ul>
+            <h4>${iconLabel('x-circle', 'リスク・懸念', 'sm')}</h4>
+            <ul>${bears.map(t => `<li>${t}</li>`).join('') || '<li>銘柄固有の懸念は限定的です</li>'}</ul>
           </div>
         </div>
         ${verdict.general_risks?.length ? `
         <div class="verdict-general-risks">
           <h4>${iconLabel('alert', '一般的なリスク', 'sm')}</h4>
           <ul>${verdict.general_risks.map(t => `<li>${t}</li>`).join('')}</ul>
-        </div>` : ''}
-        ${verdict.disclaimer ? `<p class="verdict-disclaimer">${verdict.disclaimer} <a href="/disclaimer">詳細</a></p>` : ''}`;
+        </div>` : ''}`;
     }
 
     async function loadHomeTrending() {
       const searchEl = document.getElementById('search-trending-list');
       const newsEl = document.getElementById('news-trending-list');
-      const noteEl = document.getElementById('trending-home-note');
       const searchPanel = document.getElementById('search-trending-panel');
       const trendCard = document.getElementById('trending-home-card');
       if (!searchEl || !newsEl) return;
@@ -4855,17 +4791,12 @@
         newsEl.classList.remove('trending-loading');
         const searchItems = data.search_trending || [];
         const newsItems = data.news_trending || [];
-        const searchSource = data.search_trending_source || 'google_trends';
-        const searchIsMomentum = searchSource === 'news_momentum';
 
         if (trendCard) trendCard.style.display = '';
-        if (searchPanel) {
-          searchPanel.hidden = false;
-          searchPanel.classList.toggle('trending-panel--provisional', searchIsMomentum);
-        }
+        if (searchPanel) searchPanel.hidden = false;
 
         const formatNewsDelta = (item) => formatDayOverDayRate(item.today_count ?? item.article_count, item.prior_count);
-        const formatSearchBadge = (item) => formatSearchDayOverDayRate(item, searchIsMomentum);
+        const formatSearchBadge = (item) => formatSearchDayOverDayRate(item, false);
 
         const renderTrendingItem = (item, rate, rateClass = 'trending-rank-badge') => `
               <div class="trending-rank-item" data-code="${item.edinet_code}" role="button" tabindex="0">
@@ -4877,7 +4808,7 @@
           ? `<div class="trending-rank-list">${searchItems.map((item) =>
               renderTrendingItem(item, formatSearchBadge(item))
             ).join('')}</div>`
-          : `<p class="trending-empty">検索急上昇データを収集中です（Google トレンドは日次バッチで取得しています）。</p>`;
+          : `<p class="trending-empty">現在、検索急上昇銘柄はありません。</p>`;
 
         newsEl.innerHTML = newsItems.length
           ? `<div class="trending-rank-list">${newsItems.map((item) => {
@@ -4894,11 +4825,6 @@
           });
         });
 
-        if (noteEl) {
-          const showNote = (searchItems.length || newsItems.length) && data.disclaimer;
-          noteEl.hidden = !showNote;
-          noteEl.textContent = showNote ? data.disclaimer : '';
-        }
         decorateStaticIcons(trendCard);
       } catch (e) {
         searchEl.classList.remove('trending-loading');
@@ -4917,7 +4843,7 @@
         const data = await api('/api/themes/weekly?limit=5');
         el.classList.remove('loading');
         el.innerHTML = `<div class="theme-weekly-grid">${(data.themes || []).filter(t => t.id !== 'high_roe').slice(0, 4).map(theme => {
-          const desc = `${theme.description || ''}${theme.id === 're_nav' && !theme.count ? '（時価総額データ更新後に表示）' : ''}`;
+          const desc = theme.description || '';
           return `
           <div class="theme-box">
             <div class="theme-box-head">
@@ -4933,8 +4859,7 @@
               </div>`).join('')}
             <button type="button" class="secondary theme-more" data-preset="${theme.preset}">${iconLabelEnd('chevron', 'すべて見る', 'sm')}</button>
           </div>`;
-        }).join('')}</div>
-        ${data.disclaimer ? `<p class="verdict-disclaimer" style="margin-top:12px">${data.disclaimer}</p>` : ''}`;
+        }).join('')}</div>`;
         el.querySelectorAll('[data-code]').forEach(node => {
           node.addEventListener('click', () => loadDetail(node.dataset.code));
         });
@@ -4950,51 +4875,15 @@
       }
     }
 
-    function renderDataFreshness(fresh, { annualFye, verdict } = {}) {
-      if (!fresh) return '';
-      const f = fresh.financial || {};
-      const stockDays = daysSince(fresh.stock?.updated_at);
-      const finDays = daysSince(f.submit_date_time);
-      const qEnd = fresh.quarterly?.latest_period_end;
-      const warnings = [];
-      if (stockDays != null && stockDays > 7) warnings.push(`株価は${stockDays}日前のデータです`);
-      if (finDays != null && finDays > 400) warnings.push(`有報提出から${finDays}日経過しています`);
-      if (!fresh.quarterly?.row_count) warnings.push('四半期データがありません');
-      else if (annualFye && qEnd && String(qEnd) < String(annualFye)) {
-        warnings.push(`四半期（${qEnd}）が年次直近期（${annualFye}）より古いです`);
-      }
-      if (f.has_operating_cf === false) warnings.push('営業CFデータが未取得です');
-      if (f.parse_version && f.parse_version_current && f.parse_version < f.parse_version_current) {
-        warnings.push(`財務データが旧版（v${f.parse_version}→v${f.parse_version_current}更新待ち）`);
-      }
-      if (verdict?.trust_score != null && verdict.trust_score < 70) {
-        warnings.push(`データ信頼度${verdict.trust_score}%（追加確認推奨）`);
-      }
-      const parseLabel = f.parse_version && f.parse_version_current
-        ? (f.parse_version >= f.parse_version_current ? `v${f.parse_version}` : `v${f.parse_version}→v${f.parse_version_current}`)
-        : '-';
-      const items = [
-        { lbl: '決算期', val: f.fiscal_year_end || '-', warn: false },
-        { lbl: '有報提出日', val: f.submit_date_time ? formatDateTime(f.submit_date_time) : '-', warn: finDays != null && finDays > 400 },
-        { lbl: '最新四半期', val: qEnd || '-', warn: annualFye && qEnd && String(qEnd) < String(annualFye) },
-        { lbl: '株価更新', val: fresh.stock?.updated_at ? formatDateTime(fresh.stock.updated_at) : '-', warn: stockDays != null && stockDays > 7 },
-        { lbl: '財務解析版', val: parseLabel, warn: f.parse_version && f.parse_version_current && f.parse_version < f.parse_version_current },
-        { lbl: '営業CF', val: f.has_operating_cf ? 'あり' : '未取得', warn: !f.has_operating_cf },
-      ];
-      return `${warnings.length ? `<div class="freshness-banner warn">${icon('alert', 'sm')}<span>${warnings.join(' · ')}</span></div>` : ''}
-        <div class="freshness-grid">${items.map(it => `
-        <div class="freshness-item${it.warn ? ' warn' : ''}">
-          <div class="lbl">${it.lbl}</div>
-          <div class="val">${it.val}</div>
-        </div>`).join('')}</div>`;
+    function renderDataFreshness() {
+      return '';
     }
 
     function renderDocLinks(f) {
       const links = [];
-      if (f.viewer_url) links.push(`<a href="${f.viewer_url}" target="_blank" rel="noopener">EDINET</a>`);
+      if (f.viewer_url) links.push(`<a href="${f.viewer_url}" target="_blank" rel="noopener">閲覧</a>`);
       if (f.pdf_url) links.push(`<a href="${f.pdf_url}" target="_blank" rel="noopener">PDF</a>`);
-      if (f.xbrl_url) links.push(`<a href="${f.xbrl_url}" target="_blank" rel="noopener">XBRL</a>`);
-      if (!links.length) return f.has_pdf ? '<span class="badge amber">PDF</span>' : (f.has_xbrl ? '<span class="badge blue">XBRL</span>' : '-');
+      if (!links.length) return f.has_pdf ? '<span class="badge amber">PDF</span>' : '-';
       return `<div class="doc-links">${links.join('')}</div>`;
     }
 
@@ -5069,13 +4958,12 @@
     async function loadCompanyNews(code, dataPromise = null) {
       const card = document.getElementById('company-news-card');
       const feed = document.getElementById('company-news-feed');
-      const lead = document.getElementById('company-news-lead');
       const chartWrap = document.getElementById('company-news-chart-wrap');
       const chartCaption = document.getElementById('company-news-chart-caption');
       if (!card || !feed) return;
       card.style.display = 'block';
       if (chartWrap) chartWrap.style.display = 'none';
-      feed.innerHTML = `<div class="profile-loading">${icon('clock', 'sm')}ニュースを読み込んでいます…</div>`;
+      feed.innerHTML = `<div class="profile-loading">${icon('clock', 'sm')}読み込み中…</div>`;
       syncMediaRowVisibility();
       try {
         const data = dataPromise ? await dataPromise : await api(`/api/companies/${code}/news?limit=8`);
@@ -5083,23 +4971,10 @@
         const timeline = data.timeline || [];
         const hasTimeline = timeline.some(point => point.count > 0);
         if (!items.length && !hasTimeline) {
-          if (data.refreshing && lead) {
-            lead.textContent = 'ニュースをバックグラウンドで取得中です。少し待ってから再読み込みしてください。';
-            card.style.display = 'block';
-            feed.innerHTML = '';
-            syncMediaRowVisibility();
-            return;
-          }
           card.style.display = 'none';
           feed.innerHTML = '';
           syncMediaRowVisibility();
           return;
-        }
-        if (lead) {
-          const when = data.fetched_at ? formatDateTime(data.fetched_at) : '';
-          const total = data.rss_total != null ? `${data.rss_total}件` : '';
-          const pending = data.refreshing ? ' · 更新取得中' : '';
-          lead.textContent = `Google News（${when || '自動取得'}）· 検索: ${data.query || ''}${total ? ` · ${total}` : ''}${pending}`;
         }
         if (chartWrap && hasTimeline && globalThis.EdinetCharts?.renderVerticalBarChart) {
           const labels = timeline.map(point => point.label);
@@ -5110,7 +4985,7 @@
           });
           if (chartCaption) {
             const sum = values.reduce((acc, v) => acc + (v || 0), 0);
-            chartCaption.textContent = `過去12か月で ${sum}件（RSSから最大${data.rss_total ?? 100}件を集計）`;
+            chartCaption.textContent = sum ? `過去12か月で ${sum}件` : '';
           }
           chartWrap.style.display = 'block';
         } else if (chartWrap) {
@@ -5143,11 +5018,9 @@
       currentTrendCode = code;
       currentTrendDays = days;
       const card = document.getElementById('company-trend-card');
-      const lead = document.getElementById('company-trend-lead');
       const caption = document.getElementById('company-trend-chart-caption');
       if (!card) return;
       card.style.display = 'block';
-      if (lead) lead.textContent = '検索トレンドを読み込んでいます…';
       syncMediaRowVisibility();
       try {
         const data = dataPromise
@@ -5155,20 +5028,6 @@
           : await api(`/api/companies/${code}/search-trend?days=${days}`);
         const points = data.points || [];
         if (!points.length) {
-          if (data.error === 'rate_limited') {
-            if (lead) lead.textContent = 'Googleトレンドの取得制限中です。1時間ほど待ってから再度お試しください。';
-            card.style.display = 'block';
-            decorateStaticIcons(card);
-            syncMediaRowVisibility();
-            return;
-          }
-          if (data.refreshing && lead) {
-            lead.textContent = '検索トレンドをバックグラウンドで取得中です。少し待ってから再読み込みしてください。';
-            card.style.display = 'block';
-            decorateStaticIcons(card);
-            syncMediaRowVisibility();
-            return;
-          }
           card.style.display = 'none';
           syncMediaRowVisibility();
           return;
@@ -5176,20 +5035,13 @@
         document.querySelectorAll('#company-trend-range-btns [data-trend-days]').forEach((btn) => {
           btn.classList.toggle('active', Number(btn.dataset.trendDays) === data.days);
         });
-        if (lead) {
-          const when = data.fetched_at ? formatDateTime(data.fetched_at) : '';
-          const stale = data.stale ? ' · キャッシュ表示' : '';
-          const err = data.error === 'rate_limited' ? ' · 取得制限のためキャッシュ' : '';
-          const pending = data.refreshing ? ' · 更新取得中' : '';
-          lead.textContent = `「${data.keyword}」· 日本 · 過去${data.days}日 · ${when || '自動取得'}${stale}${err}${pending}`;
-        }
         if (globalThis.EdinetCharts?.renderSearchTrendChart) {
           EdinetCharts.renderSearchTrendChart('company-trend-chart', points, {
             datasetLabel: data.keyword,
           });
         }
         if (caption && data.average != null) {
-          caption.textContent = `平均 ${data.average} · ピーク ${data.peak ?? '-'}（0〜100の相対指数。100＝期間内の最大検索量）`;
+          caption.textContent = data.peak != null ? `平均 ${data.average} · ピーク ${data.peak}` : '';
         }
         card.style.display = 'block';
         decorateStaticIcons(card);
@@ -5385,7 +5237,7 @@
         document.getElementById('detail-header').innerHTML = `
           <div class="detail-hero-layout">
           <div>
-            <p class="detail-code">${c.edinet_code} · ${formatSecCode(c.sec_code)}</p>
+            <p class="detail-code">${formatSecCode(c.sec_code) || c.edinet_code}</p>
             <div class="detail-title-row">
               <h1>${c.name}</h1>
               <div class="detail-actions">
@@ -5400,7 +5252,6 @@
                 ${s?.ticker ? `<span class="badge gray">${s.ticker}</span>` : ''}
                 ${re?.items?.length ? `<span class="badge green">不動産 ${re.summary.count}件 · ${formatMillionYen(re.summary.total_book_value_m)}${re.summary.assets_ratio != null ? ` · 総資産比 ${formatPct(re.summary.assets_ratio)}` : ''}${data.real_estate?.nav_ratio != null ? ` · NAV ${(data.real_estate.nav_ratio * 100).toFixed(0)}%` : ''}</span>` : ''}
               </div>
-              ${renderTrustBadges(data.data_freshness, data.verdict)}
             </div>
             ${s?.price != null ? `
             <div class="hero-strip">
@@ -5409,9 +5260,7 @@
               </div>
               ${latest?.fiscal_year_end ? `<span class="hero-chip">直近期 ${latest.fiscal_year_end}</span>` : ''}
               ${latest?.revenue ? `<span class="hero-chip">売上 ${formatYen(latest.revenue)}</span>` : ''}
-              ${s?.updated_at ? `<span class="hero-chip">株価 ${formatDateTime(s.updated_at)}</span>` : ''}
-            </div>` : `<p class="muted" style="margin-top:8px;font-size:var(--fs-small)">株価データ未取得のため、PER/PBR・時価総額は表示できません。</p>`}
-            ${renderDataFreshness(data.data_freshness, { annualFye: latest?.fiscal_year_end, verdict: data.verdict })}
+            </div>` : `<p class="muted" style="margin-top:8px;font-size:var(--fs-small)">株価データがありません。</p>`}
           </div>
           </div>`;
 
