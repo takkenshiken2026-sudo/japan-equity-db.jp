@@ -1535,8 +1535,32 @@
       display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; min-height: 0;
     }
     .compare-workspace-chips:empty { display: none; }
+    .compare-add-btn {
+      flex: 0 0 auto; width: 28px; height: 28px; padding: 0;
+      border-radius: 50%; border: 1px solid var(--brand-100);
+      background: var(--brand-50); color: var(--text-brand);
+      font-size: var(--fs-body); font-weight: var(--fw-bold); line-height: 1;
+      cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+    }
+    .compare-add-btn:hover:not(:disabled) {
+      background: var(--accent-light); border-color: var(--brand-100); color: var(--text-brand);
+    }
+    .compare-add-btn:disabled,
+    .compare-add-btn.is-added {
+      background: var(--surface2); color: var(--text-muted); border-color: var(--border);
+      cursor: default;
+    }
+    .compare-name-cell {
+      display: flex; align-items: center; gap: var(--space-2); min-width: 0;
+    }
+    .compare-name-cell .cell-name { min-width: 0; }
+    .compare-picker-meta {
+      font-size: var(--fs-caption); color: var(--text-muted); margin-bottom: var(--space-2);
+    }
     .compare-empty {
-      text-align: center; padding: var(--space-12) var(--space-5); color: var(--text-muted); font-size: var(--fs-body); line-height: 1.6;
+      text-align: center; padding: var(--space-6) var(--space-5); color: var(--text-muted); font-size: var(--fs-body); line-height: 1.6;
+      border: 1px dashed var(--border); border-radius: var(--radius); margin-bottom: var(--space-4);
     }
     .compare-columns {
       display: grid;
@@ -2344,23 +2368,63 @@
         <div class="card-header">
           <div>
             <h2 data-icon="compare">銘柄比較</h2>
-            <span class="muted" style="font-size:var(--fs-small)">最大4社まで指標・グラフを並べて比較</span>
+            <span class="muted" id="compare-meta" style="font-size:var(--fs-small)">最大4社まで。表の＋で追加</span>
           </div>
           <button type="button" class="secondary" id="compare-clear-all-btn" data-icon="x" style="padding:var(--space-2) var(--space-4);font-size:var(--fs-small)">すべてクリア</button>
         </div>
         <div class="compare-workspace-toolbar">
           <div class="global-search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            <input id="compare-add-search" type="search" placeholder="銘柄を追加…" autocomplete="off" />
+            <input id="compare-add-search" type="search" placeholder="銘柄名で追加…" autocomplete="off" />
             <div id="compare-add-dropdown" class="search-dropdown"></div>
           </div>
           <div class="compare-workspace-chips" id="compare-workspace-chips"></div>
         </div>
-        <div id="compare-workspace-empty" class="compare-empty">
-          比較する銘柄を2社以上追加してください。<br />
-          <span style="font-size:var(--fs-small)">銘柄詳細の「比較に追加」からも登録できます。</span>
+
+        <div class="filter-section" style="margin-bottom:var(--space-3)">
+          <div class="filter-section-title" data-icon="sliders">カテゴリ</div>
+          <div class="presets-scroll" id="compare-views-scroll">
+            <div class="presets" id="compare-views">
+              <button type="button" class="preset compare-view active" data-compare-view="revenue" data-icon="bar-chart">売上高</button>
+              <button type="button" class="preset compare-view" data-compare-view="roe" data-icon="percent">高ROE</button>
+              <button type="button" class="preset compare-view" data-compare-view="growth" data-icon="trending-up">高成長</button>
+              <button type="button" class="preset compare-view" data-compare-view="low_per" data-icon="tag">低PER</button>
+              <button type="button" class="preset compare-view" data-compare-view="net_cash" data-icon="wallet">ネットキャッシュ</button>
+              <button type="button" class="preset compare-view" data-compare-view="dividend" data-icon="coins">高配当</button>
+              <button type="button" class="presets-toggle" id="compare-views-more-btn" aria-expanded="false">もっと見る</button>
+              <div class="presets-more" id="compare-views-more">
+                <button type="button" class="preset compare-view" data-compare-view="margin" data-icon="pie-chart">営業利益率</button>
+                <button type="button" class="preset compare-view" data-compare-view="net_income" data-icon="coins">純利益</button>
+                <button type="button" class="preset compare-view" data-compare-view="market_cap" data-icon="wallet">時価総額</button>
+                <button type="button" class="preset compare-view" data-compare-view="realestate" data-icon="building">不動産保有</button>
+              </div>
+            </div>
+          </div>
         </div>
-        <div id="compare-workspace-body" style="display:none">
+
+        <p class="compare-picker-meta" id="compare-picker-meta"></p>
+        <div class="table-wrap table-wrap--list table-scroll-hint" id="compare-picker-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="col-sm-hide" style="width:3rem">#</th>
+                <th>企業名</th>
+                <th style="width:5rem">コード</th>
+                <th class="col-md-hide">業種</th>
+                <th class="num" id="compare-metric-th">売上高</th>
+              </tr>
+            </thead>
+            <tbody id="compare-picker-tbody">
+              <tr><td colspan="5" class="muted">読み込み中…</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="compare-workspace-empty" class="compare-empty" style="margin-top:var(--space-4)">
+          比較する銘柄を2社以上追加してください。<br />
+          <span style="font-size:var(--fs-small)">表の＋、または上の検索から追加できます。</span>
+        </div>
+        <div id="compare-workspace-body" style="display:none;margin-top:var(--space-4)">
           <div class="compare-columns" id="compare-columns"></div>
           <div class="compare-charts-grid">
             <div class="chart-box">
@@ -2935,6 +2999,8 @@
     const SEARCH_DEFAULT_LIMIT = 100;
     const DASH_INDUSTRY_CHIP_LIMIT = 14;
     let dashState = { view: 'revenue', industry: '' };
+    let compareState = { view: 'revenue', loaded: false };
+    const COMPARE_PICKER_LIMIT = 50;
     const DASH_VIEWS = {
       revenue: {
         icon: 'bar-chart',
@@ -3091,7 +3157,10 @@
       if (name === 'screening' && !screeningLoaded) ensureScreeningLoaded();
       if (name === 'search' && !searchInitialized) ensureSearchLoaded();
       if (name === 'disclosures') ensureDisclosuresLoaded();
-      if (name === 'compare') renderCompareWorkspace();
+      if (name === 'compare') {
+        ensureComparePickerLoaded();
+        renderCompareWorkspace();
+      }
     }
     function scrollToAnchor(id) {
       const el = document.getElementById(id);
@@ -4323,6 +4392,8 @@
         localStorage.setItem('compareCodes', JSON.stringify(codes.slice(0, 4)));
         renderCompareBar();
         renderCompareWorkspaceChips();
+        refreshCompareAddButtons();
+        updateCompareMeta();
         if (document.getElementById('compare')?.classList.contains('active')) renderCompareWorkspace();
       },
       add(code) {
@@ -4360,6 +4431,161 @@
       });
     }
 
+    function updateCompareMeta() {
+      const el = document.getElementById('compare-meta');
+      if (!el) return;
+      const n = compareStore.load().length;
+      el.textContent = n
+        ? `${n} / 4社を選択中 · 表の＋で追加`
+        : '最大4社まで。表の＋で追加';
+    }
+
+    function compareMetricLabel(view) {
+      if (view.chartField === 'per') return 'PER';
+      if (view.chartField === 'roe') return 'ROE';
+      if (view.chartField === 'revenue_growth') return '成長率';
+      if (view.chartField === 'operating_margin') return '営業利益率';
+      if (view.chartField === 'net_income') return '純利益';
+      if (view.chartField === 'market_cap') return '時価総額';
+      if (view.chartField === 'real_estate_book') return '不動産';
+      if (view.chartField === 'net_cash') return 'ネットキャッシュ';
+      if (view.chartField === 'dividend_yield') return '配当利回り';
+      return '売上高';
+    }
+
+    function formatComparePickerMetric(item, view) {
+      const v = dashChartValue(item, view);
+      if (v == null || Number.isNaN(v)) return '-';
+      if (view.chartFormat === 'book_m') return formatBookValueM(v);
+      if (view.chartFormat === 'pct') return formatPct(v);
+      if (view.chartFormat === 'multiple') return formatPer(v);
+      return formatYen(v);
+    }
+
+    function compareAddButtonHtml(code, selected, atMax) {
+      const added = selected.includes(code);
+      if (added) {
+        return `<button type="button" class="compare-add-btn is-added" data-compare-add="${code}" disabled title="追加済み" aria-label="追加済み">✓</button>`;
+      }
+      if (atMax) {
+        return `<button type="button" class="compare-add-btn" data-compare-add="${code}" disabled title="上限4社" aria-label="上限に達しています">＋</button>`;
+      }
+      return `<button type="button" class="compare-add-btn" data-compare-add="${code}" title="比較に追加" aria-label="比較に追加">＋</button>`;
+    }
+
+    function refreshCompareAddButtons() {
+      const selected = compareStore.load();
+      const atMax = selected.length >= 4;
+      document.querySelectorAll('#compare-picker-tbody [data-compare-add]').forEach((btn) => {
+        const code = btn.dataset.compareAdd;
+        const wrap = document.createElement('div');
+        wrap.innerHTML = compareAddButtonHtml(code, selected, atMax);
+        const next = wrap.firstElementChild;
+        btn.replaceWith(next);
+        if (!next.disabled) {
+          next.addEventListener('click', (e) => {
+            e.stopPropagation();
+            compareStore.add(code);
+          });
+        }
+      });
+    }
+
+    function bindCompareAddButtons(container) {
+      container?.querySelectorAll('[data-compare-add]').forEach((btn) => {
+        if (btn.disabled) return;
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          compareStore.add(btn.dataset.compareAdd);
+        });
+      });
+    }
+
+    function applyCompareView(viewKey) {
+      if (!DASH_VIEWS[viewKey] || DASH_VIEWS[viewKey].special) return;
+      compareState.view = viewKey;
+      const moreBtn = document.getElementById('compare-views-more-btn');
+      const more = document.getElementById('compare-views-more');
+      const activeInMore = more?.querySelector(`.compare-view[data-compare-view="${viewKey}"]`);
+      if (activeInMore && more && !more.classList.contains('open')) {
+        more.classList.add('open');
+        if (moreBtn) {
+          moreBtn.setAttribute('aria-expanded', 'true');
+          moreBtn.textContent = '閉じる';
+        }
+      }
+      document.querySelectorAll('#compare-views .compare-view').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.compareView === viewKey);
+      });
+      loadComparePickerList();
+    }
+
+    function buildComparePickerQueryParams() {
+      const view = DASH_VIEWS[compareState.view] || DASH_VIEWS.revenue;
+      const params = {
+        limit: String(COMPARE_PICKER_LIMIT),
+        listing: '上場',
+        sort_by: view.sort_by || 'revenue',
+        order: view.order || 'desc',
+      };
+      if (view.min_roe) params.min_roe = view.min_roe;
+      if (view.min_revenue_growth) params.min_revenue_growth = view.min_revenue_growth;
+      if (view.max_per) params.max_per = view.max_per;
+      if (view.has_real_estate) params.has_real_estate = view.has_real_estate;
+      if (view.has_net_cash) params.has_net_cash = view.has_net_cash;
+      if (view.min_dividend_yield) params.min_dividend_yield = view.min_dividend_yield;
+      return params;
+    }
+
+    async function loadComparePickerList() {
+      const tbody = document.getElementById('compare-picker-tbody');
+      const meta = document.getElementById('compare-picker-meta');
+      const th = document.getElementById('compare-metric-th');
+      if (!tbody) return;
+      const view = DASH_VIEWS[compareState.view] || DASH_VIEWS.revenue;
+      if (th) th.textContent = compareMetricLabel(view);
+      tbody.innerHTML = `<tr><td colspan="5" class="muted">読み込み中…</td></tr>`;
+      try {
+        const q = new URLSearchParams(buildComparePickerQueryParams());
+        const data = await api(`/api/screening?${q}`);
+        const selected = compareStore.load();
+        const atMax = selected.length >= 4;
+        const items = data.items || [];
+        if (!items.length) {
+          tbody.innerHTML = '<tr><td colspan="5" class="muted">条件に一致する企業がありません</td></tr>';
+        } else {
+          tbody.innerHTML = items.map((item, i) => {
+            const name = (item.name || '').replace(/株式会社/g, '').trim();
+            return `<tr class="clickable" data-code="${item.edinet_code}">
+              <td class="muted col-sm-hide">${i + 1}</td>
+              <td>
+                <div class="compare-name-cell">
+                  ${compareAddButtonHtml(item.edinet_code, selected, atMax)}
+                  ${companyLink(item.edinet_code, `<span class="cell-name">${name}</span>`)}
+                </div>
+              </td>
+              <td class="muted">${formatSecCode(item.sec_code)}</td>
+              <td class="muted col-md-hide">${item.industry ?? '-'}</td>
+              <td class="num">${formatComparePickerMetric(item, view)}</td>
+            </tr>`;
+          }).join('');
+          bindRowClicks(tbody);
+          bindCompareAddButtons(tbody);
+        }
+        if (meta) meta.textContent = `${view.title.replace(/（.*）/, '')} · ${items.length}社`;
+        updateTableScrollHints();
+        compareState.loaded = true;
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="5" style="color:var(--red)">読み込み失敗（${e.message}）</td></tr>`;
+      }
+    }
+
+    function ensureComparePickerLoaded() {
+      updateCompareMeta();
+      if (!compareState.loaded) loadComparePickerList();
+      else refreshCompareAddButtons();
+    }
+
     const COMPARE_ACCENT = ['#374151', '#6b7280', '#9ca3af', '#1f2937'];
 
     function renderCompareWorkspaceChips() {
@@ -4392,6 +4618,7 @@
       const codes = compareStore.load();
       const emptyEl = document.getElementById('compare-workspace-empty');
       const bodyEl = document.getElementById('compare-workspace-body');
+      updateCompareMeta();
       renderCompareWorkspaceChips();
 
       if (!emptyEl || !bodyEl) return;
@@ -4578,7 +4805,7 @@
     function bindRowClicks(container) {
       container.querySelectorAll('[data-code]').forEach(el => {
         el.addEventListener('click', e => {
-          if (e.target.closest('a')) return;
+          if (e.target.closest('a, button')) return;
           goCompanyPage(el.dataset.code);
         });
       });
@@ -5902,6 +6129,9 @@
       document.querySelectorAll('#dash-views .dash-view').forEach(btn => {
         btn.addEventListener('click', () => applyDashView(btn.dataset.dashView));
       });
+      document.querySelectorAll('#compare-views .compare-view').forEach((btn) => {
+        btn.addEventListener('click', () => applyCompareView(btn.dataset.compareView));
+      });
       const bindPresetsMore = (btnId, moreId) => {
         const btn = document.getElementById(btnId);
         const more = document.getElementById(moreId);
@@ -5914,6 +6144,7 @@
       };
       bindPresetsMore('dash-views-more-btn', 'dash-views-more');
       bindPresetsMore('screening-presets-more-btn', 'screening-presets-more');
+      bindPresetsMore('compare-views-more-btn', 'compare-views-more');
       const updatePresetsScrollHint = (scrollId) => {
         const wrap = document.getElementById(scrollId);
         const presets = wrap?.querySelector('.presets');
@@ -5921,10 +6152,11 @@
         const can = presets.scrollWidth > presets.clientWidth + 8;
         wrap.classList.toggle('can-scroll', can);
       };
-      ['dash-views-scroll', 'screening-presets-scroll'].forEach(updatePresetsScrollHint);
+      ['dash-views-scroll', 'screening-presets-scroll', 'compare-views-scroll'].forEach(updatePresetsScrollHint);
       window.addEventListener('resize', () => {
         updatePresetsScrollHint('dash-views-scroll');
         updatePresetsScrollHint('screening-presets-scroll');
+        updatePresetsScrollHint('compare-views-scroll');
       });
       document.getElementById('dash-industry-select')?.addEventListener('change', (e) => {
         applyDashIndustry(e.target.value);
