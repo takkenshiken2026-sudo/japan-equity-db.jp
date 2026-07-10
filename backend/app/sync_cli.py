@@ -311,6 +311,16 @@ def main() -> None:
     external_media.add_argument("--trend-days", type=int, default=90)
     external_media.add_argument("--no-trends", action="store_true", help="トレンド取得をスキップ")
 
+    short_selling = sub.add_parser(
+        "collect-short-selling",
+        help="JPX 空売り残高（残高割合0.5%以上）を取得してDBに蓄積",
+    )
+    short_selling.add_argument(
+        "--file-url",
+        default=None,
+        help="公表ページ探索を省略して直接取得するデータファイルURL",
+    )
+
     purge_news = sub.add_parser(
         "purge-irrelevant-news",
         help="保存済みニュースから無関係記事を一括削除",
@@ -357,7 +367,7 @@ def main() -> None:
         return
 
     api_key = getattr(args, "api_key", None)
-    if args.command not in ("init-db", "plan", "cleanup-local-data", "sync-prices", "backfill-quotes", "sync-real-estate", "sync-quarterly", "collect-quarterly", "sync-profiles", "seed-no-xbrl-profiles", "collect-external-media", "purge-irrelevant-news") and not api_key:
+    if args.command not in ("init-db", "plan", "cleanup-local-data", "sync-prices", "backfill-quotes", "sync-real-estate", "sync-quarterly", "collect-quarterly", "sync-profiles", "seed-no-xbrl-profiles", "collect-external-media", "collect-short-selling", "purge-irrelevant-news") and not api_key:
         raise SystemExit("EDINET_API_KEY を .env に設定してください")
 
     db = SessionLocal()
@@ -952,6 +962,11 @@ def main() -> None:
                 trends_enabled=not args.no_trends,
             )
             print(summary, flush=True)
+
+        elif args.command == "collect-short-selling":
+            from app.short_selling.sync import collect_short_selling
+
+            print(collect_short_selling(db, file_url=args.file_url), flush=True)
 
         elif args.command == "purge-irrelevant-news":
             print(

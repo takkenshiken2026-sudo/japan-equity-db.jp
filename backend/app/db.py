@@ -274,6 +274,37 @@ class ExternalMediaBatchState(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
+class ShortSellingBalance(Base):
+    """JPX が公表する「空売り残高に関する情報」（残高割合0.5%以上の個別ポジション）。
+
+    無料 API では配布されず、公表ページからは日々消えていくため、
+    日次で自前収集して時系列を積み上げること自体が優位性になる。
+    """
+
+    __tablename__ = "short_selling_balances"
+    __table_args__ = (
+        UniqueConstraint(
+            "sec_code", "holder_name", "calc_date", name="uq_short_code_holder_date"
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    sec_code: Mapped[str] = mapped_column(String(10), index=True)
+    edinet_code: Mapped[Optional[str]] = mapped_column(
+        ForeignKey("companies.edinet_code"), index=True
+    )
+    company_name: Mapped[Optional[str]] = mapped_column(String(255))
+    holder_name: Mapped[str] = mapped_column(String(255))
+    short_ratio: Mapped[Optional[float]] = mapped_column(Float)
+    short_shares: Mapped[Optional[float]] = mapped_column(Float)
+    prev_ratio: Mapped[Optional[float]] = mapped_column(Float)
+    prev_calc_date: Mapped[Optional[str]] = mapped_column(String(10))
+    calc_date: Mapped[str] = mapped_column(String(10), index=True)
+    published_date: Mapped[Optional[str]] = mapped_column(String(10), index=True)
+    first_seen_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
 engine = create_engine(
     settings.database_url,
     connect_args={"check_same_thread": False, "timeout": 60}
