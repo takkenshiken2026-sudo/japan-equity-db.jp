@@ -77,6 +77,8 @@ def _export_globals(client, data_dir: Path) -> dict:
         "trending/home.json": "/api/trending/home?limit=8&days=7",
         "themes/weekly.json": "/api/themes/weekly?limit=8",
         "calendar/earnings.json": "/api/calendar/earnings?days=0&past_days=365&limit=200",
+        "explore/quarterly-momentum.json": "/api/explore/quarterly-momentum?limit=100&min_revenue_yoy=0.1",
+        "explore/prefectures.json": "/api/explore/prefectures?limit=20&top_companies=5",
     }
     for rel, path in endpoints.items():
         response = client.get(path)

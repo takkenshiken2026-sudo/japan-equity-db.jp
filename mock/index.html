@@ -1235,7 +1235,7 @@
     }
     .theme-weekly-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 10px;
     }
     .theme-box {
@@ -1859,7 +1859,11 @@
             <button type="button" class="preset dash-view" data-dash-view="net_income" data-icon="coins">純利益</button>
             <button type="button" class="preset dash-view" data-dash-view="market_cap" data-icon="wallet">時価総額</button>
             <button type="button" class="preset dash-view" data-dash-view="low_per" data-icon="tag">低PER</button>
+            <button type="button" class="preset dash-view" data-dash-view="net_cash" data-icon="wallet">ネットキャッシュ</button>
+            <button type="button" class="preset dash-view" data-dash-view="dividend" data-icon="coins">高配当</button>
+            <button type="button" class="preset dash-view" data-dash-view="q_momentum" data-icon="trending-up">四半期モメンタム</button>
             <button type="button" class="preset dash-view" data-dash-view="realestate" data-icon="building">不動産保有</button>
+            <button type="button" class="preset dash-view" data-dash-view="prefecture" data-icon="map-pin">都道府県別不動産</button>
           </div>
           <div class="filters" style="margin-top:12px">
             <div class="field">
@@ -1936,6 +1940,11 @@
             <button class="preset" data-preset="high-roe" data-icon="percent">高ROE（10%以上）</button>
             <button class="preset" data-preset="low-per" data-icon="tag">低PER（15倍以下）</button>
             <button class="preset" data-preset="growth" data-icon="trending-up">高成長（10%以上）</button>
+            <button class="preset" data-preset="net-cash" data-icon="wallet">ネットキャッシュ</button>
+            <button class="preset" data-preset="high-equity" data-icon="shield">高自己資本（50%以上）</button>
+            <button class="preset" data-preset="low-de" data-icon="activity">低D/E（0.5以下）</button>
+            <button class="preset" data-preset="high-dividend" data-icon="coins">高配当（3%以上）</button>
+            <button class="preset" data-preset="q-momentum" data-icon="trending-up">四半期モメンタム</button>
             <button class="preset" data-preset="large" data-icon="landmark">大型（売上1兆以上）</button>
             <button class="preset" data-preset="realestate" data-icon="building">不動産保有</button>
             <button class="preset" data-preset="re-nav" data-icon="target">不動産NAV割安</button>
@@ -1961,6 +1970,10 @@
                 <option value="revenue_growth">成長率</option>
                 <option value="net_income">純利益</option>
                 <option value="operating_cf">営業CF</option>
+                <option value="net_cash">ネットキャッシュ</option>
+                <option value="equity_ratio">自己資本比率</option>
+                <option value="debt_equity">D/E比率</option>
+                <option value="dividend_yield">配当利回り</option>
                 <option value="per">PER</option>
                 <option value="pbr">PBR</option>
                 <option value="market_cap">時価総額</option>
@@ -1975,6 +1988,10 @@
             <div class="field field-check">
               <input type="checkbox" id="has-operating-cf" name="has_operating_cf" value="true" />
               <label for="has-operating-cf">営業CF黒字のみ</label>
+            </div>
+            <div class="field field-check">
+              <input type="checkbox" id="has-net-cash" name="has_net_cash" value="true" />
+              <label for="has-net-cash">ネットキャッシュのみ</label>
             </div>
             <div class="field field-check">
               <input type="checkbox" id="has-real-estate" name="has_real_estate" value="true" />
@@ -2019,6 +2036,18 @@
               <div class="field">
                 <label>成長率 下限 <span class="hint">（%）</span></label>
                 <input name="min_revenue_growth_pct" placeholder="10" inputmode="decimal" />
+              </div>
+              <div class="field">
+                <label>自己資本比率 下限 <span class="hint">（%）</span></label>
+                <input name="min_equity_ratio_pct" placeholder="50" inputmode="decimal" />
+              </div>
+              <div class="field">
+                <label>D/E比率 上限</label>
+                <input name="max_debt_equity_ratio" placeholder="0.5" inputmode="decimal" />
+              </div>
+              <div class="field">
+                <label>配当利回り 下限 <span class="hint">（%）</span></label>
+                <input name="min_dividend_yield_pct" placeholder="3" inputmode="decimal" />
               </div>
               <div class="field">
                 <label>PER 上限 <span class="hint">（倍）</span></label>
@@ -2080,6 +2109,10 @@
         <div class="card-header">
           <h2 data-icon="file">適時開示フィード</h2>
           <span class="muted" id="disclosures-meta" style="font-size:var(--fs-small)"></span>
+        </div>
+        <div class="presets" style="margin-bottom:12px">
+          <button type="button" class="preset active" id="disclosures-filter-all" data-icon="layers">すべて</button>
+          <button type="button" class="preset" id="disclosures-filter-watch" data-icon="star">ウォッチ銘柄のみ</button>
         </div>
         <div id="disclosures-feed" class="disclosure-feed loading"><span class="spinner"></span>読み込み中…</div>
         <div class="pager-row" style="margin-top:12px">
@@ -2616,6 +2649,11 @@
       'value-growth': 'sparkles',
       'cf-positive': 'activity',
       quality: 'award',
+      'net-cash': 'wallet',
+      'high-equity': 'shield',
+      'low-de': 'activity',
+      'high-dividend': 'coins',
+      'q-momentum': 'trending-up',
     };
 
     const PROFILE_BLOCK_ICON = {
@@ -2733,7 +2771,7 @@
     let searchInitialized = false;
     let screeningState = { offset: 0, total: 0, shown: 0 };
     let searchState = { offset: 0, total: 0, shown: 0, params: {} };
-    let disclosuresState = { offset: 0, total: 0, loaded: false };
+    let disclosuresState = { offset: 0, total: 0, loaded: false, watchOnly: false };
     let currentPriceRange = '1y';
 
     const PRESETS = {
@@ -2747,6 +2785,11 @@
       'value-growth': { max_per: '15', min_revenue_growth_pct: '10', sort_by: 'revenue_growth', order: 'desc' },
       'cf-positive': { has_operating_cf: 'true', sort_by: 'operating_cf', order: 'desc' },
       quality: { min_roe_pct: '10', min_operating_margin_pct: '8', has_operating_cf: 'true', sort_by: 'roe', order: 'desc' },
+      'net-cash': { has_net_cash: 'true', sort_by: 'net_cash', order: 'desc' },
+      'high-equity': { min_equity_ratio_pct: '50', sort_by: 'equity_ratio', order: 'desc' },
+      'low-de': { max_debt_equity_ratio: '0.5', sort_by: 'debt_equity', order: 'asc' },
+      'high-dividend': { min_dividend_yield_pct: '3', has_operating_cf: 'true', sort_by: 'dividend_yield', order: 'desc' },
+      'q-momentum': { _special: 'q-momentum' },
     };
     const DASH_TOP_LIMIT = 100;
     const DASH_CHART_LIMIT = 30;
@@ -2845,6 +2888,50 @@
         sort_by: 'real_estate_book',
         order: 'desc',
         has_real_estate: 'true',
+      },
+      net_cash: {
+        icon: 'wallet',
+        title: 'ネットキャッシュランキング',
+        chartTitle: 'ネットキャッシュトップ30',
+        chartCaption: '単位: 億円',
+        chartField: 'net_cash',
+        chartFormat: 'yen',
+        highlight: 'net_cash',
+        sort_by: 'net_cash',
+        order: 'desc',
+        has_net_cash: 'true',
+      },
+      dividend: {
+        icon: 'coins',
+        title: '高配当ランキング（3%以上）',
+        chartTitle: '配当利回りトップ30',
+        chartCaption: '単位: %',
+        chartField: 'dividend_yield',
+        chartFormat: 'pct',
+        highlight: 'dividend_yield',
+        sort_by: 'dividend_yield',
+        order: 'desc',
+        min_dividend_yield: '0.03',
+      },
+      q_momentum: {
+        icon: 'trending-up',
+        title: '四半期モメンタム（売上YoY 10%以上）',
+        chartTitle: '四半期売上YoYトップ30',
+        chartCaption: '単位: %（前年比）',
+        chartField: 'revenue_yoy',
+        chartFormat: 'pct',
+        highlight: 'revenue_yoy',
+        special: 'quarterly-momentum',
+      },
+      prefecture: {
+        icon: 'map-pin',
+        title: '都道府県別不動産',
+        chartTitle: '都道府県別帳簿価額トップ',
+        chartCaption: '帳簿価額合計',
+        chartField: 'total_book_value_m',
+        chartFormat: 'book_m',
+        highlight: 'prefecture',
+        special: 'prefectures',
       },
     };
 
@@ -2954,6 +3041,15 @@
           if (item.real_estate_nav_ratio != null) {
             return `NAV ${(item.real_estate_nav_ratio * 100).toFixed(0)}%`;
           }
+          break;
+        case 'net_cash':
+          if (item.net_cash != null) return formatYen(item.net_cash);
+          break;
+        case 'high_dividend':
+          if (item.dividend_yield != null) return formatPct(item.dividend_yield);
+          break;
+        case 'q_momentum':
+          if (item.revenue_yoy != null) return formatChg(item.revenue_yoy);
           break;
         case 'value_growth': {
           const parts = [];
@@ -3672,13 +3768,15 @@
       const params = {
         limit: String(DASH_TOP_LIMIT),
         listing: '上場',
-        sort_by: view.sort_by,
-        order: view.order,
+        sort_by: view.sort_by || 'revenue',
+        order: view.order || 'desc',
       };
       if (view.min_roe) params.min_roe = view.min_roe;
       if (view.min_revenue_growth) params.min_revenue_growth = view.min_revenue_growth;
       if (view.max_per) params.max_per = view.max_per;
       if (view.has_real_estate) params.has_real_estate = view.has_real_estate;
+      if (view.has_net_cash) params.has_net_cash = view.has_net_cash;
+      if (view.min_dividend_yield) params.min_dividend_yield = view.min_dividend_yield;
       if (dashState.industry) params.industry = dashState.industry;
       return params;
     }
@@ -3686,6 +3784,10 @@
     function dashChartValue(item, view) {
       if (view.chartField === 'per') return item.per_edinet ?? item.per;
       if (view.chartField === 'real_estate_book') return item.real_estate?.total_book_value_m ?? null;
+      if (view.chartField === 'total_book_value_m') return item.total_book_value_m ?? null;
+      if (view.chartField === 'net_cash') {
+        return item.net_cash != null ? item.net_cash : (item.cash_and_deposits != null ? item.cash_and_deposits - (item.interest_bearing_debt || 0) : null);
+      }
       return item[view.chartField];
     }
 
@@ -3712,9 +3814,11 @@
         min_roa_pct: 'min_roa',
         min_revenue_growth_pct: 'min_revenue_growth',
         min_operating_margin_pct: 'min_operating_margin',
+        min_equity_ratio_pct: 'min_equity_ratio',
+        min_dividend_yield_pct: 'min_dividend_yield',
       };
       for (const [k, v] of fd.entries()) {
-        if (k === 'has_real_estate' || k === 'has_operating_cf') continue;
+        if (k === 'has_real_estate' || k === 'has_operating_cf' || k === 'has_net_cash') continue;
         if (k === 'min_revenue_preset') {
           if (v) params.min_revenue = v;
           continue;
@@ -3732,15 +3836,22 @@
       }
       if (document.getElementById('has-real-estate')?.checked) params.has_real_estate = 'true';
       if (document.getElementById('has-operating-cf')?.checked) params.has_operating_cf = 'true';
+      if (document.getElementById('has-net-cash')?.checked) params.has_net_cash = 'true';
       return params;
     }
 
     function applyPreset(name) {
       activePreset = name;
-      document.querySelectorAll('.preset').forEach(p => p.classList.toggle('active', p.dataset.preset === name));
+      document.querySelectorAll('#presets .preset').forEach(p => p.classList.toggle('active', p.dataset.preset === name));
       const form = document.getElementById('screening-form');
       form.reset();
       const preset = PRESETS[name] || {};
+      if (preset._special === 'q-momentum') {
+        showTab('dashboard');
+        applyDashView('q_momentum');
+        requestAnimationFrame(() => scrollToAnchor('dash-top-anchor'));
+        return;
+      }
       Object.entries(preset).forEach(([k, v]) => {
         if (k === 'has_real_estate') {
           const el = document.getElementById('has-real-estate');
@@ -3749,6 +3860,11 @@
         }
         if (k === 'has_operating_cf') {
           const el = document.getElementById('has-operating-cf');
+          if (el) el.checked = v === 'true';
+          return;
+        }
+        if (k === 'has_net_cash') {
+          const el = document.getElementById('has-net-cash');
           if (el) el.checked = v === 'true';
           return;
         }
@@ -3768,7 +3884,11 @@
         const el = document.getElementById('has-operating-cf');
         if (el) el.checked = false;
       }
-      if (Object.keys(preset).some(k => ['min_roe_pct','min_roa_pct','min_revenue_preset','max_per','max_pbr','min_revenue_growth_pct','min_operating_margin_pct','min_real_estate_nav_preset'].includes(k))) {
+      if (!preset.has_net_cash) {
+        const el = document.getElementById('has-net-cash');
+        if (el) el.checked = false;
+      }
+      if (Object.keys(preset).some(k => ['min_roe_pct','min_roa_pct','min_revenue_preset','max_per','max_pbr','min_revenue_growth_pct','min_operating_margin_pct','min_real_estate_nav_preset','min_equity_ratio_pct','max_debt_equity_ratio','min_dividend_yield_pct'].includes(k))) {
         document.getElementById('filters-adv').classList.add('open');
         setToggleAdvLabel(true);
       }
@@ -4426,8 +4546,70 @@
       if (chartTitle) setHeadingIcon(chartTitle, view.icon || 'bar-chart', `${view.chartTitle}（棒グラフ）`);
       if (chartCaption) chartCaption.textContent = view.chartCaption;
       try {
-        const q = new URLSearchParams(buildDashQueryParams());
-        const data = await api(`/api/screening?${q}`);
+        let data;
+        if (view.special === 'quarterly-momentum') {
+          const q = new URLSearchParams({
+            limit: String(DASH_TOP_LIMIT),
+            min_revenue_yoy: '0.1',
+            sort_by: 'revenue_yoy',
+            order: 'desc',
+          });
+          if (dashState.industry) q.set('industry', dashState.industry);
+          data = await api(`/api/explore/quarterly-momentum?${q}`);
+        } else if (view.special === 'prefectures') {
+          data = await api('/api/explore/prefectures?limit=20&top_companies=5');
+          const items = data.items || [];
+          body.innerHTML = items.length
+            ? items.map((item, i) => `
+              <tr>
+                <td class="col-sm-hide">${i + 1}</td>
+                <td><div class="cell-name">${item.prefecture}</div>
+                  <div class="cell-sub">${item.company_count}社 · ${item.property_count}件</div></td>
+                <td class="col-md-hide">${(item.top_companies || []).slice(0, 2).map(c => c.name.replace(/株式会社/g, '').trim()).join('、') || '-'}</td>
+                <td class="num">${formatBookValueM(item.total_book_value_m)}</td>
+                <td class="num col-sm-hide">-</td>
+                <td class="num">-</td>
+                <td class="num col-sm-hide">-</td>
+                <td class="num col-md-hide">-</td>
+                <td class="num">-</td>
+              </tr>`).join('')
+            : emptyRow(9, 'データがありません');
+          cards.innerHTML = items.length
+            ? items.map((item, i) => `
+              <div class="co-card">
+                <div class="co-card-head"><div class="co-card-name">${i + 1}. ${item.prefecture}</div></div>
+                <div class="co-card-industry">${item.company_count}社 · ${item.property_count}件</div>
+                <div class="co-card-metrics">
+                  <div class="co-metric"><div class="lbl">帳簿価額</div><div class="val">${formatBookValueM(item.total_book_value_m)}</div></div>
+                  <div class="co-metric"><div class="lbl">代表</div><div class="val">${(item.top_companies?.[0]?.name || '-').replace(/株式会社/g, '').trim()}</div></div>
+                </div>
+              </div>`).join('')
+            : '<div class="empty"><div class="empty-title">データがありません</div></div>';
+          if (meta) meta.textContent = `${items.length}都道府県`;
+          whenChartsReady(() => {
+            const chartItems = items.slice(0, DASH_CHART_LIMIT);
+            EdinetCharts.renderVerticalBarChart(
+              'dash-revenue-chart',
+              chartItems.map(i => i.prefecture),
+              chartItems.map(i => i.total_book_value_m),
+              {
+                datasetLabel: view.chartTitle,
+                formatValue: (v) => formatBookValueM(v),
+              }
+            );
+          });
+          cards.querySelectorAll('.co-card').forEach((card, idx) => {
+            const top = items[idx]?.top_companies?.[0];
+            if (!top) return;
+            card.style.cursor = 'pointer';
+            card.addEventListener('click', () => loadDetail(top.edinet_code));
+          });
+          updateTableScrollHints();
+          return;
+        } else {
+          const q = new URLSearchParams(buildDashQueryParams());
+          data = await api(`/api/screening?${q}`);
+        }
         body.innerHTML = data.items.length
           ? data.items.map((item, i) => renderDashRow(item, i + 1, view.highlight)).join('')
           : emptyRow(9, '条件に一致する企業がありません');
@@ -4435,7 +4617,7 @@
           ? data.items.map((item, i) => renderCoCard(item, i + 1, highlightFieldForSort(null, dashState.view))).join('')
           : '<div class="empty"><div class="empty-title">条件に一致する企業がありません</div></div>';
         const industryLabel = dashState.industry ? `${dashState.industry} · ` : '';
-        if (meta) meta.textContent = `${industryLabel}${data.items.length}社表示（全${data.total.toLocaleString()}社）`;
+        if (meta) meta.textContent = `${industryLabel}${data.items.length}社表示（全${(data.total || data.items.length).toLocaleString()}社）`;
         whenChartsReady(() => {
           const chartItems = data.items.slice(0, DASH_CHART_LIMIT);
           const labels = chartItems.map(i => i.name.replace(/株式会社/g, '').trim().slice(0, 12));
@@ -4877,7 +5059,7 @@
       try {
         const data = await api('/api/themes/weekly?limit=5');
         el.classList.remove('loading');
-        el.innerHTML = `<div class="theme-weekly-grid">${(data.themes || []).filter(t => t.id !== 'high_roe').slice(0, 4).map(theme => {
+        el.innerHTML = `<div class="theme-weekly-grid">${(data.themes || []).filter(t => t.id !== 'high_roe').slice(0, 6).map(theme => {
           const desc = theme.description || '';
           return `
           <div class="theme-box">
@@ -5096,7 +5278,20 @@
       const limit = 50;
       const offset = append ? disclosuresState.offset : 0;
       try {
-        const data = await api(`/api/calendar/disclosures?limit=${limit}&offset=${offset}`);
+        const q = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+        if (disclosuresState.watchOnly) {
+          const codes = engagementStore.getWatchlist().map(w => w.code).filter(Boolean);
+          if (!codes.length) {
+            el.innerHTML = '<p class="muted">ウォッチリストに銘柄がありません。銘柄詳細から追加できます。</p>';
+            el.classList.remove('loading');
+            document.getElementById('disclosures-meta').textContent = '0件';
+            disclosuresState.total = 0;
+            disclosuresState.offset = 0;
+            return;
+          }
+          q.set('codes', codes.slice(0, 40).join(','));
+        }
+        const data = await api(`/api/calendar/disclosures?${q}`);
         disclosuresState.total = data.total;
         disclosuresState.offset = offset + data.count;
         const rows = data.items.map(item => `
@@ -5502,6 +5697,20 @@
       });
       document.getElementById('disclosures-more')?.addEventListener('click', () => {
         if (disclosuresState.offset < disclosuresState.total) loadDisclosuresFeed({ append: true });
+      });
+      document.getElementById('disclosures-filter-all')?.addEventListener('click', () => {
+        disclosuresState.watchOnly = false;
+        disclosuresState.offset = 0;
+        document.getElementById('disclosures-filter-all')?.classList.add('active');
+        document.getElementById('disclosures-filter-watch')?.classList.remove('active');
+        loadDisclosuresFeed();
+      });
+      document.getElementById('disclosures-filter-watch')?.addEventListener('click', () => {
+        disclosuresState.watchOnly = true;
+        disclosuresState.offset = 0;
+        document.getElementById('disclosures-filter-watch')?.classList.add('active');
+        document.getElementById('disclosures-filter-all')?.classList.remove('active');
+        loadDisclosuresFeed();
       });
       document.getElementById('compare-clear-all-btn')?.addEventListener('click', () => compareStore.clear());
       try {

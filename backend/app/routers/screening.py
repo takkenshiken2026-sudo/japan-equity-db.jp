@@ -64,7 +64,16 @@ def _real_estate_totals_subquery():
     )
 
 
+def _net_cash_expr():
+    return Financial.cash_and_deposits - func.coalesce(Financial.interest_bearing_debt, 0)
+
+
 def _serialize_row(company: Company, financial: Financial, quote: Optional[StockQuote], re_brief: dict | None = None) -> dict[str, Any]:
+    cash = financial.cash_and_deposits
+    debt = financial.interest_bearing_debt
+    net_cash = None
+    if cash is not None:
+        net_cash = cash - (debt or 0)
     row = {
         "edinet_code": company.edinet_code,
         "name": company.name,
@@ -78,12 +87,14 @@ def _serialize_row(company: Company, financial: Financial, quote: Optional[Stock
         "roe": financial.roe,
         "roa": financial.roa,
         "equity_ratio": financial.equity_ratio,
+        "debt_equity_ratio": financial.debt_equity_ratio,
         "revenue_growth": financial.revenue_growth,
         "eps": financial.eps,
         "bps": financial.bps,
         "operating_cf": financial.operating_cf,
-        "cash_and_deposits": financial.cash_and_deposits,
-        "interest_bearing_debt": financial.interest_bearing_debt,
+        "cash_and_deposits": cash,
+        "interest_bearing_debt": debt,
+        "net_cash": net_cash,
         "dividend_per_share": financial.dividend_per_share,
         "doc_id": financial.doc_id,
         "price": quote.price if quote else None,
@@ -122,10 +133,14 @@ def screen_companies(
     max_pbr: Optional[float] = None,
     has_real_estate: Optional[bool] = None,
     has_operating_cf: Optional[bool] = None,
+    has_net_cash: Optional[bool] = None,
+    min_equity_ratio: Optional[float] = None,
+    max_debt_equity_ratio: Optional[float] = None,
+    min_dividend_yield: Optional[float] = None,
     min_real_estate_nav_ratio: Optional[float] = None,
     sort_by: str = Query(
         "revenue",
-        pattern="^(revenue|operating_margin|roe|roa|revenue_growth|net_income|per|pbr|market_cap|operating_cf|real_estate_nav|real_estate_book)$",
+        pattern="^(revenue|operating_margin|roe|roa|revenue_growth|net_income|per|pbr|market_cap|operating_cf|real_estate_nav|real_estate_book|equity_ratio|debt_equity|net_cash|dividend_yield)$",
     ),
     order: str = Query("desc", pattern="^(asc|desc)$"),
     limit: int = Query(100, ge=1, le=500),
@@ -178,10 +193,32 @@ def screen_companies(
     if has_operating_cf:
         filters.append(Financial.operating_cf.is_not(None))
         filters.append(Financial.operating_cf > 0)
+    if has_net_cash:
+        filters.append(Financial.cash_and_deposits.is_not(None))
+        filters.append(_net_cash_expr() > 0)
+    if min_equity_ratio is not None:
+        filters.append(Financial.equity_ratio.is_not(None))
+        filters.append(Financial.equity_ratio >= min_equity_ratio)
+    if max_debt_equity_ratio is not None:
+        filters.append(Financial.debt_equity_ratio.is_not(None))
+        filters.append(Financial.debt_equity_ratio <= max_debt_equity_ratio)
+        filters.append(Financial.debt_equity_ratio >= 0)
+    if min_dividend_yield is not None:
+        filters.append(StockQuote.dividend_yield.is_not(None))
+        filters.append(StockQuote.dividend_yield >= min_dividend_yield)
 
     if sort_by == "market_cap":
         filters.append(StockQuote.market_cap.is_not(None))
         filters.append(StockQuote.market_cap > 0)
+    if sort_by == "net_cash":
+        filters.append(Financial.cash_and_deposits.is_not(None))
+    if sort_by == "equity_ratio":
+        filters.append(Financial.equity_ratio.is_not(None))
+    if sort_by == "debt_equity":
+        filters.append(Financial.debt_equity_ratio.is_not(None))
+    if sort_by == "dividend_yield":
+        filters.append(StockQuote.dividend_yield.is_not(None))
+        filters.append(StockQuote.dividend_yield > 0)
 
     re_totals = None
     nav_expr = None
@@ -216,6 +253,10 @@ def screen_companies(
         "market_cap": StockQuote.market_cap,
         "real_estate_nav": nav_expr,
         "real_estate_book": re_totals.c.total_book_m if re_totals is not None else None,
+        "equity_ratio": Financial.equity_ratio,
+        "debt_equity": Financial.debt_equity_ratio,
+        "net_cash": _net_cash_expr(),
+        "dividend_yield": StockQuote.dividend_yield,
     }
     sort_column = sort_map[sort_by]
     if sort_by in ("real_estate_nav", "real_estate_book") and sort_column is None:

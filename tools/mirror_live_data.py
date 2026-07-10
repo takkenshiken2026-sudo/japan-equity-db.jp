@@ -20,6 +20,8 @@ GLOBAL_FILES = (
     "themes/weekly.json",
     "calendar/earnings.json",
     "calendar/disclosures.json",
+    "explore/quarterly-momentum.json",
+    "explore/prefectures.json",
 )
 
 
@@ -42,7 +44,14 @@ def mirror_live_data(out_dir: Path, site_url: str, *, workers: int = 24) -> dict
     for rel in GLOBAL_FILES:
         dest = data_dir / rel
         print(f"  fetch {rel}")
-        _write(dest, _fetch(f"{base}/data/{rel}"))
+        try:
+            _write(dest, _fetch(f"{base}/data/{rel}"))
+        except urllib.error.HTTPError as exc:
+            if rel.startswith("explore/") and exc.code == 404:
+                print(f"  skip {rel} (not on live yet)")
+                _write(dest, b'{"items":[],"count":0,"total":0}')
+            else:
+                raise
 
     screening = json.loads((data_dir / "screening/index.json").read_text(encoding="utf-8"))
     codes = sorted({row["edinet_code"] for row in screening.get("items", []) if row.get("edinet_code")})

@@ -15,7 +15,7 @@ from app.config import settings
 from app.collection_log import collection_log_root, read_collection_manifest
 from app.db import Company, Filing, Financial, QuarterlyFinancial, RealEstateProperty, RealEstateSync, SessionLocal, StockQuote, init_db
 from app.db_maintenance import checkpoint_sqlite_wal
-from app.routers import calendar, companies, screening, themes, trending
+from app.routers import calendar, companies, explore, screening, themes, trending
 from app.seo.helpers import build_home_hero_subtitle, build_home_meta_description, build_website_json_ld
 from app.seo.canonical_host import CanonicalHostMiddleware
 from app.seo.middleware import TechSEOMiddleware
@@ -43,6 +43,7 @@ app.include_router(screening.router, prefix="/api")
 app.include_router(calendar.router, prefix="/api")
 app.include_router(themes.router, prefix="/api")
 app.include_router(trending.router, prefix="/api")
+app.include_router(explore.router, prefix="/api")
 app.include_router(seo_router)
 
 

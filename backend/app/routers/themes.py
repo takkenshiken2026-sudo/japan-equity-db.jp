@@ -6,12 +6,13 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
 
-from app.db import Company, Financial, RealEstateProperty, StockQuote, get_db
+from app.db import Company, Financial, QuarterlyFinancial, RealEstateProperty, StockQuote, get_db
 from app.company_verdict import DISCLAIMER, GENERAL_RISKS
-from app.real_estate_nav import MAX_SANE_NAV_RATIO, MIN_SANE_MARKET_CAP, compute_nav_ratio
+from app.real_estate_nav import MAX_SANE_NAV_RATIO, MIN_SANE_MARKET_CAP
 from app.routers.companies import _property_book_value_expr, _real_estate_briefs_batch
 from app.queries import latest_financial_subquery
-from app.routers.screening import _pbr_expr, _serialize_row, _valuation_expr
+from app.routers.explore import _latest_quarterly_subquery
+from app.routers.screening import _net_cash_expr, _serialize_row, _valuation_expr
 
 router = APIRouter(prefix="/themes", tags=["themes"])
 
@@ -95,7 +96,6 @@ def weekly_themes(
         reverse=True,
     )[:limit]
 
-    # 割安成長（PER≤15 & 成長≥10%）
     growth_stmt = (
         _theme_query_base(db)
         .where(
@@ -108,16 +108,27 @@ def weekly_themes(
     )
     growth_rows = db.execute(growth_stmt).all()
 
-    # 営業CF黒字（CF降順）
-    cf_stmt = (
+    net_cash_stmt = (
         _theme_query_base(db)
-        .where(Financial.operating_cf.is_not(None), Financial.operating_cf > 0)
-        .order_by(Financial.operating_cf.desc())
+        .where(Financial.cash_and_deposits.is_not(None), _net_cash_expr() > 0)
+        .order_by(_net_cash_expr().desc())
         .limit(limit)
     )
-    cf_rows = db.execute(cf_stmt).all()
+    net_cash_rows = db.execute(net_cash_stmt).all()
 
-    # 高品質（ROE≥10% & 利益率≥8% & CF黒字）
+    dividend_stmt = (
+        _theme_query_base(db)
+        .where(
+            StockQuote.dividend_yield.is_not(None),
+            StockQuote.dividend_yield >= 0.03,
+            Financial.operating_cf.is_not(None),
+            Financial.operating_cf > 0,
+        )
+        .order_by(StockQuote.dividend_yield.desc())
+        .limit(limit)
+    )
+    dividend_rows = db.execute(dividend_stmt).all()
+
     quality_stmt = (
         _theme_query_base(db)
         .where(
@@ -130,6 +141,47 @@ def weekly_themes(
         .limit(limit)
     )
     quality_rows = db.execute(quality_stmt).all()
+
+    latest_q = _latest_quarterly_subquery()
+    latest_fin = latest_financial_subquery()
+    q_momentum_stmt = (
+        select(Company, QuarterlyFinancial, Financial, StockQuote)
+        .join(latest_q, Company.edinet_code == latest_q.c.edinet_code)
+        .join(
+            QuarterlyFinancial,
+            and_(
+                QuarterlyFinancial.edinet_code == latest_q.c.edinet_code,
+                QuarterlyFinancial.period_end == latest_q.c.period_end,
+            ),
+        )
+        .outerjoin(latest_fin, Company.edinet_code == latest_fin.c.edinet_code)
+        .outerjoin(
+            Financial,
+            and_(
+                Financial.edinet_code == latest_fin.c.edinet_code,
+                Financial.fiscal_year_end == latest_fin.c.fiscal_year_end,
+            ),
+        )
+        .outerjoin(StockQuote, Company.edinet_code == StockQuote.edinet_code)
+        .where(
+            Company.listing_status == "上場",
+            QuarterlyFinancial.revenue_yoy.is_not(None),
+            QuarterlyFinancial.revenue_yoy >= 0.1,
+        )
+        .order_by(QuarterlyFinancial.revenue_yoy.desc())
+        .limit(limit)
+    )
+    q_rows = db.execute(q_momentum_stmt).all()
+    q_codes = [c.edinet_code for c, _, _, _ in q_rows]
+    q_briefs = _real_estate_briefs_batch(db, q_codes)
+    q_items = []
+    for company, qtr, financial, quote in q_rows:
+        if financial is None:
+            continue
+        item = _serialize_row(company, financial, quote, q_briefs.get(company.edinet_code))
+        item["revenue_yoy"] = qtr.revenue_yoy
+        item["period_end"] = qtr.period_end
+        q_items.append(item)
 
     return {
         "disclaimer": DISCLAIMER,
@@ -144,20 +196,36 @@ def weekly_themes(
                 "items": nav_items,
             },
             {
+                "id": "net_cash",
+                "title": "ネットキャッシュ",
+                "description": "現金預金が有利子負債を上回る企業（ネットキャッシュ降順）",
+                "preset": "net-cash",
+                "count": len(net_cash_rows),
+                "items": _rows_to_items(db, net_cash_rows),
+            },
+            {
+                "id": "high_dividend",
+                "title": "高配当＋CF黒字",
+                "description": "配当利回り3%以上かつ営業CF黒字",
+                "preset": "high-dividend",
+                "count": len(dividend_rows),
+                "items": _rows_to_items(db, dividend_rows),
+            },
+            {
+                "id": "q_momentum",
+                "title": "四半期モメンタム",
+                "description": "直近四半期売上YoY 10%以上",
+                "preset": "q-momentum",
+                "count": len(q_items),
+                "items": q_items,
+            },
+            {
                 "id": "value_growth",
                 "title": "割安成長株",
                 "description": "PER15倍以下かつ売上成長10%以上",
                 "preset": "value-growth",
                 "count": len(growth_rows),
                 "items": _rows_to_items(db, growth_rows),
-            },
-            {
-                "id": "cf_positive",
-                "title": "営業CF黒字",
-                "description": "営業キャッシュフローがプラスの銘柄",
-                "preset": "cf-positive",
-                "count": len(cf_rows),
-                "items": _rows_to_items(db, cf_rows),
             },
             {
                 "id": "quality",

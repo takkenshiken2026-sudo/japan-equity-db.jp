@@ -64,7 +64,15 @@
 
   async function loadGlobal(rel) {
     if (!globalsCache[rel]) {
-      globalsCache[rel] = await fetchJson(`/data/${rel}`);
+      try {
+        globalsCache[rel] = await fetchJson(`/data/${rel}`);
+      } catch (err) {
+        if (String(rel).startsWith('explore/')) {
+          globalsCache[rel] = { items: [], count: 0, total: 0 };
+        } else {
+          throw err;
+        }
+      }
     }
     return globalsCache[rel];
   }
@@ -93,6 +101,10 @@
     const minNav = num(params.get('min_real_estate_nav_ratio'));
     const hasRe = params.get('has_real_estate') === 'true';
     const hasCf = params.get('has_operating_cf') === 'true';
+    const hasNetCash = params.get('has_net_cash') === 'true';
+    const minEquity = num(params.get('min_equity_ratio'));
+    const maxDe = num(params.get('max_debt_equity_ratio'));
+    const minDivYield = num(params.get('min_dividend_yield'));
     const sortBy = params.get('sort_by') || 'revenue';
     const order = params.get('order') || 'desc';
 
@@ -112,9 +124,24 @@
     if (maxPbr != null) rows = rows.filter(r => (pbrVal(r) ?? Infinity) <= maxPbr);
     if (hasRe) rows = rows.filter(r => r.real_estate);
     if (hasCf) rows = rows.filter(r => (r.operating_cf ?? 0) > 0);
+    if (hasNetCash) {
+      rows = rows.filter(r => {
+        const cash = r.cash_and_deposits;
+        if (cash == null) return false;
+        const net = r.net_cash != null ? r.net_cash : cash - (r.interest_bearing_debt || 0);
+        return net > 0;
+      });
+    }
+    if (minEquity != null) rows = rows.filter(r => (r.equity_ratio ?? -Infinity) >= minEquity);
+    if (maxDe != null) rows = rows.filter(r => r.debt_equity_ratio != null && r.debt_equity_ratio >= 0 && r.debt_equity_ratio <= maxDe);
+    if (minDivYield != null) rows = rows.filter(r => (r.dividend_yield ?? -Infinity) >= minDivYield);
     if (sortBy === 'market_cap') {
       rows = rows.filter(r => (r.market_cap ?? 0) > 0);
     }
+    if (sortBy === 'net_cash') rows = rows.filter(r => r.cash_and_deposits != null);
+    if (sortBy === 'equity_ratio') rows = rows.filter(r => r.equity_ratio != null);
+    if (sortBy === 'debt_equity') rows = rows.filter(r => r.debt_equity_ratio != null);
+    if (sortBy === 'dividend_yield') rows = rows.filter(r => (r.dividend_yield ?? 0) > 0);
     if (minNav != null || sortBy === 'real_estate_nav') {
       rows = rows.filter(r => (r.market_cap ?? 0) >= MIN_SANE_MARKET_CAP && r.real_estate_nav_ratio != null);
     }
@@ -135,6 +162,10 @@
       operating_cf: r => r.operating_cf,
       real_estate_nav: r => r.real_estate_nav_ratio,
       real_estate_book: r => r.real_estate?.total_book_value_m,
+      equity_ratio: r => r.equity_ratio,
+      debt_equity: r => r.debt_equity_ratio,
+      net_cash: r => r.net_cash != null ? r.net_cash : (r.cash_and_deposits != null ? r.cash_and_deposits - (r.interest_bearing_debt || 0) : null),
+      dividend_yield: r => r.dividend_yield,
     }[sortBy] || (r => r.revenue);
 
     rows.sort((a, b) => {
@@ -262,10 +293,45 @@
     }
     if (pathname === '/api/calendar/disclosures') {
       const all = await loadGlobal('calendar/disclosures.json');
+      let rows = (all.items || []).slice();
+      const codes = (params.get('codes') || '').split(',').map(c => c.trim()).filter(Boolean);
+      if (codes.length) {
+        const set = new Set(codes);
+        rows = rows.filter(r => set.has(r.edinet_code));
+      }
+      const q = (params.get('q') || '').trim().toLowerCase();
+      if (q) {
+        rows = rows.filter(r => {
+          const hay = [r.company_name, r.doc_description, r.edinet_code].filter(Boolean).join(' ').toLowerCase();
+          return hay.includes(q);
+        });
+      }
       const limit = Math.min(num(params.get('limit')) || 50, 500);
       const offset = num(params.get('offset')) || 0;
-      const items = (all.items || []).slice(offset, offset + limit);
-      return { ...all, total: all.total ?? all.items?.length ?? 0, count: items.length, offset, items };
+      const items = rows.slice(offset, offset + limit);
+      return { total: rows.length, count: items.length, offset, items };
+    }
+    if (pathname === '/api/explore/quarterly-momentum') {
+      const all = await loadGlobal('explore/quarterly-momentum.json');
+      let rows = (all.items || []).slice();
+      const industry = params.get('industry');
+      const minYoy = num(params.get('min_revenue_yoy'));
+      if (industry) rows = rows.filter(r => (r.industry || '').includes(industry));
+      if (minYoy != null) rows = rows.filter(r => (r.revenue_yoy ?? -Infinity) >= minYoy);
+      const sortBy = params.get('sort_by') || 'revenue_yoy';
+      const order = params.get('order') || 'desc';
+      rows.sort((a, b) => {
+        const av = a[sortBy];
+        const bv = b[sortBy];
+        if (av == null && bv == null) return 0;
+        if (av == null) return 1;
+        if (bv == null) return -1;
+        return order === 'asc' ? av - bv : bv - av;
+      });
+      return paginate(rows, params);
+    }
+    if (pathname === '/api/explore/prefectures') {
+      return loadGlobal('explore/prefectures.json');
     }
     if (pathname === '/api/screening') {
       const idx = await loadScreeningIndex();
