@@ -13,12 +13,6 @@ DISCLAIMER = (
     "投資判断はご自身の責任で行い、リスクを十分にご理解ください。"
 )
 
-GENERAL_RISKS = [
-    "株式価格は変動し、投資元本が保証されるものではありません",
-    "過去の財務実績は将来の業績・株価を保証しません",
-    "データの欠損・更新遅延により指標が実態と乖離する場合があります",
-]
-
 BUY_RATING_RISKS = [
     "好材料が既に株価に織り込み済みの可能性があります",
     "業績改善が一時的で、トレンド継続は保証されません",
@@ -56,19 +50,16 @@ def _trust_score(data_freshness: dict | None) -> int:
     return min(100, score)
 
 
-def _merge_risk_factors(rating: str, bears: list[str]) -> tuple[list[str], list[str]]:
-    """銘柄固有リスクと、買い寄り系評価時に必ず示す一般リスクを返す。"""
+def _merge_risk_factors(rating: str, bears: list[str]) -> list[str]:
+    """銘柄固有リスクを整え、買い寄り系評価時は追加の留意点を足す。"""
     specific = list(bears)
-    general = list(GENERAL_RISKS)
 
     if rating in BUY_RATINGS:
         for item in BUY_RATING_RISKS:
             if item not in specific and len(specific) < 5:
                 specific.append(item)
-    elif not specific:
-        general = GENERAL_RISKS[:2]
 
-    return specific[:5], general
+    return specific[:5]
 
 
 def build_company_verdict(
@@ -93,7 +84,6 @@ def build_company_verdict(
             "stars": 0,
             "bulls": [],
             "bears": ["年次財務データがありません"],
-            "general_risks": list(GENERAL_RISKS),
             "disclaimer": DISCLAIMER,
             "summary": "財務データが不足しているため判断できません。",
             "trust_score": _trust_score(data_freshness),
@@ -241,7 +231,7 @@ def build_company_verdict(
     if rating in BUY_RATINGS:
         summary += "。好材料とあわせて下記リスクも必ず確認してください"
 
-    bears_out, general_risks = _merge_risk_factors(rating, bears)
+    bears_out = _merge_risk_factors(rating, bears)
 
     return {
         "score": score,
@@ -249,7 +239,6 @@ def build_company_verdict(
         "stars": stars,
         "bulls": bulls[:5],
         "bears": bears_out,
-        "general_risks": general_risks,
         "disclaimer": DISCLAIMER,
         "summary": summary,
         "trust_score": trust,

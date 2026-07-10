@@ -7,7 +7,7 @@ from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
 
 from app.db import Company, Financial, QuarterlyFinancial, RealEstateProperty, StockQuote, get_db
-from app.company_verdict import DISCLAIMER, GENERAL_RISKS
+from app.company_verdict import DISCLAIMER
 from app.real_estate_nav import MAX_SANE_NAV_RATIO, MIN_SANE_MARKET_CAP
 from app.routers.companies import _property_book_value_expr, _real_estate_briefs_batch
 from app.queries import latest_financial_subquery
@@ -185,7 +185,6 @@ def weekly_themes(
 
     return {
         "disclaimer": DISCLAIMER,
-        "general_risks": list(GENERAL_RISKS),
         "themes": [
             {
                 "id": "re_nav",
