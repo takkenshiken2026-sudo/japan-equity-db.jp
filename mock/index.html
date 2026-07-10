@@ -70,13 +70,23 @@
       --shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
       --shadow-lg: 0 10px 40px rgba(15, 23, 42, 0.1);
       --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
-      /* タイポグラフィ（5段階 + 数値・見出し） */
-      --fs-caption: 0.8125rem;
-      --fs-small: 0.875rem;
-      --fs-body: 0.9375rem;
-      --fs-subhead: 1.0625rem;
-      --fs-value: 1.125rem;
-      --fs-stat: 1.3125rem;
+      /* ── Type scale (root 16px) ─────────────────────────────────
+         caption  12px  補助・バッジ・メタ
+         small    14px  表・ナビ・ラベル・二次UI
+         body     16px  本文・フォーム・ボタン
+         subhead  18px  カード/セクション見出し (h2)
+         value    20px  KPI・強調数値
+         stat     24px  株価・判定・ページ強調
+         display  ヒーロー見出しのみ (clamp)
+         ───────────────────────────────────────────────────────── */
+      --fs-caption: 0.75rem;   /* 12px */
+      --fs-small: 0.875rem;    /* 14px */
+      --fs-body: 1rem;         /* 16px */
+      --fs-subhead: 1.125rem;  /* 18px */
+      --fs-value: 1.25rem;     /* 20px */
+      --fs-stat: 1.5rem;       /* 24px */
+      --fs-display-min: 1.75rem;  /* 28px */
+      --fs-display-max: 2.5rem;   /* 40px */
       --hero-width: 1100px;
       --hero-search-width: 900px;
       --hero-gradient: linear-gradient(135deg, var(--brand-800) 0%, var(--brand-600) 45%, var(--brand-500) 100%);
@@ -224,7 +234,7 @@
     }
     .logo {
       display: flex; align-items: center; gap: 8px;
-      font-size: 1.0625rem; font-weight: 700; color: var(--brand-700); flex-shrink: 0;
+      font-size: var(--fs-subhead); font-weight: 700; color: var(--brand-700); flex-shrink: 0;
       cursor: pointer; user-select: none;
       transition: color 0.15s;
     }
@@ -260,7 +270,7 @@
       width: 16px; height: 16px; color: var(--muted); pointer-events: none;
     }
     .global-search--hero input {
-      padding: 16px 20px 16px 48px; font-size: var(--fs-value); border-radius: var(--radius-pill);
+      padding: 14px 20px 14px 48px; font-size: var(--fs-body); border-radius: var(--radius-pill);
       box-shadow: var(--shadow-lg); border: 0; background: rgba(255, 255, 255, 0.95);
     }
     .global-search--hero svg { width: 20px; height: 20px; left: 18px; }
@@ -347,7 +357,10 @@
     .section-head h2[data-icon] .ico,
     .trending-panel-head h3[data-icon] .ico,
     .tab[data-icon] .ico { color: var(--accent); }
+    /* Page / panel titles (not marketing hero) */
     h1 { margin: 0 0 8px; font-size: var(--fs-stat); font-weight: 700; letter-spacing: -0.02em; line-height: 1.3; }
+    h2 { font-size: var(--fs-subhead); font-weight: 700; line-height: 1.35; }
+    h3 { font-size: var(--fs-body); font-weight: 600; line-height: 1.4; }
     .subtitle { color: var(--text-secondary); font-size: var(--fs-body); margin: 0; line-height: 1.55; }
 
     /* Stats (re-summary cards) */
@@ -521,7 +534,7 @@
       margin-top: 12px; padding-top: 0;
     }
     .co-metric .lbl { font-size: var(--fs-caption); color: var(--muted); font-weight: 600; }
-    .co-metric .val { font-size: var(--fs-body); font-weight: 700; margin-top: 1px; }
+    .co-metric .val { font-size: var(--fs-value); font-weight: 700; margin-top: 1px; }
     .co-metric.highlight { background: var(--surface2); border-radius: var(--radius); padding: 4px 6px; margin: -4px -6px; }
 
     .detail-tabs-wrap {
@@ -752,7 +765,7 @@
       padding: 16px 18px; min-height: 240px; overflow: visible;
       box-shadow: var(--shadow-sm);
     }
-    .chart-box h3 { margin: 0 0 12px; font-size: var(--fs-body); color: var(--text); font-weight: 600; }
+    .chart-box h3 { margin: 0 0 12px; font-size: var(--fs-small); color: var(--text-secondary); font-weight: 600; }
     .chart-canvas-wrap {
       position: relative; width: 100%; height: 260px;
       overflow: visible;
@@ -1026,7 +1039,7 @@
       text-align: center;
     }
     #dashboard .hero-intro-stack h1 {
-      font-size: clamp(1.85rem, 3.8vw, 2.85rem);
+      font-size: clamp(var(--fs-display-min), 4vw, var(--fs-display-max));
       font-weight: 700;
       margin: 0;
       letter-spacing: -0.03em;
@@ -1038,7 +1051,7 @@
     #dashboard .hero-intro-stack .subtitle {
       max-width: 42em;
       margin: 0;
-      font-size: 1.125rem;
+      font-size: var(--fs-subhead);
       font-weight: 400;
       line-height: 1.65;
       text-align: center;
@@ -1307,7 +1320,7 @@
     .theme-box-title {
       display: flex; align-items: center; gap: 4px; min-width: 0;
     }
-    .theme-box h3 { margin: 0; font-size: var(--fs-small); line-height: 1.3; min-width: 0; }
+    .theme-box h3 { margin: 0; font-size: var(--fs-body); line-height: 1.3; min-width: 0; font-weight: 700; }
     .theme-meta { font-size: var(--fs-caption); color: var(--muted); white-space: nowrap; flex-shrink: 0; }
     .help-tip {
       position: relative; display: inline-flex; align-items: center; flex-shrink: 0;
@@ -1315,7 +1328,7 @@
     .help-tip-trigger {
       width: 16px; height: 16px; padding: 0; border-radius: 50%;
       border: 1px solid var(--border); background: var(--surface2); color: var(--muted);
-      font-size: 11px; font-weight: 700; line-height: 1; cursor: help;
+      font-size: var(--fs-caption); font-weight: 700; line-height: 1; cursor: help;
       display: inline-flex; align-items: center; justify-content: center;
       transition: color 0.12s, border-color 0.12s, background 0.12s;
     }
@@ -1392,7 +1405,7 @@
     .trending-rank-item:first-child { padding-top: 0; }
     .trending-rank-item:hover { color: var(--text); }
     .trending-rank-num {
-      font-size: var(--fs-small); font-weight: 800; color: var(--muted); line-height: 1.2;
+      font-size: var(--fs-small); font-weight: 700; color: var(--muted); line-height: 1.2;
     }
     .trending-rank-item:first-child .trending-rank-num { color: var(--accent); }
     .trending-rank-body { min-width: 0; }
@@ -1490,7 +1503,7 @@
       font-size: var(--fs-caption); color: var(--muted); margin-top: 4px;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-    .compare-col-price { font-size: var(--fs-subhead); font-weight: 800; margin-top: 8px; line-height: 1.2; }
+    .compare-col-price { font-size: var(--fs-value); font-weight: 700; margin-top: 8px; line-height: 1.2; }
     .compare-col-price-sub { font-size: var(--fs-caption); font-weight: 500; color: var(--muted); margin-top: 2px; }
     .compare-col-body { padding: 12px 14px 14px; flex: 1; display: flex; flex-direction: column; }
     .compare-col-kpis {
@@ -1621,7 +1634,7 @@
         gap: 18px;
       }
       #dashboard .hero-intro-stack h1 {
-        font-size: clamp(1.55rem, 4.2vw, 2.35rem);
+        font-size: clamp(1.5rem, 3.5vw, 2.25rem);
         max-width: 18em;
       }
       #dashboard .hero-intro-stack .subtitle {
@@ -1674,7 +1687,9 @@
       h1 { font-size: var(--fs-value); }
       .card { padding: 16px; }
       .card-header { margin-bottom: 14px; }
-      .card-header h2 { font-size: var(--fs-subhead); }
+      .card-header h2, .section-head h2 { font-size: var(--fs-subhead); }
+      .stat .value, .verdict-rating, .hero-strip .hero-price { font-size: var(--fs-value); }
+      .kpi .kpi-value, .analysis-kpi .kpi .val, .co-metric .val { font-size: var(--fs-subhead); }
       #dashboard .dash-hero {
         width: auto;
         margin-left: calc(-1 * var(--main-pad-x));
@@ -1691,7 +1706,7 @@
         text-align: center;
       }
       #dashboard .hero-intro-stack h1 {
-        font-size: clamp(1.35rem, 5.8vw, 1.9rem);
+        font-size: clamp(1.375rem, 5vw, 1.75rem);
         max-width: none;
         line-height: 1.35;
         text-align: center;
@@ -1780,7 +1795,7 @@
         padding-bottom: 22px;
       }
       #dashboard .hero-intro-stack h1 {
-        font-size: clamp(1.18rem, 5.2vw, 1.45rem);
+        font-size: clamp(1.375rem, 5vw, 1.625rem);
       }
       #dashboard .hero-intro-stack .subtitle {
         font-size: var(--fs-small);
@@ -1940,7 +1955,7 @@
         </div>
 
         <div class="chart-box" style="margin-bottom:16px">
-          <h3 id="dash-chart-title" data-icon="bar-chart" style="margin:0 0 12px;font-size:var(--fs-body);color:var(--text-secondary)">売上高トップ30（棒グラフ）</h3>
+          <h3 id="dash-chart-title" data-icon="bar-chart" style="margin:0 0 12px;font-size:var(--fs-small);color:var(--text-secondary)">売上高トップ30（棒グラフ）</h3>
           <div class="chart-canvas-wrap" id="dash-chart-wrap" style="min-height:220px">
             <div class="chart-loading" id="dash-chart-loading"><span class="spinner"></span>チャートを読み込み中…</div>
             <canvas id="dash-revenue-chart" style="display:none"></canvas>
@@ -2254,19 +2269,19 @@
           <div class="compare-columns" id="compare-columns"></div>
           <div class="compare-charts-grid">
             <div class="chart-box">
-              <h3 data-icon="bar-chart" style="margin:0 0 10px;font-size:var(--fs-body);color:var(--text-secondary)">売上高推移</h3>
+              <h3 data-icon="bar-chart" style="margin:0 0 10px;font-size:var(--fs-small);color:var(--text-secondary)">売上高推移</h3>
               <div class="chart-canvas-wrap"><canvas id="compare-chart-revenue"></canvas></div>
             </div>
             <div class="chart-box">
-              <h3 data-icon="percent" style="margin:0 0 10px;font-size:var(--fs-body);color:var(--text-secondary)">ROE推移</h3>
+              <h3 data-icon="percent" style="margin:0 0 10px;font-size:var(--fs-small);color:var(--text-secondary)">ROE推移</h3>
               <div class="chart-canvas-wrap"><canvas id="compare-chart-roe"></canvas></div>
             </div>
             <div class="chart-box">
-              <h3 data-icon="pie-chart" style="margin:0 0 10px;font-size:var(--fs-body);color:var(--text-secondary)">営業利益率推移</h3>
+              <h3 data-icon="pie-chart" style="margin:0 0 10px;font-size:var(--fs-small);color:var(--text-secondary)">営業利益率推移</h3>
               <div class="chart-canvas-wrap"><canvas id="compare-chart-margin"></canvas></div>
             </div>
             <div class="chart-box">
-              <h3 data-icon="trending-up" style="margin:0 0 10px;font-size:var(--fs-body);color:var(--text-secondary)">株価推移（基準日=100）</h3>
+              <h3 data-icon="trending-up" style="margin:0 0 10px;font-size:var(--fs-small);color:var(--text-secondary)">株価推移（基準日=100）</h3>
               <div class="chart-canvas-wrap"><canvas id="compare-chart-price"></canvas></div>
             </div>
           </div>
