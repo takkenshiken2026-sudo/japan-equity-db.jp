@@ -1315,13 +1315,24 @@
     .trust-badge.ok, .trust-badge.warn, .trust-badge.miss {
       background: var(--surface); color: var(--text-secondary); border-color: var(--border);
     }
+    #weekly-themes {
+      display: block;
+      width: 100%;
+    }
+    #weekly-themes-card .theme-weekly-grid,
     .theme-weekly-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      grid-template-columns: 1fr 1fr 1fr 1fr;
       gap: var(--space-3);
+      width: 100%;
+      box-sizing: border-box;
     }
+    #weekly-themes-card .theme-box,
     .theme-box {
       min-width: 0;
+      width: 100%;
+      max-width: none;
+      box-sizing: border-box;
       display: flex; flex-direction: column;
       border: 1px solid var(--border); border-radius: var(--radius-card); padding: var(--space-3) var(--space-3);
       background: var(--surface); transition: border-color 0.15s, box-shadow 0.15s;
@@ -1408,8 +1419,27 @@
     .trending-rank-list {
       display: flex; flex-direction: column; gap: 0;
     }
+    .trending-rank-list--cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: var(--space-4);
+      row-gap: 0;
+    }
+    .trending-rank-cols-head-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 4.5rem minmax(0, 1fr) 4.5rem;
+      column-gap: var(--space-4);
+      row-gap: 0;
+      padding: 0 0 var(--space-1);
+      margin-bottom: 2px;
+      border-bottom: 1px solid var(--border);
+      font-size: var(--fs-caption);
+      color: var(--text-muted);
+      font-weight: var(--fw-semibold);
+    }
+    .trending-rank-cols-head-row span:nth-child(even) { text-align: right; }
     .trending-rank-item {
-      display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-2); align-items: center;
+      display: grid; grid-template-columns: minmax(0, 1fr) 4.5rem; gap: var(--space-2); align-items: center;
       padding: var(--space-1) 0;
       cursor: pointer; transition: color 0.12s;
     }
@@ -1447,16 +1477,24 @@
     }
     @media (max-width: 640px) {
       .trending-home-grid { grid-template-columns: 1fr; }
+      .trending-rank-list--cols { grid-template-columns: 1fr; }
+      .trending-rank-cols-head-row {
+        grid-template-columns: minmax(0, 1fr) 4.5rem;
+      }
+      .trending-rank-cols-head-row span:nth-child(n+3) { display: none; }
     }
     @media (max-width: 1200px) {
-      .theme-weekly-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      #weekly-themes-card .theme-weekly-grid,
+      .theme-weekly-grid { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 768px) {
+      #weekly-themes-card .theme-weekly-grid,
       .theme-weekly-grid {
         display: flex; overflow-x: auto; padding-bottom: var(--space-1);
         -webkit-overflow-scrolling: touch; scrollbar-width: thin;
       }
-      .theme-box { flex: 0 0 min(220px, 72vw); }
+      #weekly-themes-card .theme-box,
+      .theme-box { flex: 0 0 min(240px, 72vw); width: auto; }
     }
     .compare-bar {
       display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center;
@@ -5092,7 +5130,7 @@
       };
 
       try {
-        const data = await api('/api/trending/home?limit=5');
+        const data = await api('/api/trending/home?limit=10');
         searchEl.classList.remove('trending-loading');
         newsEl.classList.remove('trending-loading');
         const searchItems = data.search_trending || [];
@@ -5111,7 +5149,8 @@
               </div>`;
 
         searchEl.innerHTML = searchItems.length
-          ? `<div class="trending-rank-list">${searchItems.map((item) =>
+          ? `<div class="trending-rank-cols-head-row"><span>社名</span><span>前日比</span><span>社名</span><span>前日比</span></div>
+            <div class="trending-rank-list trending-rank-list--cols">${searchItems.map((item) =>
               renderTrendingItem(item, formatSearchBadge(item))
             ).join('')}</div>`
           : `<p class="trending-empty">現在、検索急上昇銘柄はありません。</p>`;
@@ -5148,7 +5187,7 @@
       try {
         const data = await api('/api/themes/weekly?limit=5');
         el.classList.remove('loading');
-        el.innerHTML = `<div class="theme-weekly-grid">${(data.themes || []).filter(t => t.id !== 'high_roe').slice(0, 6).map(theme => {
+        el.innerHTML = `<div class="theme-weekly-grid">${(data.themes || []).filter(t => t.id !== 'high_roe').slice(0, 4).map(theme => {
           const desc = theme.description || '';
           return `
           <div class="theme-box">
