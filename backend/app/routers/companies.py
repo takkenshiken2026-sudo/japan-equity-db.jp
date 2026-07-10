@@ -15,6 +15,7 @@ from app.db import (
     QuarterlyFinancial,
     RealEstateProperty,
     RealEstateSync,
+    ShortSellingBalance,
     StockQuote,
     get_db,
 )
@@ -1097,6 +1098,68 @@ def get_company_quarterly(
                 "eps_yoy": r.eps_yoy,
             }
             for r in rows
+        ],
+    }
+
+
+@router.get("/{edinet_code}/short-selling")
+def get_company_short_selling(
+    edinet_code: str,
+    db: Session = Depends(get_db),
+):
+    """空売り残高（残高割合0.5%以上）。報告者ごとに直近の残高を返す。"""
+    company = db.get(Company, edinet_code)
+    if not company:
+        raise HTTPException(status_code=404, detail="企業が見つかりません")
+
+    rows = db.scalars(
+        select(ShortSellingBalance)
+        .where(ShortSellingBalance.edinet_code == edinet_code)
+        .order_by(ShortSellingBalance.calc_date.desc())
+    ).all()
+
+    # 報告者ごとに直近（最新 calc_date）の1件を採用
+    latest_by_holder: dict[str, ShortSellingBalance] = {}
+    for r in rows:
+        if r.holder_name not in latest_by_holder:
+            latest_by_holder[r.holder_name] = r
+
+    holders = sorted(
+        latest_by_holder.values(),
+        key=lambda r: (r.short_ratio if r.short_ratio is not None else -1),
+        reverse=True,
+    )
+    # 現時点で0.5%以上を保有している報告者のみ（撤回済みは除外）
+    open_holders = [h for h in holders if (h.short_ratio or 0) >= 0.5]
+
+    def _trend(h: ShortSellingBalance) -> str | None:
+        if h.short_ratio is None or h.prev_ratio is None:
+            return None
+        if h.short_ratio > h.prev_ratio:
+            return "up"
+        if h.short_ratio < h.prev_ratio:
+            return "down"
+        return "flat"
+
+    total_ratio = sum(h.short_ratio for h in open_holders if h.short_ratio is not None)
+    latest_calc_date = max((r.calc_date for r in rows), default=None)
+
+    return {
+        "edinet_code": edinet_code,
+        "sec_code": company.sec_code,
+        "count": len(open_holders),
+        "latest_calc_date": latest_calc_date,
+        "total_ratio": round(total_ratio, 4) if open_holders else None,
+        "holders": [
+            {
+                "holder_name": h.holder_name,
+                "short_ratio": h.short_ratio,
+                "short_shares": h.short_shares,
+                "prev_ratio": h.prev_ratio,
+                "calc_date": h.calc_date,
+                "trend": _trend(h),
+            }
+            for h in open_holders
         ],
     }
 

@@ -435,6 +435,7 @@
       }
       if (sub === 'profile') return bundle.profile;
       if (sub === 'real-estate') return bundle.real_estate;
+      if (sub === 'short-selling') return bundle.short_selling || { holders: [], count: 0, total_ratio: null };
       if (sub === 'quarterly') return bundle.quarterly;
       if (sub === 'valuation-history') return bundle.valuation_history;
       if (sub === 'price-history') {
