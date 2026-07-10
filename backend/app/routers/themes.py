@@ -131,15 +131,6 @@ def weekly_themes(
     )
     quality_rows = db.execute(quality_stmt).all()
 
-    # 高ROE（10%以上）
-    roe_stmt = (
-        _theme_query_base(db)
-        .where(Financial.roe >= 0.1)
-        .order_by(Financial.roe.desc())
-        .limit(limit)
-    )
-    roe_rows = db.execute(roe_stmt).all()
-
     return {
         "disclaimer": DISCLAIMER,
         "general_risks": list(GENERAL_RISKS),
@@ -175,14 +166,6 @@ def weekly_themes(
                 "preset": "quality",
                 "count": len(quality_rows),
                 "items": _rows_to_items(db, quality_rows),
-            },
-            {
-                "id": "high_roe",
-                "title": "高ROE",
-                "description": "ROE10%以上の収益性上位銘柄",
-                "preset": "high-roe",
-                "count": len(roe_rows),
-                "items": _rows_to_items(db, roe_rows),
             },
         ]
     }

@@ -1216,7 +1216,7 @@
     }
     .theme-weekly-grid {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 10px;
     }
     .theme-box {
@@ -4886,7 +4886,7 @@
       try {
         const data = await api('/api/themes/weekly?limit=5');
         el.classList.remove('loading');
-        el.innerHTML = `<div class="theme-weekly-grid">${(data.themes || []).map(theme => {
+        el.innerHTML = `<div class="theme-weekly-grid">${(data.themes || []).filter(t => t.id !== 'high_roe').slice(0, 4).map(theme => {
           const desc = `${theme.description || ''}${theme.id === 're_nav' && !theme.count ? '（時価総額データ更新後に表示）' : ''}`;
           return `
           <div class="theme-box">
