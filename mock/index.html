@@ -862,6 +862,34 @@
     }
 
     .company-profile-card { margin-bottom: var(--space-4); }
+    .detail-hero-profile {
+      margin-top: var(--space-3);
+      max-width: 52rem;
+    }
+    .detail-hero-profile .profile-intro {
+      margin: 0 0 var(--space-3); padding: 0; border: none; background: none; border-radius: 0;
+      color: var(--text-secondary); font-size: var(--fs-small); line-height: 1.7;
+    }
+    .detail-hero-profile .profile-facts {
+      margin-bottom: var(--space-3); gap: var(--space-2);
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+    .detail-hero-profile .profile-fact {
+      padding: var(--space-2) var(--space-3);
+    }
+    .detail-hero-profile .profile-fact .val { font-size: var(--fs-small); }
+    .detail-hero-profile .profile-block {
+      margin-top: var(--space-3); padding-top: var(--space-3);
+    }
+    .detail-hero-profile .profile-block h3 {
+      margin: 0 0 var(--space-2); font-size: var(--fs-small);
+    }
+    .detail-hero-profile .profile-text {
+      font-size: var(--fs-small); line-height: 1.7;
+    }
+    .detail-hero-profile .profile-loading {
+      padding: var(--space-1) 0; font-size: var(--fs-small);
+    }
     .profile-intro {
       margin: 0 0 var(--space-4); padding: var(--space-4) var(--space-4); border-radius: var(--radius);
       background: var(--surface);
@@ -2531,15 +2559,6 @@
             <div class="insight-grid" id="data-insights"></div>
             <nav class="overview-nav" id="overview-nav" aria-label="詳細セクションへ"></nav>
           </div>
-
-          <div class="card company-profile-card section-card" id="company-profile-card">
-            <div class="card-header">
-              <h2 data-icon="building">企業概要・事業内容</h2>
-            </div>
-            <div id="profile-body">
-              <div class="profile-loading"><span class="spinner" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:8px"></span>読み込み中…</div>
-            </div>
-          </div>
         </div>
 
         <div class="detail-section" id="sec-analysis">
@@ -3925,17 +3944,14 @@
     }
 
     function renderCompanyProfile(profile, company) {
-      const el = document.getElementById('profile-body');
+      const el = document.getElementById('detail-hero-profile');
+      if (!el) return;
       if (!profile) {
-        el.innerHTML = '<p class="muted">企業概要を取得できませんでした。</p>';
+        el.innerHTML = '<p class="muted" style="margin:0;font-size:var(--fs-small)">企業概要を取得できませんでした。</p>';
         return;
       }
 
       const facts = [
-        ['業種', company.industry],
-        ['所在地', company.location],
-        ['上場区分', company.listing_status],
-        ['決算期', company.fiscal_year_end],
         ['従業員数', profile.employee_count ? `${formatNum(profile.employee_count, 0)}人` : null],
         ['資本金', profile.capital_stock_m ? formatBookValueM(profile.capital_stock_m) : null],
         ['発行済株式', profile.issued_shares],
@@ -3943,11 +3959,11 @@
       ].filter(([, v]) => v);
 
       el.innerHTML = `
-        <p class="profile-intro">${profile.intro ?? ''}</p>
-        <div class="profile-facts">
+        ${profile.intro ? `<p class="profile-intro">${profile.intro}</p>` : ''}
+        ${facts.length ? `<div class="profile-facts">
           ${facts.map(([l, v]) => `
             <div class="profile-fact"><div class="lbl">${l}</div><div class="val">${v}</div></div>`).join('')}
-        </div>
+        </div>` : ''}
         ${profile.affiliates_summary ? `
           <div class="profile-block" style="margin-top:0;padding-top:0;border-top:none">
             <h3>${iconLabel('users', '主要関係会社', 'sm')}</h3>
@@ -6035,6 +6051,9 @@
               </div>
             </div>
             <p class="subtitle detail-subtitle">${c.industry ?? '-'} · ${c.location ?? '-'} · ${c.listing_status ?? '-'}</p>
+            <div class="detail-hero-profile" id="detail-hero-profile">
+              <div class="profile-loading"><span class="spinner" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:8px"></span>概要を読み込み中…</div>
+            </div>
             <div class="detail-badge-row">
               <div class="tags">
                 ${c.fiscal_year_end ? `<span class="badge blue">決算 ${c.fiscal_year_end}</span>` : ''}
