@@ -864,31 +864,55 @@
     .company-profile-card { margin-bottom: var(--space-4); }
     .detail-hero-profile {
       margin-top: var(--space-3);
-      max-width: 52rem;
+      min-width: 0;
+      width: 100%;
     }
     .detail-hero-profile .profile-intro {
       margin: 0 0 var(--space-3); padding: 0; border: none; background: none; border-radius: 0;
       color: var(--text-secondary); font-size: var(--fs-small); line-height: 1.7;
+      overflow-wrap: anywhere; word-break: break-word;
     }
     .detail-hero-profile .profile-facts {
       margin-bottom: var(--space-3); gap: var(--space-2);
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     }
     .detail-hero-profile .profile-fact {
       padding: var(--space-2) var(--space-3);
+      min-width: 0;
     }
-    .detail-hero-profile .profile-fact .val { font-size: var(--fs-small); }
+    .detail-hero-profile .profile-fact .val {
+      font-size: var(--fs-small);
+      overflow-wrap: anywhere; word-break: break-word;
+    }
     .detail-hero-profile .profile-block {
       margin-top: var(--space-3); padding-top: var(--space-3);
+      min-width: 0;
     }
     .detail-hero-profile .profile-block h3 {
       margin: 0 0 var(--space-2); font-size: var(--fs-small);
     }
     .detail-hero-profile .profile-text {
       font-size: var(--fs-small); line-height: 1.7;
+      overflow-wrap: anywhere; word-break: break-word;
+      min-width: 0;
     }
     .detail-hero-profile .profile-loading {
       padding: var(--space-1) 0; font-size: var(--fs-small);
+    }
+    .detail-hero .hero-strip {
+      justify-content: flex-start;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .detail-hero .hero-price-row {
+      flex: 0 1 auto;
+      min-width: 0;
+    }
+    .detail-hero,
+    .detail-hero-layout,
+    .detail-hero-layout > div {
+      min-width: 0;
+      max-width: 100%;
     }
     .profile-intro {
       margin: 0 0 var(--space-4); padding: var(--space-4) var(--space-4); border-radius: var(--radius);
