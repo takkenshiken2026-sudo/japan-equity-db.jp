@@ -932,7 +932,8 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
-      align-items: stretch;
+      align-items: center;
+      text-align: center;
     }
     #dashboard .hero-intro::before {
       content: "";
@@ -941,32 +942,17 @@
       background: radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.15), transparent 60%);
       pointer-events: none;
     }
-    #dashboard .hero-layout {
-      position: relative;
-      z-index: 1;
-      width: 100%;
-      max-width: min(var(--dash-shell-width), calc(100vw - 48px));
-      margin-inline: auto;
-      display: grid;
-      gap: clamp(20px, 3vw, 32px);
-      align-items: start;
-    }
-    @media (min-width: 1025px) {
-      #dashboard .hero-layout {
-        grid-template-columns: minmax(0, 1fr) min(340px, 34vw);
-      }
-    }
     #dashboard .hero-intro-stack {
       position: relative;
       z-index: 1;
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
+      align-items: center;
       gap: clamp(20px, 3vh, 28px);
       width: 100%;
-      max-width: none;
-      margin-inline: 0;
-      text-align: left;
+      max-width: min(var(--hero-width), calc(100vw - 48px));
+      margin-inline: auto;
+      text-align: center;
     }
     #dashboard .hero-intro-stack h1 {
       font-size: clamp(1.85rem, 3.8vw, 2.85rem);
@@ -974,17 +960,17 @@
       margin: 0;
       letter-spacing: -0.03em;
       line-height: 1.3;
-      text-align: left;
-      max-width: 14em;
+      text-align: center;
+      max-width: 20em;
       color: var(--hero-text);
     }
     #dashboard .hero-intro-stack .subtitle {
-      max-width: 36em;
+      max-width: 42em;
       margin: 0;
       font-size: 1.125rem;
       font-weight: 400;
       line-height: 1.65;
-      text-align: left;
+      text-align: center;
       color: var(--hero-subtitle);
     }
     #dashboard .hero-intro-stack .global-search--hero {
@@ -996,7 +982,7 @@
       width: 100%;
       max-width: none;
       margin: 0;
-      justify-content: flex-start;
+      justify-content: center;
       flex-wrap: nowrap;
       -webkit-overflow-scrolling: touch;
       scroll-padding-inline: 12px;
@@ -1244,62 +1230,7 @@
     #weekly-themes-card.card { padding: 16px 18px; }
     #weekly-themes-card .card-header { margin-bottom: 10px; justify-content: flex-start; gap: 10px; }
     #weekly-themes-card .card-header h2 { font-size: var(--fs-subhead); margin-bottom: 0; }
-    .trending-home-card {
-      margin: 0;
-      padding: 0;
-      background: transparent;
-      border: none;
-      box-shadow: none;
-      min-width: 0;
-    }
-    .hero-trending-side .trending-home-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .hero-trending-side .trending-panel {
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: var(--radius-card);
-      background: rgba(0, 0, 0, 0.14);
-      backdrop-filter: blur(6px);
-      padding: 12px 14px;
-      min-width: 0;
-    }
-    .hero-trending-side .trending-panel-head h3 {
-      color: #fff;
-    }
-    .hero-trending-side .trending-panel-head .ico {
-      color: #fff;
-      opacity: 0.9;
-    }
-    .hero-trending-side .trending-panel-head .muted {
-      color: rgba(240, 249, 255, 0.78);
-    }
-    .hero-trending-side .trending-rank-name {
-      color: #fff;
-    }
-    .hero-trending-side .trending-rank-sub,
-    .hero-trending-side .trending-empty {
-      color: rgba(240, 249, 255, 0.78);
-    }
-    .hero-trending-side .trending-rank-num {
-      color: rgba(240, 249, 255, 0.65);
-    }
-    .hero-trending-side .trending-rank-item:first-child .trending-rank-num {
-      color: #fff;
-    }
-    .hero-trending-side .trending-rank-badge {
-      background: rgba(255, 255, 255, 0.16);
-      color: #fff;
-      border-color: rgba(255, 255, 255, 0.22);
-    }
-    .hero-trending-side .trending-rank-badge--down {
-      background: rgba(255, 255, 255, 0.1);
-      color: rgba(240, 249, 255, 0.85);
-    }
-    .hero-trending-side .trending-home-note {
-      color: rgba(240, 249, 255, 0.78);
-    }
+    .trending-home-card { padding: 12px 14px; margin-bottom: 12px; }
     .trending-home-grid {
       display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
     }
@@ -1547,10 +1478,8 @@
         padding: 40px 20px 36px;
         min-height: auto;
       }
-      #dashboard .hero-layout {
-        max-width: min(var(--hero-width), calc(100vw - 32px));
-      }
       #dashboard .hero-intro-stack {
+        max-width: min(var(--hero-width), calc(100vw - 32px));
         gap: 18px;
       }
       #dashboard .hero-intro-stack h1 {
@@ -1560,9 +1489,6 @@
       #dashboard .hero-intro-stack .subtitle {
         max-width: 42em;
         font-size: var(--fs-body);
-      }
-      #dashboard .hero-trending-side .trending-rank-list {
-        max-height: 140px;
       }
       #dashboard .hero-intro-stack .global-search--hero {
         max-width: 100%;
@@ -1620,10 +1546,8 @@
         padding: 32px max(16px, env(safe-area-inset-left)) 28px max(16px, env(safe-area-inset-right));
         min-height: auto;
       }
-      #dashboard .hero-layout {
-        max-width: none;
-      }
       #dashboard .hero-intro-stack {
+        max-width: none;
         gap: 16px;
         align-items: center;
         text-align: center;
@@ -1646,7 +1570,7 @@
       .global-search--hero { display: none; }
       #dashboard .hero-intro-stack .feature-chips {
         align-self: stretch;
-        justify-content: flex-start;
+        justify-content: center;
         gap: 8px;
         margin-inline: calc(-1 * max(16px, env(safe-area-inset-left)));
         padding-inline: max(16px, env(safe-area-inset-left));
@@ -1808,45 +1732,43 @@
     <section id="dashboard" class="panel active">
       <div class="dash-hero">
         <div class="hero-intro">
-          <div class="hero-layout">
-            <div class="hero-intro-stack">
-              <h1>財務データとオルタナティブデータで<br>気になる株をチェック</h1>
-              <p class="subtitle" id="hero-subtitle">__HERO_SUBTITLE__</p>
-              <div class="global-search global-search--hero">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                <input id="hero-search" type="search" placeholder="企業名・証券コードで検索…" autocomplete="off" />
-                <div id="hero-search-dropdown" class="search-dropdown"></div>
-              </div>
-              <div class="feature-chips">
-                <span class="chip" data-go="dashboard" data-dash-view="revenue" data-icon="bar-chart">売上高順</span>
-                <span class="chip" data-go="dashboard" data-dash-view="roe" data-icon="percent">高ROE</span>
-                <span class="chip" data-go="dashboard" data-dash-view="growth" data-icon="trending-up">高成長</span>
-                <span class="chip" data-go="dashboard" data-dash-view="realestate" data-icon="building">不動産保有</span>
-                <span class="chip" data-go="dashboard" data-dash-view="low_per" data-icon="tag">低PER</span>
-                <span class="chip" data-go="screening" data-icon="sliders">詳細スクリーニング</span>
-              </div>
+          <div class="hero-intro-stack">
+            <h1>財務データとオルタナティブデータで<br>気になる株をチェック</h1>
+            <p class="subtitle" id="hero-subtitle">__HERO_SUBTITLE__</p>
+            <div class="global-search global-search--hero">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input id="hero-search" type="search" placeholder="企業名・証券コードで検索…" autocomplete="off" />
+              <div id="hero-search-dropdown" class="search-dropdown"></div>
             </div>
-            <aside class="hero-trending-side trending-home-card" id="trending-home-card">
-              <div class="trending-home-grid">
-                <div class="trending-panel" id="search-trending-panel">
-                  <div class="trending-panel-head">
-                    <h3 data-icon="trending-up">検索急上昇</h3>
-                    <span class="muted">Googleトレンド取得待ち</span>
-                  </div>
-                  <div id="search-trending-list" class="trending-loading"><span class="spinner"></span></div>
-                </div>
-                <div class="trending-panel" id="news-trending-panel">
-                  <div class="trending-panel-head">
-                    <h3 data-icon="newspaper">ニュース急上昇</h3>
-                    <span class="muted">Google News</span>
-                  </div>
-                  <div id="news-trending-list" class="trending-loading"><span class="spinner"></span></div>
-                </div>
-              </div>
-              <p class="trending-home-note" id="trending-home-note" hidden></p>
-            </aside>
+            <div class="feature-chips">
+              <span class="chip" data-go="dashboard" data-dash-view="revenue" data-icon="bar-chart">売上高順</span>
+              <span class="chip" data-go="dashboard" data-dash-view="roe" data-icon="percent">高ROE</span>
+              <span class="chip" data-go="dashboard" data-dash-view="growth" data-icon="trending-up">高成長</span>
+              <span class="chip" data-go="dashboard" data-dash-view="realestate" data-icon="building">不動産保有</span>
+              <span class="chip" data-go="dashboard" data-dash-view="low_per" data-icon="tag">低PER</span>
+              <span class="chip" data-go="screening" data-icon="sliders">詳細スクリーニング</span>
+            </div>
           </div>
         </div>
+      </div>
+      <div class="card trending-home-card" id="trending-home-card">
+        <div class="trending-home-grid">
+          <div class="trending-panel" id="search-trending-panel">
+            <div class="trending-panel-head">
+              <h3 data-icon="trending-up">検索急上昇</h3>
+              <span class="muted">Googleトレンド取得待ち</span>
+            </div>
+            <div id="search-trending-list" class="trending-loading"><span class="spinner"></span></div>
+          </div>
+          <div class="trending-panel" id="news-trending-panel">
+            <div class="trending-panel-head">
+              <h3 data-icon="newspaper">ニュース急上昇</h3>
+              <span class="muted">Google News</span>
+            </div>
+            <div id="news-trending-list" class="trending-loading"><span class="spinner"></span></div>
+          </div>
+        </div>
+        <p class="trending-home-note" id="trending-home-note" hidden></p>
       </div>
       <div class="card" id="weekly-themes-card" style="margin-bottom:16px">
         <div class="card-header">
