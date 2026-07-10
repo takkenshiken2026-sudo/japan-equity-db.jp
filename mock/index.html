@@ -1071,13 +1071,45 @@
     }
     .theme-box:hover { border-color: var(--accent-border); box-shadow: var(--shadow-sm); }
     .theme-box-head {
-      display: flex; justify-content: space-between; align-items: baseline; gap: 6px; margin-bottom: 4px;
+      display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 6px;
+    }
+    .theme-box-title {
+      display: flex; align-items: center; gap: 4px; min-width: 0;
     }
     .theme-box h3 { margin: 0; font-size: var(--fs-small); line-height: 1.3; min-width: 0; }
     .theme-meta { font-size: var(--fs-caption); color: var(--muted); white-space: nowrap; flex-shrink: 0; }
-    .theme-box .desc {
-      font-size: var(--fs-caption); color: var(--muted); margin: 0 0 6px; line-height: 1.35;
-      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    .help-tip {
+      position: relative; display: inline-flex; align-items: center; flex-shrink: 0;
+    }
+    .help-tip-trigger {
+      width: 16px; height: 16px; padding: 0; border-radius: 50%;
+      border: 1px solid var(--border); background: var(--surface2); color: var(--muted);
+      font-size: 11px; font-weight: 700; line-height: 1; cursor: help;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: color 0.12s, border-color 0.12s, background 0.12s;
+    }
+    .help-tip-trigger:hover,
+    .help-tip-trigger:focus-visible {
+      color: var(--accent); border-color: var(--accent-border); background: var(--accent-light);
+      outline: none;
+    }
+    .help-tip-panel {
+      position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%);
+      width: max-content; max-width: min(240px, 72vw);
+      padding: 8px 10px; border-radius: var(--radius);
+      background: var(--text); color: #fff;
+      font-size: var(--fs-caption); font-weight: 400; line-height: 1.45; text-align: left;
+      box-shadow: var(--shadow); z-index: 30;
+      opacity: 0; visibility: hidden; pointer-events: none;
+      transition: opacity 0.12s, visibility 0.12s;
+    }
+    .help-tip-panel::after {
+      content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      border: 5px solid transparent; border-top-color: var(--text);
+    }
+    .help-tip:hover .help-tip-panel,
+    .help-tip:focus-within .help-tip-panel {
+      opacity: 1; visibility: visible;
     }
     .theme-item {
       display: flex; justify-content: space-between; gap: 6px; padding: 3px 0;
@@ -2429,6 +2461,16 @@
 
     function iconLabelEnd(name, text, size = 'sm') {
       return `<span class="ico-label ico-label-end">${icon(name, size)}<span>${text}</span></span>`;
+    }
+
+    function helpTipHtml(text, label = '説明') {
+      if (!text) return '';
+      const safe = String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+      return `<span class="help-tip"><button type="button" class="help-tip-trigger" aria-label="${label}">?</button><span class="help-tip-panel" role="tooltip">${safe}</span></span>`;
     }
 
     function setHeadingIcon(el, iconName, text) {
@@ -4667,20 +4709,25 @@
       try {
         const data = await api('/api/themes/weekly?limit=5');
         el.classList.remove('loading');
-        el.innerHTML = `<div class="theme-weekly-grid">${(data.themes || []).map(theme => `
+        el.innerHTML = `<div class="theme-weekly-grid">${(data.themes || []).map(theme => {
+          const desc = `${theme.description || ''}${theme.id === 're_nav' && !theme.count ? '（時価総額データ更新後に表示）' : ''}`;
+          return `
           <div class="theme-box">
             <div class="theme-box-head">
-              <h3>${iconLabel(PRESET_ICON[theme.preset] || 'sparkles', theme.title, 'sm')}</h3>
+              <div class="theme-box-title">
+                <h3>${iconLabel(PRESET_ICON[theme.preset] || 'sparkles', theme.title, 'sm')}</h3>
+                ${helpTipHtml(desc, `${theme.title}の条件`)}
+              </div>
               <span class="theme-meta">${theme.count}社</span>
             </div>
-            <div class="desc">${theme.description}${theme.id === 're_nav' && !theme.count ? '（時価総額データ更新後に表示）' : ''}</div>
             ${(theme.items || []).slice(0, 5).map(item => `
               <div class="theme-item" data-code="${item.edinet_code}">
                 <span>${item.name.replace(/株式会社/g, '').trim()}</span>
                 <span class="muted">${item.real_estate_nav_ratio != null ? `NAV ${(item.real_estate_nav_ratio * 100).toFixed(0)}%` : item.revenue_growth != null ? formatChg(item.revenue_growth) : formatPer(item.per_edinet ?? item.per)}</span>
               </div>`).join('')}
             <button type="button" class="secondary theme-more" data-preset="${theme.preset}">${iconLabelEnd('chevron', 'すべて見る', 'sm')}</button>
-          </div>`).join('')}</div>
+          </div>`;
+        }).join('')}</div>
         ${data.disclaimer ? `<p class="verdict-disclaimer" style="margin-top:12px">${data.disclaimer}</p>` : ''}`;
         el.querySelectorAll('[data-code]').forEach(node => {
           node.addEventListener('click', () => loadDetail(node.dataset.code));
