@@ -557,8 +557,114 @@
     .detail-hero {
       background: var(--surface2);
       border-top: none;
+      padding: 14px 16px;
     }
-    .detail-hero .tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .detail-hero .detail-code {
+      color: var(--text-secondary);
+      font-size: var(--fs-caption);
+      font-weight: 600;
+      margin: 0;
+      line-height: 1.3;
+    }
+    .detail-hero .detail-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+    .detail-hero h1 {
+      margin: 0;
+      font-size: var(--fs-value);
+      line-height: 1.25;
+    }
+    .detail-hero .detail-subtitle {
+      margin-top: 2px;
+      font-size: var(--fs-small);
+      line-height: 1.4;
+    }
+    .detail-hero .detail-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .detail-hero .detail-actions .secondary {
+      padding: 6px 10px;
+      font-size: var(--fs-caption);
+    }
+    .detail-hero .detail-badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .detail-hero .tags {
+      display: contents;
+    }
+    .detail-hero .trust-meta-row {
+      display: contents;
+    }
+    .detail-hero .trust-badges {
+      display: contents;
+    }
+    .detail-hero .hero-strip {
+      margin-top: 8px;
+      padding: 10px 12px;
+      gap: 8px 12px;
+    }
+    .detail-hero .hero-strip .hero-price {
+      font-size: var(--fs-value);
+    }
+    .detail-hero .hero-strip .hero-price span {
+      margin-top: 2px;
+      font-size: var(--fs-caption);
+    }
+    .detail-hero .hero-strip .hero-chip {
+      padding: 3px 8px;
+      font-size: var(--fs-caption);
+    }
+    .detail-hero .freshness-banner {
+      margin-top: 8px;
+      padding: 6px 10px;
+      font-size: var(--fs-caption);
+    }
+    .detail-hero .freshness-grid {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .detail-hero .freshness-item {
+      padding: 6px 8px;
+      font-size: var(--fs-caption);
+    }
+    .detail-hero .freshness-item .val {
+      margin-top: 1px;
+      font-size: var(--fs-caption);
+      line-height: 1.35;
+      word-break: break-word;
+    }
+    .detail-hero .trust-score-badge,
+    .detail-hero .trust-badge,
+    .detail-hero .badge {
+      padding: 3px 7px;
+      font-size: var(--fs-caption);
+    }
+    @media (max-width: 900px) {
+      .detail-hero .freshness-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 600px) {
+      .detail-hero .freshness-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .detail-hero .detail-title-row {
+        align-items: flex-start;
+      }
+    }
     .kpi-group-grid {
       display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
     }
@@ -5259,19 +5365,23 @@
         document.getElementById('detail-header').innerHTML = `
           <div class="detail-hero-layout">
           <div>
-            <p style="color:var(--text-secondary);font-size:var(--fs-small);font-weight:600;margin:0">${c.edinet_code} · ${formatSecCode(c.sec_code)}</p>
-            <h1 style="margin:8px 0 6px">${c.name}</h1>
-            <p class="subtitle">${c.industry ?? '-'} · ${c.location ?? '-'} · ${c.listing_status ?? '-'}</p>
-            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-              <button type="button" class="secondary watch-btn" id="watchlist-btn"></button>
-              <button type="button" class="secondary" id="add-compare-btn" style="padding:8px 14px;font-size:var(--fs-small)">${iconLabel('compare', '比較に追加', 'sm')}</button>
+            <p class="detail-code">${c.edinet_code} · ${formatSecCode(c.sec_code)}</p>
+            <div class="detail-title-row">
+              <h1>${c.name}</h1>
+              <div class="detail-actions">
+                <button type="button" class="secondary watch-btn" id="watchlist-btn"></button>
+                <button type="button" class="secondary" id="add-compare-btn">${iconLabel('compare', '比較に追加', 'sm')}</button>
+              </div>
             </div>
-            <div class="tags">
-              ${c.fiscal_year_end ? `<span class="badge blue">決算 ${c.fiscal_year_end}</span>` : ''}
-              ${s?.ticker ? `<span class="badge gray">${s.ticker}</span>` : ''}
-              ${re?.items?.length ? `<span class="badge green">不動産 ${re.summary.count}件 · ${formatMillionYen(re.summary.total_book_value_m)}${re.summary.assets_ratio != null ? ` · 総資産比 ${formatPct(re.summary.assets_ratio)}` : ''}${data.real_estate?.nav_ratio != null ? ` · NAV ${(data.real_estate.nav_ratio * 100).toFixed(0)}%` : ''}</span>` : ''}
+            <p class="subtitle detail-subtitle">${c.industry ?? '-'} · ${c.location ?? '-'} · ${c.listing_status ?? '-'}</p>
+            <div class="detail-badge-row">
+              <div class="tags">
+                ${c.fiscal_year_end ? `<span class="badge blue">決算 ${c.fiscal_year_end}</span>` : ''}
+                ${s?.ticker ? `<span class="badge gray">${s.ticker}</span>` : ''}
+                ${re?.items?.length ? `<span class="badge green">不動産 ${re.summary.count}件 · ${formatMillionYen(re.summary.total_book_value_m)}${re.summary.assets_ratio != null ? ` · 総資産比 ${formatPct(re.summary.assets_ratio)}` : ''}${data.real_estate?.nav_ratio != null ? ` · NAV ${(data.real_estate.nav_ratio * 100).toFixed(0)}%` : ''}</span>` : ''}
+              </div>
+              ${renderTrustBadges(data.data_freshness, data.verdict)}
             </div>
-            ${renderTrustBadges(data.data_freshness, data.verdict)}
             ${s?.price != null ? `
             <div class="hero-strip">
               <div class="hero-price">${formatNum(s.price, 0)}円
@@ -5280,7 +5390,7 @@
               ${latest?.fiscal_year_end ? `<span class="hero-chip">直近期 ${latest.fiscal_year_end}</span>` : ''}
               ${latest?.revenue ? `<span class="hero-chip">売上 ${formatYen(latest.revenue)}</span>` : ''}
               ${s?.updated_at ? `<span class="hero-chip">株価 ${formatDateTime(s.updated_at)}</span>` : ''}
-            </div>` : `<p class="muted" style="margin-top:10px;font-size:var(--fs-body)">株価データ未取得のため、PER/PBR・時価総額は表示できません。</p>`}
+            </div>` : `<p class="muted" style="margin-top:8px;font-size:var(--fs-small)">株価データ未取得のため、PER/PBR・時価総額は表示できません。</p>`}
             ${renderDataFreshness(data.data_freshness, { annualFye: latest?.fiscal_year_end, verdict: data.verdict })}
           </div>
           </div>`;
