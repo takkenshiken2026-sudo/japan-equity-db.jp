@@ -886,6 +886,18 @@
     }
     .hero-strip .hero-price { font-size: var(--fs-stat); font-weight: var(--fw-bold); color: var(--text); letter-spacing: -0.02em; }
     .hero-strip .hero-price span { display: block; font-size: var(--fs-small); font-weight: var(--fw-medium); color: var(--text-muted); margin-left: 0; margin-top: var(--space-1); }
+    .hero-price-row {
+      display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4);
+    }
+    .hero-price-chgs {
+      display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2) var(--space-3);
+    }
+    .hero-chg {
+      display: inline-flex; align-items: baseline; gap: var(--space-1);
+      font-size: var(--fs-small); font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums;
+    }
+    .hero-chg .lbl { font-weight: var(--fw-medium); color: var(--text-muted); font-size: var(--fs-caption); }
+    .hero-chg .chg { font-size: var(--fs-body); }
     .hero-strip .hero-chip {
       font-size: var(--fs-small); color: var(--text-secondary); padding: var(--space-1) var(--space-3);
       background: var(--bg); border: 1px solid var(--border); border-radius: 999px;
@@ -3242,6 +3254,52 @@
       const cls = v > 0 ? 'up' : v < 0 ? 'down' : 'flat';
       return `<span class="chg ${cls}">${v > 0 ? '+' : ''}${(v * 100).toFixed(1)}%</span>`;
     }
+
+    function findPriceNearDate(points, targetDateStr) {
+      if (!points?.length) return null;
+      let best = null;
+      for (let i = points.length - 1; i >= 0; i--) {
+        const p = points[i];
+        if (!p?.date || p.close == null) continue;
+        if (p.date <= targetDateStr) return p;
+        best = p;
+      }
+      return best;
+    }
+
+    function priceReturnVsDaysAgo(points, days, currentPrice) {
+      if (!points?.length || currentPrice == null || !Number.isFinite(currentPrice)) return null;
+      const latest = [...points].reverse().find((p) => p?.close != null);
+      if (!latest?.date) return null;
+      const target = new Date(`${latest.date}T00:00:00Z`);
+      target.setUTCDate(target.getUTCDate() - days);
+      const base = findPriceNearDate(points, target.toISOString().slice(0, 10));
+      if (!base?.close) return null;
+      return (currentPrice - base.close) / base.close;
+    }
+
+    function priceDayOverDayReturn(points, currentPrice) {
+      if (!points || points.length < 2) return null;
+      const closes = points.filter((p) => p?.close != null);
+      if (closes.length < 2) return null;
+      const prev = closes[closes.length - 2].close;
+      const cur = currentPrice != null && Number.isFinite(currentPrice) ? currentPrice : closes[closes.length - 1].close;
+      if (!prev) return null;
+      return (cur - prev) / prev;
+    }
+
+    function renderHeroPriceChanges(points, currentPrice) {
+      const d1 = priceDayOverDayReturn(points, currentPrice);
+      const d30 = priceReturnVsDaysAgo(points, 30, currentPrice);
+      const d60 = priceReturnVsDaysAgo(points, 60, currentPrice);
+      if (d1 == null && d30 == null && d60 == null) return '';
+      return `<div class="hero-price-chgs" aria-label="株価騰落率">
+        <span class="hero-chg"><span class="lbl">前日比</span>${formatChg(d1)}</span>
+        <span class="hero-chg"><span class="lbl">30日比</span>${formatChg(d30)}</span>
+        <span class="hero-chg"><span class="lbl">60日比</span>${formatChg(d60)}</span>
+      </div>`;
+    }
+
     function formatPer(v) {
       if (v == null || isNaN(v)) return '-';
       return `${Number(v).toFixed(1)}倍`;
@@ -5567,12 +5625,14 @@
       return `<div class="doc-links">${links.join('')}</div>`;
     }
 
-    async function loadPriceChart(code, range = currentPriceRange) {
+    async function loadPriceChart(code, range = currentPriceRange, preloaded = null) {
       currentPriceRange = range;
       document.querySelectorAll('#price-range-btns button').forEach(b => {
         b.classList.toggle('active', b.dataset.range === range);
       });
-      const priceHist = await api(`/api/companies/${code}/price-history?range=${range}`).catch(() => null);
+      const priceHist = preloaded && preloaded.range === range
+        ? preloaded
+        : await api(`/api/companies/${code}/price-history?range=${range}`).catch(() => null);
       whenChartsReady(() => {
         if (priceHist?.points?.length) {
           EdinetCharts.renderPriceLineChart('chart-stock-price', priceHist.points, {
@@ -5932,16 +5992,18 @@
       loadCompanySearchTrend(code, currentTrendDays, mediaRequests.trend);
 
       try {
-        const [data, re, qtr, profile] = await Promise.all([
+        const [data, re, qtr, profile, priceHist] = await Promise.all([
           api(`/api/companies/${code}?financial_limit=12`),
           api(`/api/companies/${code}/real-estate`).catch(() => null),
           api(`/api/companies/${code}/quarterly?limit=32`).catch(() => null),
           api(`/api/companies/${code}/profile`).catch(() => null),
+          api(`/api/companies/${code}/price-history?range=1y`).catch(() => null),
         ]);
         const c = data.company;
         const s = data.stock;
         const fin = data.financials;
         const latest = fin[0];
+        const pricePoints = priceHist?.points || [];
 
         updateBreadcrumb(c.name, c.industry);
 
@@ -5966,8 +6028,11 @@
             </div>
             ${s?.price != null ? `
             <div class="hero-strip">
-              <div class="hero-price">${formatNum(s.price, 0)}円
-                <span>PER ${formatValuationInline(s, 'per')} · PBR ${formatValuationInline(s, 'pbr')}${s.market_cap ? ` · 時価総額 ${formatYen(s.market_cap)}` : ''}</span>
+              <div class="hero-price-row">
+                <div class="hero-price">${formatNum(s.price, 0)}円
+                  <span>PER ${formatValuationInline(s, 'per')} · PBR ${formatValuationInline(s, 'pbr')}${s.market_cap ? ` · 時価総額 ${formatYen(s.market_cap)}` : ''}</span>
+                </div>
+                ${renderHeroPriceChanges(pricePoints, s.price)}
               </div>
               ${latest?.fiscal_year_end ? `<span class="hero-chip">直近期 ${latest.fiscal_year_end}</span>` : ''}
               ${latest?.revenue ? `<span class="hero-chip">売上 ${formatYen(latest.revenue)}</span>` : ''}
@@ -5996,7 +6061,7 @@
 
         const [valuationHist] = await Promise.all([
           api(`/api/companies/${code}/valuation-history`).catch(() => null),
-          loadPriceChart(code, currentPriceRange),
+          loadPriceChart(code, currentPriceRange, priceHist),
         ]);
         whenChartsReady(() => {
           EdinetCharts.renderFromFinancials(fin, qtr?.items, {
