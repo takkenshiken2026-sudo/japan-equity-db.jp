@@ -60,7 +60,7 @@ jobs:
           fi
 
       - name: Daily sync
-        if: (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.skip_sync != true)) && inputs.quick_deploy != true
+        if: (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.skip_sync != true)) && (github.event_name != 'workflow_dispatch' || inputs.quick_deploy != true)
         run: |
           if [ -z "$EDINET_API_KEY" ]; then
             echo "::warning::EDINET_API_KEY 未設定 — sync をスキップ"
@@ -80,7 +80,7 @@ jobs:
           python -c "from app.db_maintenance import checkpoint_sqlite_wal; checkpoint_sqlite_wal('TRUNCATE')"
 
       - name: Publish database backup
-        if: (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.skip_sync != true)) && inputs.quick_deploy != true
+        if: (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.skip_sync != true)) && (github.event_name != 'workflow_dispatch' || inputs.quick_deploy != true)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
