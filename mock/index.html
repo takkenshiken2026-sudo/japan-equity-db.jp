@@ -2251,12 +2251,34 @@
           <h2 data-icon="file">適時開示フィード</h2>
           <span class="muted" id="disclosures-meta" style="font-size:var(--fs-small)"></span>
         </div>
-        <div class="presets" style="margin-bottom:12px">
+        <form id="disclosures-search-form" class="filters" style="margin-bottom:var(--space-3)">
+          <div class="field" style="flex:1 1 240px;min-width:180px">
+            <label for="disclosures-q">キーワード</label>
+            <input type="search" id="disclosures-q" name="q" placeholder="企業名・証券コード・書類名" autocomplete="off" />
+          </div>
+          <button class="primary" type="submit">検索</button>
+        </form>
+        <div class="presets" style="margin-bottom:var(--space-3)">
           <button type="button" class="preset active" id="disclosures-filter-all" data-icon="layers">すべて</button>
           <button type="button" class="preset" id="disclosures-filter-watch" data-icon="star">ウォッチ銘柄のみ</button>
         </div>
-        <div id="disclosures-feed" class="disclosure-feed loading"><span class="spinner"></span>読み込み中…</div>
-        <div class="pager-row" style="margin-top:12px">
+        <div class="table-wrap table-wrap--list table-scroll-hint desktop-table" id="disclosures-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:9.5rem">提出日時</th>
+                <th>企業名</th>
+                <th class="col-sm-hide" style="width:5rem">コード</th>
+                <th>書類</th>
+                <th style="width:7.5rem">リンク</th>
+              </tr>
+            </thead>
+            <tbody id="disclosures-tbody">
+              <tr><td colspan="5" class="muted">読み込み中…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pager-row" style="margin-top:var(--space-3)">
           <button type="button" class="secondary" id="disclosures-more">さらに50件読み込む</button>
         </div>
       </div>
@@ -2870,7 +2892,7 @@
     let searchInitialized = false;
     let screeningState = { offset: 0, total: 0, shown: 0 };
     let searchState = { offset: 0, total: 0, shown: 0, params: {} };
-    let disclosuresState = { offset: 0, total: 0, loaded: false, watchOnly: false };
+    let disclosuresState = { offset: 0, total: 0, loaded: false, watchOnly: false, q: '' };
     let currentPriceRange = '1y';
 
     const PRESETS = {
@@ -5421,19 +5443,25 @@
     }
 
     async function loadDisclosuresFeed({ append = false } = {}) {
-      const el = document.getElementById('disclosures-feed');
+      const tbody = document.getElementById('disclosures-tbody');
+      const moreBtn = document.getElementById('disclosures-more');
+      if (!tbody) return;
       const limit = 50;
       const offset = append ? disclosuresState.offset : 0;
+      if (!append) {
+        tbody.innerHTML = `<tr><td colspan="5" class="muted">読み込み中…</td></tr>`;
+      }
       try {
         const q = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+        if (disclosuresState.q) q.set('q', disclosuresState.q);
         if (disclosuresState.watchOnly) {
           const codes = engagementStore.getWatchlist().map(w => w.code).filter(Boolean);
           if (!codes.length) {
-            el.innerHTML = '<p class="muted">ウォッチリストに銘柄がありません。銘柄詳細から追加できます。</p>';
-            el.classList.remove('loading');
+            tbody.innerHTML = '<tr><td colspan="5" class="muted">ウォッチリストに銘柄がありません。銘柄詳細から追加できます。</td></tr>';
             document.getElementById('disclosures-meta').textContent = '0件';
             disclosuresState.total = 0;
             disclosuresState.offset = 0;
+            if (moreBtn) moreBtn.style.display = 'none';
             return;
           }
           q.set('codes', codes.slice(0, 40).join(','));
@@ -5441,26 +5469,38 @@
         const data = await api(`/api/calendar/disclosures?${q}`);
         disclosuresState.total = data.total;
         disclosuresState.offset = offset + data.count;
-        const rows = data.items.map(item => `
-          <div class="feed-item">
-            <div><strong>${item.company_name ?? item.edinet_code}</strong>
-              <span class="muted" style="margin-left:8px">${formatDateTime(item.submit_date_time)}</span></div>
-            <div>${shortenDocDescription(item.doc_description)}</div>
-            <div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;margin-top:var(--space-1)">
-              <button type="button" class="secondary" style="padding:var(--space-1) var(--space-3);font-size:var(--fs-small)" data-code="${item.edinet_code}">詳細を見る</button>
-              ${renderDocLinks(item)}
-            </div>
-          </div>`).join('');
-        if (!append) el.innerHTML = rows || '<p class="muted">開示情報がありません</p>';
-        else el.insertAdjacentHTML('beforeend', rows);
-        el.classList.remove('loading');
-        document.getElementById('disclosures-meta').textContent = `${disclosuresState.offset.toLocaleString()} / ${disclosuresState.total.toLocaleString()} 件表示`;
-        el.querySelectorAll('[data-code]').forEach(btn => {
-          btn.addEventListener('click', () => loadDetail(btn.dataset.code));
+        const rows = (data.items || []).map(item => {
+          const name = (item.company_name || item.edinet_code || '').replace(/株式会社/g, '').trim();
+          const code = formatSecCode(item.sec_code);
+          const desc = shortenDocDescription(item.doc_description);
+          const full = item.doc_description || '';
+          return `
+          <tr class="clickable" data-code="${item.edinet_code}">
+            <td class="muted" style="white-space:nowrap">${formatDateTime(item.submit_date_time)}</td>
+            <td>${companyLink(item.edinet_code, `<span class="cell-name">${name}</span>`)}</td>
+            <td class="muted col-sm-hide">${code}</td>
+            <td><span class="cell-name" style="font-weight:var(--fw-semibold)">${desc}</span>${full && full.length > 36 ? `<div class="cell-line2">${full}</div>` : ''}</td>
+            <td onclick="event.stopPropagation()">${renderDocLinks(item)}</td>
+          </tr>`;
+        }).join('');
+        if (!append) {
+          tbody.innerHTML = rows || '<tr><td colspan="5" class="muted">開示情報がありません</td></tr>';
+        } else if (rows) {
+          tbody.insertAdjacentHTML('beforeend', rows);
+        }
+        document.getElementById('disclosures-meta').textContent =
+          `${disclosuresState.offset.toLocaleString()} / ${disclosuresState.total.toLocaleString()} 件表示`;
+        if (moreBtn) {
+          moreBtn.style.display = disclosuresState.offset < disclosuresState.total ? '' : 'none';
+        }
+        tbody.querySelectorAll('tr.clickable[data-code]').forEach(row => {
+          if (row.dataset.bound) return;
+          row.dataset.bound = '1';
+          row.addEventListener('click', () => loadDetail(row.dataset.code));
         });
+        updateTableScrollHints();
       } catch (e) {
-        if (!append) el.innerHTML = `<span style="color:var(--red)">読み込み失敗（${e.message}）</span>`;
-        el.classList.remove('loading');
+        if (!append) tbody.innerHTML = `<tr><td colspan="5" style="color:var(--red)">読み込み失敗（${e.message}）</td></tr>`;
       }
     }
 
@@ -5866,6 +5906,21 @@
       });
       document.getElementById('disclosures-more')?.addEventListener('click', () => {
         if (disclosuresState.offset < disclosuresState.total) loadDisclosuresFeed({ append: true });
+      });
+      document.getElementById('disclosures-search-form')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        disclosuresState.q = (document.getElementById('disclosures-q')?.value || '').trim();
+        disclosuresState.offset = 0;
+        loadDisclosuresFeed();
+      });
+      let disclosuresSearchTimer = null;
+      document.getElementById('disclosures-q')?.addEventListener('input', () => {
+        clearTimeout(disclosuresSearchTimer);
+        disclosuresSearchTimer = setTimeout(() => {
+          disclosuresState.q = (document.getElementById('disclosures-q')?.value || '').trim();
+          disclosuresState.offset = 0;
+          loadDisclosuresFeed();
+        }, 320);
       });
       document.getElementById('disclosures-filter-all')?.addEventListener('click', () => {
         disclosuresState.watchOnly = false;

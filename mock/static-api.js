@@ -302,7 +302,8 @@
       const q = (params.get('q') || '').trim().toLowerCase();
       if (q) {
         rows = rows.filter(r => {
-          const hay = [r.company_name, r.doc_description, r.edinet_code].filter(Boolean).join(' ').toLowerCase();
+          const hay = [r.company_name, r.doc_description, r.edinet_code, r.sec_code]
+            .filter(Boolean).join(' ').toLowerCase();
           return hay.includes(q);
         });
       }

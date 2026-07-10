@@ -112,6 +112,8 @@ def recent_disclosures(
         stmt = stmt.where(
             or_(
                 Company.name.like(pattern),
+                Company.sec_code.like(pattern),
+                Filing.edinet_code.like(pattern),
                 Filing.doc_description.like(pattern),
             )
         )
