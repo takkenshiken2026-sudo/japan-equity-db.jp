@@ -1002,16 +1002,51 @@
     }
     #dashboard .hero-intro .chip .ico { color: currentColor; }
     #dashboard .hero-intro h1 { margin-top: 0; }
-    #dashboard > :not(.dash-hero) {
+    #dashboard .dash-body {
       width: 100%;
       max-width: var(--dash-shell-width);
       margin-left: auto;
       margin-right: auto;
+      display: grid;
+      gap: 16px;
+      align-items: start;
     }
-    #dashboard > :not(.dash-hero) > * {
+    @media (min-width: 1100px) {
+      #dashboard .dash-body {
+        grid-template-columns: minmax(0, 1fr) min(300px, 27vw);
+      }
+    }
+    #dashboard .dash-main {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    #dashboard .dash-main > * {
+      width: 100%;
       max-width: var(--dash-content-width);
       margin-left: auto;
       margin-right: auto;
+    }
+    #dashboard .dash-trending-side {
+      min-width: 0;
+    }
+    @media (min-width: 1100px) {
+      #dashboard .dash-trending-side {
+        position: sticky;
+        top: 72px;
+      }
+    }
+    #dashboard .dash-trending-side .trending-home-card {
+      margin-bottom: 0;
+    }
+    #dashboard .dash-trending-side .trending-home-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    #dashboard .dash-trending-side .trending-rank-list {
+      max-height: 220px;
     }
     .feature-chips {
       display: flex; flex-wrap: nowrap; justify-content: center; align-items: center;
@@ -1292,8 +1327,18 @@
       display: flex; align-items: center; gap: 8px; color: var(--muted);
       padding: 4px 0; font-size: var(--fs-small);
     }
-    @media (max-width: 768px) {
-      .trending-home-grid { grid-template-columns: 1fr; }
+    @media (max-width: 1099px) {
+      #dashboard .dash-trending-side {
+        order: -1;
+      }
+      #dashboard .dash-trending-side .trending-home-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      #dashboard .dash-trending-side .trending-rank-list {
+        max-height: 168px;
+      }
     }
     @media (max-width: 1200px) {
       .theme-weekly-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -1751,26 +1796,9 @@
           </div>
         </div>
       </div>
-      <div class="card trending-home-card" id="trending-home-card">
-        <div class="trending-home-grid">
-          <div class="trending-panel" id="search-trending-panel">
-            <div class="trending-panel-head">
-              <h3 data-icon="trending-up">検索急上昇</h3>
-              <span class="muted">Googleトレンド取得待ち</span>
-            </div>
-            <div id="search-trending-list" class="trending-loading"><span class="spinner"></span></div>
-          </div>
-          <div class="trending-panel" id="news-trending-panel">
-            <div class="trending-panel-head">
-              <h3 data-icon="newspaper">ニュース急上昇</h3>
-              <span class="muted">Google News</span>
-            </div>
-            <div id="news-trending-list" class="trending-loading"><span class="spinner"></span></div>
-          </div>
-        </div>
-        <p class="trending-home-note" id="trending-home-note" hidden></p>
-      </div>
-      <div class="card" id="weekly-themes-card" style="margin-bottom:16px">
+      <div class="dash-body">
+        <div class="dash-main">
+      <div class="card" id="weekly-themes-card" style="margin-bottom:0">
         <div class="card-header">
           <h2 data-icon="sparkles">今週のテーマ株</h2>
           <span class="muted" style="font-size:var(--fs-small)">データから自動抽出</span>
@@ -1838,6 +1866,29 @@
           </table>
         </div>
         <div class="mobile-cards" id="dash-top-cards"></div>
+      </div>
+        </div>
+        <aside class="dash-trending-side">
+          <div class="card trending-home-card" id="trending-home-card">
+            <div class="trending-home-grid">
+              <div class="trending-panel" id="search-trending-panel">
+                <div class="trending-panel-head">
+                  <h3 data-icon="trending-up">検索急上昇</h3>
+                  <span class="muted">Googleトレンド取得待ち</span>
+                </div>
+                <div id="search-trending-list" class="trending-loading"><span class="spinner"></span></div>
+              </div>
+              <div class="trending-panel" id="news-trending-panel">
+                <div class="trending-panel-head">
+                  <h3 data-icon="newspaper">ニュース急上昇</h3>
+                  <span class="muted">Google News</span>
+                </div>
+                <div id="news-trending-list" class="trending-loading"><span class="spinner"></span></div>
+              </div>
+            </div>
+            <p class="trending-home-note" id="trending-home-note" hidden></p>
+          </div>
+        </aside>
       </div>
     </section>
 
