@@ -2018,8 +2018,13 @@
           <button class="secondary" id="dash-screen-btn" data-icon-suffix="chevron">スクリーニングを開く</button>
         </div>
 
+        <div class="compare-workspace-toolbar" id="dash-compare-toolbar" style="display:none;margin-bottom:var(--space-3)">
+          <div class="compare-workspace-chips" id="dash-compare-chips"></div>
+          <button type="button" class="secondary" id="dash-open-compare-btn" style="display:none;padding:var(--space-2) var(--space-4);font-size:var(--fs-small);align-self:flex-start" data-icon="compare">比較画面を開く</button>
+        </div>
+
         <div class="filter-section dash-filters">
-          <div class="filter-section-title" data-icon="sliders">並び替え・条件</div>
+          <div class="filter-section-title" data-icon="sliders">カテゴリ</div>
           <div class="presets-scroll" id="dash-views-scroll">
           <div class="presets" id="dash-views">
             <button type="button" class="preset dash-view active" data-dash-view="revenue" data-icon="bar-chart">売上高</button>
@@ -3185,6 +3190,7 @@
     });
     tabs.forEach(tab => tab.addEventListener('click', () => showTab(tab.dataset.tab)));
     document.getElementById('dash-screen-btn').addEventListener('click', () => showTab('screening'));
+    document.getElementById('dash-open-compare-btn')?.addEventListener('click', () => showTab('compare'));
     document.querySelectorAll('.detail-tab').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.detail-tab').forEach(b => b.classList.remove('active'));
@@ -4476,7 +4482,7 @@
     function refreshCompareAddButtons() {
       const selected = compareStore.load();
       const atMax = selected.length >= 4;
-      document.querySelectorAll('#compare-picker-tbody [data-compare-add]').forEach((btn) => {
+      document.querySelectorAll('[data-compare-add]').forEach((btn) => {
         const code = btn.dataset.compareAdd;
         const wrap = document.createElement('div');
         wrap.innerHTML = compareAddButtonHtml(code, selected, atMax);
@@ -4589,25 +4595,35 @@
     const COMPARE_ACCENT = ['#374151', '#6b7280', '#9ca3af', '#1f2937'];
 
     function renderCompareWorkspaceChips() {
-      const wrap = document.getElementById('compare-workspace-chips');
-      if (!wrap) return;
+      const wraps = [
+        document.getElementById('compare-workspace-chips'),
+        document.getElementById('dash-compare-chips'),
+      ].filter(Boolean);
+      const openBtn = document.getElementById('dash-open-compare-btn');
+      const toolbar = document.getElementById('dash-compare-toolbar');
       const codes = compareStore.load();
+      if (openBtn) openBtn.style.display = codes.length >= 2 ? 'inline-flex' : 'none';
+      if (toolbar) toolbar.style.display = codes.length ? 'flex' : 'none';
+      if (!wraps.length) return;
       if (!codes.length) {
-        wrap.innerHTML = '';
+        wraps.forEach((wrap) => { wrap.innerHTML = ''; });
         return;
       }
-      wrap.innerHTML = codes.map((code, idx) => `
+      const html = codes.map((code, idx) => `
         <span class="compare-chip" style="border-color:${COMPARE_ACCENT[idx % COMPARE_ACCENT.length]}40">
           <span style="color:${COMPARE_ACCENT[idx % COMPARE_ACCENT.length]};font-weight:var(--fw-bold);margin-right:4px">${idx + 1}</span>
           <span data-compare-chip-name="${code}">${code}</span>
           <button type="button" data-remove-compare="${code}" title="削除">${icon('x', 'xs')}</button>
         </span>`).join('');
-      wrap.querySelectorAll('[data-remove-compare]').forEach((btn) => {
-        btn.addEventListener('click', () => compareStore.remove(btn.dataset.removeCompare));
+      wraps.forEach((wrap) => {
+        wrap.innerHTML = html;
+        wrap.querySelectorAll('[data-remove-compare]').forEach((btn) => {
+          btn.addEventListener('click', () => compareStore.remove(btn.dataset.removeCompare));
+        });
       });
       api(`/api/companies/compare/batch?codes=${codes.join(',')}`).then((data) => {
         const nameByCode = Object.fromEntries((data.items || []).map((i) => [i.edinet_code, i.name]));
-        wrap.querySelectorAll('[data-compare-chip-name]').forEach((el) => {
+        document.querySelectorAll('[data-compare-chip-name]').forEach((el) => {
           const code = el.getAttribute('data-compare-chip-name');
           if (nameByCode[code]) el.textContent = (nameByCode[code] || '').replace(/株式会社/g, '').trim();
         });
@@ -4693,12 +4709,18 @@
     function renderCoCard(item, rank, highlightField) {
       const hiField = highlightField || null;
       const metrics = coCardMetrics(item, hiField);
+      const selected = compareStore.load();
+      const atMax = selected.length >= 4;
+      const name = (item.name || '').replace(/株式会社/g, '').trim();
       return `<div class="co-card" data-code="${item.edinet_code}">
         <div class="co-card-head">
-          <div>
-            ${rank != null ? `<span class="badge gray">#${rank}</span> ` : ''}
-            <div class="co-card-name">${companyLink(item.edinet_code, item.name)}</div>
-            <div class="co-card-code">${formatSecCode(item.sec_code)} · ${item.edinet_code}</div>
+          <div class="compare-name-cell" style="align-items:flex-start;flex:1;min-width:0">
+            ${compareAddButtonHtml(item.edinet_code, selected, atMax)}
+            <div style="min-width:0">
+              ${rank != null ? `<span class="badge gray">#${rank}</span> ` : ''}
+              <div class="co-card-name">${companyLink(item.edinet_code, name)}</div>
+              <div class="co-card-code">${formatSecCode(item.sec_code)} · ${item.edinet_code}</div>
+            </div>
           </div>
           ${hiField === 'revenue_growth' ? formatChg(item.revenue_growth) : ''}
         </div>
@@ -4759,9 +4781,20 @@
         : highlight === 'net_income' ? formatYen(item.net_income)
         : formatYen(item.revenue);
       const primaryHi = hi('revenue') || hi('market_cap') || hi('net_income');
+      const selected = compareStore.load();
+      const atMax = selected.length >= 4;
+      const name = (item.name || '').replace(/株式会社/g, '').trim();
       return `<tr class="clickable" data-code="${item.edinet_code}">
         <td class="muted col-sm-hide">${rank}</td>
-        <td>${companyLink(item.edinet_code, `<span class="cell-name">${item.name}</span>`)}${companyMeta ? `<div class="cell-line2">${companyMeta}</div>` : ''}</td>
+        <td>
+          <div class="compare-name-cell">
+            ${compareAddButtonHtml(item.edinet_code, selected, atMax)}
+            <div style="min-width:0">
+              ${companyLink(item.edinet_code, `<span class="cell-name">${name}</span>`)}
+              ${companyMeta ? `<div class="cell-line2">${companyMeta}</div>` : ''}
+            </div>
+          </div>
+        </td>
         <td class="muted col-md-hide">${item.industry ?? '-'}</td>
         <td class="num${primaryHi}"><span class="cell-val-main">${primaryVal}</span></td>
         <td class="num col-sm-hide${hi('operating_margin')}">${formatPct(item.operating_margin)}</td>
@@ -4786,8 +4819,20 @@
       const companyMeta = dashCompanyMeta(item);
       const sortSub = sortMetricSub(item, sortBy);
       const hi = (col) => (sortBy === col ? ' col-highlight' : '');
+      const selected = compareStore.load();
+      const atMax = selected.length >= 4;
+      const name = (item.name || '').replace(/株式会社/g, '').trim();
       return `<tr class="clickable" data-code="${item.edinet_code}">
-        <td>${companyLink(item.edinet_code, `<span class="cell-name">${item.name}</span>`)}${companyMeta ? `<div class="cell-line2">${companyMeta}</div>` : ''}${sortSub}</td>
+        <td>
+          <div class="compare-name-cell">
+            ${compareAddButtonHtml(item.edinet_code, selected, atMax)}
+            <div style="min-width:0">
+              ${companyLink(item.edinet_code, `<span class="cell-name">${name}</span>`)}
+              ${companyMeta ? `<div class="cell-line2">${companyMeta}</div>` : ''}
+              ${sortSub}
+            </div>
+          </div>
+        </td>
         <td class="muted col-md-hide">${item.industry ?? '-'}</td>
         <td class="num col-sm-hide${hi('price')}">${item.price != null ? formatNum(item.price, 0) + '円' : '-'}</td>
         <td class="num${hi('per')}">${formatValuationPlain(item, 'per')}</td>
@@ -4871,6 +4916,8 @@
         document.getElementById('screening-notice').textContent = notice;
         bindRowClicks(body);
         bindRowClicks(cards);
+        bindCompareAddButtons(body);
+        bindCompareAddButtons(cards);
         updateTableScrollHints();
         return data;
       } finally {
@@ -5014,7 +5061,7 @@
           ? data.items.map((item, i) => renderCoCard(item, i + 1, highlightFieldForSort(null, dashState.view))).join('')
           : '<div class="empty"><div class="empty-title">条件に一致する企業がありません</div></div>';
         const industryLabel = dashState.industry ? `${dashState.industry} · ` : '';
-        if (meta) meta.textContent = `${industryLabel}${data.items.length}社表示（全${(data.total || data.items.length).toLocaleString()}社）`;
+        if (meta) meta.textContent = `${industryLabel}${data.items.length}社表示 · ＋で比較に追加`;
         whenChartsReady(() => {
           const chartItems = data.items.slice(0, DASH_CHART_LIMIT);
           const labels = chartItems.map(i => i.name.replace(/株式会社/g, '').trim().slice(0, 12));
@@ -5028,6 +5075,8 @@
         });
         bindRowClicks(body);
         bindRowClicks(cards);
+        bindCompareAddButtons(body);
+        bindCompareAddButtons(cards);
         updateTableScrollHints();
       } catch {
         setDashChartLoading(false);
