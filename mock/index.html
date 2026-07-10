@@ -750,10 +750,25 @@
       margin-top: 2px;
       font-size: var(--fs-caption);
     }
+    .detail-hero .hero-strip .hero-chg .chg { font-size: var(--fs-small); }
     .detail-hero .hero-strip .hero-chip {
       padding: var(--space-1) var(--space-2);
       font-size: var(--fs-caption);
     }
+    .detail-price-chart-card {
+      margin-top: 0;
+      margin-bottom: var(--space-4);
+      padding: var(--space-3) var(--space-4) var(--space-4);
+    }
+    .detail-price-chart-head {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: var(--space-2) var(--space-3); margin-bottom: var(--space-3);
+    }
+    .detail-price-chart-head h2 {
+      margin: 0; font-size: var(--fs-small); color: var(--text-secondary); font-weight: var(--fw-bold);
+    }
+    .detail-price-chart-head .chart-range-btns { margin: 0; }
+    .detail-price-chart-wrap { height: 220px; }
     .detail-hero .freshness-banner {
       margin-top: var(--space-2);
       padding: var(--pad-chip-y) var(--pad-chip-x);
@@ -2466,6 +2481,20 @@
       <div id="detail-loading" class="loading" style="display:none"><span class="spinner"></span>企業データを読み込んでいます…</div>
       <div id="detail-content" style="display:none">
         <div class="card detail-hero" id="detail-header"></div>
+        <div class="card section-card detail-price-chart-card" id="detail-price-chart-card" style="display:none">
+          <div class="section-head detail-price-chart-head">
+            <h2 data-icon="trending-up">株価チャート</h2>
+            <div class="chart-range-btns" id="price-range-btns">
+              <button type="button" data-range="1mo">1M</button>
+              <button type="button" data-range="3mo">3M</button>
+              <button type="button" data-range="6mo">6M</button>
+              <button type="button" data-range="1y" class="active">1Y</button>
+              <button type="button" data-range="2y">2Y</button>
+              <button type="button" data-range="5y">5Y</button>
+            </div>
+          </div>
+          <div class="chart-canvas-wrap detail-price-chart-wrap"><canvas id="chart-stock-price"></canvas></div>
+        </div>
         <div class="detail-tabs-wrap">
         <div class="detail-tabs" id="detail-tabs">
           <button class="detail-tab active" data-section="overview" data-icon="layout">概要</button>
@@ -2501,21 +2530,6 @@
             </div>
             <div class="insight-grid" id="data-insights"></div>
             <nav class="overview-nav" id="overview-nav" aria-label="詳細セクションへ"></nav>
-          </div>
-
-          <div class="card section-card">
-            <div class="section-head">
-              <h2 data-icon="trending-up">株価チャート</h2>
-            </div>
-            <div class="chart-range-btns" id="price-range-btns">
-              <button type="button" data-range="1mo">1M</button>
-              <button type="button" data-range="3mo">3M</button>
-              <button type="button" data-range="6mo">6M</button>
-              <button type="button" data-range="1y" class="active">1Y</button>
-              <button type="button" data-range="2y">2Y</button>
-              <button type="button" data-range="5y">5Y</button>
-            </div>
-            <div class="chart-canvas-wrap" style="height:280px"><canvas id="chart-stock-price"></canvas></div>
           </div>
 
           <div class="card company-profile-card section-card" id="company-profile-card">
@@ -5969,6 +5983,8 @@
       document.getElementById('detail-loading').style.display = 'flex';
       document.getElementById('detail-loading').innerHTML = '<span class="spinner"></span>企業データを読み込んでいます…';
       document.getElementById('detail-content').style.display = 'none';
+      const priceChartCard = document.getElementById('detail-price-chart-card');
+      if (priceChartCard) priceChartCard.style.display = 'none';
       document.getElementById('company-media-row').style.display = 'none';
       document.getElementById('company-news-card').style.display = 'none';
       document.getElementById('company-news-feed').innerHTML = '';
@@ -6057,11 +6073,16 @@
         engagementStore.recordView(code, c.name, c.industry);
         renderCompareBar();
 
+        const showPriceChart = s?.price != null || pricePoints.length > 0;
+        if (priceChartCard) {
+          priceChartCard.style.display = showPriceChart ? '' : 'none';
+          if (showPriceChart) decorateStaticIcons(priceChartCard);
+        }
         bindPriceRangeButtons(code);
 
         const [valuationHist] = await Promise.all([
           api(`/api/companies/${code}/valuation-history`).catch(() => null),
-          loadPriceChart(code, currentPriceRange, priceHist),
+          showPriceChart ? loadPriceChart(code, currentPriceRange, priceHist) : Promise.resolve(),
         ]);
         whenChartsReady(() => {
           EdinetCharts.renderFromFinancials(fin, qtr?.items, {
