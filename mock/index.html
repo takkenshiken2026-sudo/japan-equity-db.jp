@@ -1062,6 +1062,10 @@
       padding: 2px 6px;
       white-space: nowrap;
     }
+    #dash-top-anchor,
+    #screening-anchor {
+      scroll-margin-top: 72px;
+    }
     .feature-chips {
       display: flex; flex-wrap: nowrap; justify-content: center; align-items: center;
       gap: 10px; margin-top: 0; overflow-x: auto; padding-bottom: 2px;
@@ -1819,7 +1823,7 @@
         </div>
         <div id="weekly-themes" class="loading" style="padding:10px 0"><span class="spinner"></span>テーマ株を読み込み中…</div>
       </div>
-      <div class="card dash-list-card">
+      <div class="card dash-list-card" id="dash-top-anchor">
         <div class="card-header">
           <div>
             <h2 id="dash-top-title" data-icon="bar-chart">売上高トップ（上場）</h2>
@@ -1908,7 +1912,7 @@
 
     <!-- Screening -->
     <section id="screening" class="panel">
-      <div class="card">
+      <div class="card" id="screening-anchor">
         <div class="card-header"><h2 data-icon="filter">財務スクリーニング</h2></div>
 
         <div class="filter-section">
@@ -2856,14 +2860,25 @@
       if (name === 'disclosures') ensureDisclosuresLoaded();
       if (name === 'compare') renderCompareWorkspace();
     }
+    function scrollToAnchor(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
     document.querySelector('.logo').addEventListener('click', () => showTab('dashboard'));
     document.querySelectorAll('.feature-chips .chip').forEach(chip => {
       chip.addEventListener('click', () => {
         const dest = chip.dataset.go || 'screening';
         showTab(dest);
-        if (chip.dataset.dashView) applyDashView(chip.dataset.dashView);
-        else if (chip.dataset.preset) applyPreset(chip.dataset.preset);
-        else if (dest === 'search') ensureSearchLoaded(true);
+        if (chip.dataset.dashView) {
+          applyDashView(chip.dataset.dashView);
+          requestAnimationFrame(() => scrollToAnchor('dash-top-anchor'));
+        } else if (chip.dataset.preset) {
+          applyPreset(chip.dataset.preset);
+        } else if (dest === 'screening') {
+          requestAnimationFrame(() => scrollToAnchor('screening-anchor'));
+        } else if (dest === 'search') ensureSearchLoaded(true);
       });
     });
     tabs.forEach(tab => tab.addEventListener('click', () => showTab(tab.dataset.tab)));
