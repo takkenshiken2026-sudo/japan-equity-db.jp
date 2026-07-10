@@ -2286,7 +2286,10 @@
     <!-- Search -->
     <section id="search" class="panel" aria-hidden="true">
       <div class="card">
-        <div class="card-header"><h2 data-icon="search">企業検索</h2></div>
+        <div class="card-header">
+          <h2 data-icon="search">企業検索</h2>
+          <span class="muted" id="search-count" style="font-size:var(--fs-small)"></span>
+        </div>
         <form id="search-form" class="filters filters-search">
           <div class="field">
             <label>キーワード</label>
@@ -2306,14 +2309,30 @@
           </div>
           <button class="primary" type="submit">検索</button>
         </form>
-        <div class="search-list" id="search-list" style="margin-top:16px">
-          <div class="search-hint" id="search-hint">
-            <strong>企業名・証券コード</strong>で検索できます<br>
-            <span class="muted">2文字以上入力するか、上場企業一覧を表示します</span>
-          </div>
+        <div class="table-wrap table-wrap--list table-scroll-hint desktop-table" id="search-table-wrap" style="margin-top:var(--space-4)">
+          <table>
+            <thead>
+              <tr>
+                <th>企業名</th>
+                <th style="width:5rem">コード</th>
+                <th class="col-md-hide">業種</th>
+                <th style="width:4.5rem">上場</th>
+                <th class="num">売上高</th>
+                <th class="num col-sm-hide">ROE</th>
+                <th class="num col-sm-hide">PER</th>
+                <th class="num col-md-hide">不動産</th>
+              </tr>
+            </thead>
+            <tbody id="search-tbody">
+              <tr id="search-hint-row">
+                <td colspan="8" class="muted">
+                  <strong style="color:var(--text)">企業名・証券コード</strong>で検索できます。2文字以上入力するか、上場企業一覧を表示します。
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <p class="muted" style="margin-top:12px" id="search-count"></p>
-        <div class="pager-row" id="search-pager" style="display:none">
+        <div class="pager-row" id="search-pager" style="display:none;margin-top:var(--space-3)">
           <button type="button" class="secondary" id="search-more">さらに50件読み込む</button>
         </div>
       </div>
@@ -4791,21 +4810,21 @@
 
     function renderSearchItems(items) {
       return items.map(c => {
-        const snap = c.revenue != null
-          ? ` · 売上 ${formatYen(c.revenue)}${c.roe != null ? ` · ROE ${formatPct(c.roe)}` : ''}${(c.per_edinet ?? c.per) != null ? ` · PER ${formatPer(c.per_edinet ?? c.per)}` : ''}`
-          : '';
-        const fye = c.fiscal_year_end ? ` · 決算 ${String(c.fiscal_year_end).slice(0, 7)}` : '';
+        const name = (c.name || c.edinet_code || '').replace(/株式会社/g, '').trim();
+        const re = c.real_estate
+          ? formatBookValueM(c.real_estate.total_book_value_m)
+          : '-';
         return `
-        <div class="search-item" data-code="${c.edinet_code}">
-          <div style="min-width:0;flex:1">
-            <strong>${companyLink(c.edinet_code, c.name)}</strong>
-            <div class="search-meta">${c.edinet_code} · ${formatSecCode(c.sec_code)} · ${c.industry ?? '-'}${fye}${snap}${c.real_estate ? ` · 不動産 ${c.real_estate.count}件` : ''}</div>
-          </div>
-          <div class="search-item-badges">
-            ${c.real_estate ? `<span class="badge green">${formatBookValueM(c.real_estate.total_book_value_m)}</span>` : ''}
-            <span class="badge ${c.listing_status === '上場' ? 'green' : 'gray'}">${c.listing_status || '-'}</span>
-          </div>
-        </div>`;
+        <tr class="clickable" data-code="${c.edinet_code}">
+          <td>${companyLink(c.edinet_code, `<span class="cell-name">${name}</span>`)}${c.fiscal_year_end ? `<div class="cell-line2">決算 ${String(c.fiscal_year_end).slice(0, 7)}</div>` : ''}</td>
+          <td class="muted">${formatSecCode(c.sec_code)}</td>
+          <td class="muted col-md-hide">${c.industry ?? '-'}</td>
+          <td>${c.listing_status || '-'}</td>
+          <td class="num">${formatYen(c.revenue)}</td>
+          <td class="num col-sm-hide">${formatPct(c.roe)}</td>
+          <td class="num col-sm-hide">${formatPer(c.per_edinet ?? c.per)}</td>
+          <td class="num col-md-hide">${re}</td>
+        </tr>`;
       }).join('');
     }
 
@@ -4816,30 +4835,37 @@
       if (listing) params.set('listing', listing);
       if (industry) params.set('industry', industry);
       if (hasRealEstate) params.set('has_real_estate', 'true');
-      const list = document.getElementById('search-list');
-      const hint = document.getElementById('search-hint');
+      const tbody = document.getElementById('search-tbody');
+      if (!tbody) return null;
       if (!append) {
-        if (hint) hint.style.display = 'none';
-        list.innerHTML = '<div class="loading" style="padding:var(--space-8)"><span class="spinner"></span>検索中…</div>';
+        tbody.innerHTML = `<tr><td colspan="8" class="muted"><span class="spinner" style="display:inline-block;vertical-align:middle;margin-right:var(--space-2)"></span>検索中…</td></tr>`;
       }
-      const data = await api(`/api/companies?${params}`);
-      if (!data.items.length && !append) {
-        list.innerHTML = '<div class="empty"><div class="empty-title">該当する企業が見つかりません</div><p class="muted">キーワードを変えてお試しください</p></div>';
-      } else {
-        const html = renderSearchItems(data.items);
-        if (append) {
-          list.insertAdjacentHTML('beforeend', html);
+      try {
+        const data = await api(`/api/companies?${params}`);
+        if (!data.items.length && !append) {
+          tbody.innerHTML = '<tr><td colspan="8" class="muted">該当する企業が見つかりません。キーワードを変えてお試しください。</td></tr>';
         } else {
-          list.innerHTML = html;
+          const html = renderSearchItems(data.items);
+          if (append) {
+            tbody.insertAdjacentHTML('beforeend', html);
+          } else {
+            tbody.innerHTML = html;
+          }
+          bindRowClicks(tbody);
         }
-        bindRowClicks(list);
+        searchState.offset = offset + data.items.length;
+        searchState.total = data.total;
+        searchState.shown = searchState.offset;
+        searchState.params = { q, listing, industry, hasRealEstate };
+        updateSearchCount();
+        updateTableScrollHints();
+        return data;
+      } catch (e) {
+        if (!append) {
+          tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red)">検索に失敗しました（${e.message}）</td></tr>`;
+        }
+        return null;
       }
-      searchState.offset = offset + data.items.length;
-      searchState.total = data.total;
-      searchState.shown = searchState.offset;
-      searchState.params = { q, listing, industry, hasRealEstate };
-      updateSearchCount();
-      return data;
     }
 
     // Global + hero search dropdowns
