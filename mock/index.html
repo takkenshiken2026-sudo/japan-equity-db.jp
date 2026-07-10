@@ -4992,16 +4992,12 @@
     }
 
     const VERDICT_RATING_LABELS = {
-      '強い買い寄り': '注目ポイント多め',
-      '買い寄り': '注目ポイントあり',
-      '様子見': '中立',
-      '慎重': '要確認',
-      '注目ポイント多め': '注目ポイント多め',
-      '注目ポイントあり': '注目ポイントあり',
-      '中立': '中立',
-      '要確認': '要確認',
+      '注目ポイント多め': '強い買い寄り',
+      '注目ポイントあり': '買い寄り',
+      '中立': '様子見',
+      '要確認': '慎重',
     };
-    const VERDICT_POSITIVE = new Set(['注目ポイント多め', '注目ポイントあり', '強い買い寄り', '買い寄り']);
+    const VERDICT_POSITIVE = new Set(['強い買い寄り', '買い寄り', '注目ポイント多め', '注目ポイントあり']);
 
     function renderVerdictCard(verdict) {
       const card = document.getElementById('verdict-card');
@@ -5013,30 +5009,27 @@
       }
       card.style.display = 'block';
       card.classList.remove('verdict-positive', 'verdict-neutral', 'verdict-negative');
-      const ratingLabel = VERDICT_RATING_LABELS[verdict.rating] || verdict.rating || 'チェックポイント';
+      const ratingLabel = VERDICT_RATING_LABELS[verdict.rating] || verdict.rating || '様子見';
       if (VERDICT_POSITIVE.has(verdict.rating) || VERDICT_POSITIVE.has(ratingLabel)) {
         card.classList.add('verdict-positive');
-      } else if (verdict.rating === 'データ不足' || ratingLabel === '要確認' || (verdict.bears?.length > 2 && !verdict.bulls?.length)) {
+      } else if (verdict.rating === 'データ不足' || ratingLabel === '慎重' || (verdict.bears?.length > 2 && !verdict.bulls?.length)) {
         card.classList.add('verdict-negative');
       } else {
         card.classList.add('verdict-neutral');
       }
-      const score = Math.max(0, Math.min(100, Number(verdict.score) || 0));
+      const stars = renderStarRating(verdict.stars || 0);
       const bears = (verdict.bears || []).filter((t) => !/データ信頼度|未取得|判断材料/.test(t));
       body.innerHTML = `
         <div class="verdict-head">
           <div>
             <div class="verdict-rating">${ratingLabel}</div>
-            <div class="verdict-score" title="公開データから自動算出した相対スコア（投資助言ではありません）">
-              <span>相対スコア ${score}</span>
-              <span class="verdict-score-bar" aria-hidden="true"><span style="width:${score}%"></span></span>
-            </div>
+            <div class="verdict-stars">${stars}</div>
           </div>
         </div>
         <p class="verdict-summary">${verdict.summary || ''}</p>
         <div class="verdict-columns">
           <div class="verdict-list bull">
-            <h4>${iconLabel('check-circle', 'プラス材料', 'sm')}</h4>
+            <h4>${iconLabel('check-circle', '買い材料', 'sm')}</h4>
             <ul>${(verdict.bulls || []).map(t => `<li>${t}</li>`).join('') || '<li>特になし</li>'}</ul>
           </div>
           <div class="verdict-list bear">
