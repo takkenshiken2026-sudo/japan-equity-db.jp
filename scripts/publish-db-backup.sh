@@ -22,6 +22,9 @@ fi
 
 gh release upload "$TAG" "/tmp/$ASSET" --clobber
 
+rm -f "/tmp/$ASSET"
+python3 "$ROOT/tools/cleanup_local_data.py"
+
 URL=$(gh release view "$TAG" --json assets -q ".assets[] | select(.name==\"$ASSET\") | .url")
 echo ""
 echo "Uploaded. Set Render env DB_BACKUP_URL to the download URL:"

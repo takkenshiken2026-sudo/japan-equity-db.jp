@@ -281,6 +281,14 @@ def main() -> None:
     (OUT / "404.html").write_text((OUT / "index.html").read_text(encoding="utf-8"), encoding="utf-8")
     print(f"Built {OUT} ({len(list(OUT.iterdir()))} files)")
 
+    skip_cleanup = os.environ.get("SKIP_CLEANUP_LOCAL_DATA", "").lower() in ("1", "true", "yes")
+    if not skip_cleanup and not os.environ.get("CI"):
+        from cleanup_local_data import cleanup_local_data
+
+        removed = cleanup_local_data(keep_public_site=True)
+        if removed:
+            print(f"Cleaned local API cache ({len(removed)} paths) — data lives on GitHub Release / production")
+
 
 if __name__ == "__main__":
     main()

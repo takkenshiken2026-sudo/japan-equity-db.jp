@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from datetime import date, datetime
 
 from sqlalchemy import func, select
@@ -317,11 +318,32 @@ def main() -> None:
     purge_news.add_argument("--listing", default="上場")
     purge_news.add_argument("--limit", type=int, default=None)
 
+    sub.add_parser(
+        "cleanup-local-data",
+        help="GitHub Release / 本番公開後にローカル DB・収集ログを削除",
+    )
+
     args = parser.parse_args()
     init_db()
 
     if args.command == "init-db":
         print("DB initialized")
+        return
+
+    if args.command == "cleanup-local-data":
+        from pathlib import Path
+
+        tools_root = Path(__file__).resolve().parents[2] / "tools"
+        sys.path.insert(0, str(tools_root))
+        from cleanup_local_data import cleanup_local_data
+
+        removed = cleanup_local_data()
+        if removed:
+            print("Removed local API data:")
+            for item in removed:
+                print(f"  - {item}")
+        else:
+            print("No local API data to remove.")
         return
 
     if args.command == "plan":
@@ -335,7 +357,7 @@ def main() -> None:
         return
 
     api_key = getattr(args, "api_key", None)
-    if args.command not in ("init-db", "plan", "sync-prices", "backfill-quotes", "sync-real-estate", "sync-quarterly", "collect-quarterly", "sync-profiles", "seed-no-xbrl-profiles", "collect-external-media", "purge-irrelevant-news") and not api_key:
+    if args.command not in ("init-db", "plan", "cleanup-local-data", "sync-prices", "backfill-quotes", "sync-real-estate", "sync-quarterly", "collect-quarterly", "sync-profiles", "seed-no-xbrl-profiles", "collect-external-media", "purge-irrelevant-news") and not api_key:
         raise SystemExit("EDINET_API_KEY を .env に設定してください")
 
     db = SessionLocal()
@@ -939,7 +961,7 @@ def main() -> None:
 
     finally:
         db.close()
-        if args.command not in ("init-db", "plan"):
+        if args.command not in ("init-db", "plan", "cleanup-local-data"):
             try:
                 db_log = SessionLocal()
                 record_sync_snapshot(args.command, build_data_quality_stats(db_log))

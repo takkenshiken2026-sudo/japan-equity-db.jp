@@ -98,6 +98,8 @@ python3 tools/build_public_site.py
 python3 -m http.server -d public_site 8080
 ```
 
+`build_public_site.py` 完了後、ローカルの DB・収集ログは自動削除されます（`SKIP_CLEANUP_LOCAL_DATA=1` で無効化）。データの正本は GitHub Release（`db-backup`）と本番 `/data` です。手動削除は `python3 tools/cleanup_local_data.py` または `python -m app.sync_cli cleanup-local-data`。
+
 ## 有料 Render について
 
 `render.yaml` は残していますが、本番は **GitHub Pages 静的構成** を推奨します。
