@@ -7,7 +7,7 @@
 
   const FONT = '"Noto Sans JP", sans-serif';
   const BRAND = '#0284c7';
-  const BRAND_LIGHT = '#38bdf8';
+  const BRAND_LIGHT = '#0ea5e9';
 
   const COLORS = {
     green: '#059669',

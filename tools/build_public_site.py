@@ -178,11 +178,21 @@ def _write_brand_assets(listed_label: str) -> None:
     )
     (OUT / "og-image.svg").write_text(
         f"""<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <rect width="1200" height="630" fill="#f3f4f6"/>
-  <rect x="60" y="60" width="1080" height="510" rx="8" fill="#ffffff" stroke="#e5e7eb"/>
-  <text x="100" y="220" fill="#111827" font-size="56" font-family="sans-serif" font-weight="700">{SITE_NAME}</text>
-  <text x="100" y="300" fill="#374151" font-size="36" font-family="sans-serif">{SITE_TITLE_TAGLINE}</text>
-  <text x="100" y="380" fill="#6b7280" font-size="28" font-family="sans-serif">有価証券報告書ベースで約{listed_label}社を分析</text>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#075985"/>
+      <stop offset="45%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#f8fafc"/>
+  <rect x="0" y="0" width="1200" height="12" fill="url(#g)"/>
+  <rect x="60" y="60" width="1080" height="510" rx="14" fill="#ffffff" stroke="#e2e8f0"/>
+  <rect x="100" y="120" width="56" height="56" rx="12" fill="#0284c7"/>
+  <text x="128" y="157" text-anchor="middle" fill="white" font-size="22" font-family="sans-serif" font-weight="700">株</text>
+  <text x="176" y="158" fill="#0369a1" font-size="36" font-family="sans-serif" font-weight="700">{SITE_NAME}</text>
+  <text x="100" y="280" fill="#0f172a" font-size="48" font-family="sans-serif" font-weight="700">{SITE_TITLE_TAGLINE}</text>
+  <text x="100" y="360" fill="#64748b" font-size="28" font-family="sans-serif">有価証券報告書ベースで約{listed_label}社を分析</text>
 </svg>""",
         encoding="utf-8",
     )
