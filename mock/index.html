@@ -1887,7 +1887,8 @@
       .global-search--hero { display: none; }
       #dashboard .hero-intro-stack .feature-chips {
         align-self: stretch;
-        justify-content: center;
+        /* 横スクロールするので先頭寄せ。center だとオーバーフロー時に先頭チップが左に隠れて押せなくなる */
+        justify-content: flex-start;
         gap: var(--space-2);
         margin-inline: calc(-1 * max(var(--space-4), env(safe-area-inset-left)));
         padding-inline: max(var(--space-4), env(safe-area-inset-left));
