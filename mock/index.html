@@ -1837,7 +1837,8 @@
         order: 3; flex: 1 1 100%; max-width: none;
       }
       .header-recent::before { display: none; }
-      .global-search { max-width: none; order: 4; width: 100%; flex: 1 1 100%; }
+      /* 検索窓はロゴ横（1行目）へ。タブは全幅の2行目で4等分し全タブを表示 */
+      .global-search { max-width: none; order: 1; width: auto; flex: 1 1 auto; min-width: 0; }
       .conn-status { order: 5; }
       .conn-status #conn-label { display: none; }
       .nav-tabs {
@@ -1847,7 +1848,9 @@
         scrollbar-width: none;
       }
       .nav-tabs::-webkit-scrollbar { display: none; }
-      .tab { padding: var(--pad-chip-y) var(--pad-chip-x); font-size: var(--fs-small); flex: 0 0 auto; text-align: center; min-width: 0; }
+      /* flex:1 で4タブを均等配置。アイコンは隠して「銘柄比較」まで収める */
+      .tab { padding: var(--pad-chip-y) var(--space-1); font-size: var(--fs-small); flex: 1 1 0; text-align: center; min-width: 0; justify-content: center; gap: 4px; }
+      .nav-tabs .tab .ico { display: none; }
       h1 { font-size: var(--fs-value); }
       .card { padding: var(--space-4); }
       .card-header { margin-bottom: var(--gap-stack); }
@@ -1923,7 +1926,10 @@
         border-radius: var(--radius); border: 1px solid var(--border);
         padding: var(--space-1);
       }
-      .detail-tab { padding: var(--space-2) var(--space-3); font-size: var(--fs-small); flex: 1; min-width: 0; text-align: center; }
+      /* flex:1 + min-width:0 だとアイコン付きタブが内容幅より縮み、ラベルが隣と重なる。
+         内容ベースで伸ばし、アイコンは隠して6タブを収める */
+      .detail-tab { padding: var(--space-2) var(--space-1); font-size: var(--fs-small); flex: 1 1 auto; text-align: center; }
+      .detail-tab .ico { display: none; }
       .chart-box { min-height: 200px; padding: var(--space-4); }
       .re-summary { grid-template-columns: repeat(2, 1fr); }
       .re-toolbar { flex-direction: column; align-items: stretch; }
