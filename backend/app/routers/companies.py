@@ -1102,12 +1102,53 @@ def get_company_quarterly(
     }
 
 
+_SHORT_OPEN_THRESHOLD = 0.5  # JPX 公表対象は残高割合0.5%以上
+_SHORT_LEVEL_MID = 1.5
+_SHORT_LEVEL_HIGH = 4.0
+
+
+def _short_selling_history(
+    by_holder: dict[str, list[tuple[str, float]]], dates: list[str], *, max_points: int = 60
+) -> list[dict]:
+    """各報告日時点で開いている（≥0.5%）ポジションを合算し、合計残高割合の推移を再構成する。
+
+    JPX の残高報告は「更新があるまでポジションが継続する」前提で解釈する。
+    各報告者について、その日以前で最も新しい残高割合を採用し、0.5%以上のもののみ合算する。
+    """
+    points: list[dict] = []
+    for d in dates:
+        total = 0.0
+        holders_open = 0
+        for events in by_holder.values():
+            latest: float | None = None
+            for cd, ratio in events:  # events は calc_date 昇順
+                if cd <= d:
+                    latest = ratio
+                else:
+                    break
+            if latest is not None and latest >= _SHORT_OPEN_THRESHOLD:
+                total += latest
+                holders_open += 1
+        points.append({"date": d, "ratio": round(total, 4), "holders": holders_open})
+    return points[-max_points:]
+
+
+def _short_selling_level(total_ratio: float | None) -> str:
+    if total_ratio is None:
+        return "none"
+    if total_ratio >= _SHORT_LEVEL_HIGH:
+        return "high"
+    if total_ratio >= _SHORT_LEVEL_MID:
+        return "medium"
+    return "low"
+
+
 @router.get("/{edinet_code}/short-selling")
 def get_company_short_selling(
     edinet_code: str,
     db: Session = Depends(get_db),
 ):
-    """空売り残高（残高割合0.5%以上）。報告者ごとに直近の残高を返す。"""
+    """空売り残高（残高割合0.5%以上）。報告者別の直近残高＋合計残高割合の推移を返す。"""
     company = db.get(Company, edinet_code)
     if not company:
         raise HTTPException(status_code=404, detail="企業が見つかりません")
@@ -1118,9 +1159,23 @@ def get_company_short_selling(
         .order_by(ShortSellingBalance.calc_date.desc())
     ).all()
 
+    if not rows:
+        return {
+            "edinet_code": edinet_code,
+            "sec_code": company.sec_code,
+            "count": 0,
+            "latest_calc_date": None,
+            "total_ratio": None,
+            "level": "none",
+            "change": None,
+            "peak": None,
+            "holders": [],
+            "history": [],
+        }
+
     # 報告者ごとに直近（最新 calc_date）の1件を採用
     latest_by_holder: dict[str, ShortSellingBalance] = {}
-    for r in rows:
+    for r in rows:  # calc_date 降順なので初出が最新
         if r.holder_name not in latest_by_holder:
             latest_by_holder[r.holder_name] = r
 
@@ -1129,8 +1184,7 @@ def get_company_short_selling(
         key=lambda r: (r.short_ratio if r.short_ratio is not None else -1),
         reverse=True,
     )
-    # 現時点で0.5%以上を保有している報告者のみ（撤回済みは除外）
-    open_holders = [h for h in holders if (h.short_ratio or 0) >= 0.5]
+    open_holders = [h for h in holders if (h.short_ratio or 0) >= _SHORT_OPEN_THRESHOLD]
 
     def _trend(h: ShortSellingBalance) -> str | None:
         if h.short_ratio is None or h.prev_ratio is None:
@@ -1141,15 +1195,33 @@ def get_company_short_selling(
             return "down"
         return "flat"
 
-    total_ratio = sum(h.short_ratio for h in open_holders if h.short_ratio is not None)
-    latest_calc_date = max((r.calc_date for r in rows), default=None)
+    # 合計残高割合の推移を再構成
+    by_holder: dict[str, list[tuple[str, float]]] = {}
+    for r in rows:
+        if r.short_ratio is None:
+            continue
+        by_holder.setdefault(r.holder_name, []).append((r.calc_date, r.short_ratio))
+    for events in by_holder.values():
+        events.sort(key=lambda e: e[0])
+    dates = sorted({r.calc_date for r in rows})
+    history = _short_selling_history(by_holder, dates)
+
+    total_ratio = history[-1]["ratio"] if history else None
+    latest_calc_date = dates[-1] if dates else None
+    change = None
+    if len(history) >= 2:
+        change = round(history[-1]["ratio"] - history[-2]["ratio"], 4)
+    peak = max(history, key=lambda p: p["ratio"]) if history else None
 
     return {
         "edinet_code": edinet_code,
         "sec_code": company.sec_code,
         "count": len(open_holders),
         "latest_calc_date": latest_calc_date,
-        "total_ratio": round(total_ratio, 4) if open_holders else None,
+        "total_ratio": total_ratio,
+        "level": _short_selling_level(total_ratio),
+        "change": change,
+        "peak": peak,
         "holders": [
             {
                 "holder_name": h.holder_name,
@@ -1161,6 +1233,7 @@ def get_company_short_selling(
             }
             for h in open_holders
         ],
+        "history": history,
     }
 
 
