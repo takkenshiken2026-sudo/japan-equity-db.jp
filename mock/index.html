@@ -1848,8 +1848,10 @@
         scrollbar-width: none;
       }
       .nav-tabs::-webkit-scrollbar { display: none; }
-      /* flex:1 で4タブを均等配置。アイコンは隠して「銘柄比較」まで収める */
-      .tab { padding: var(--pad-chip-y) var(--space-1); font-size: var(--fs-small); flex: 1 1 0; text-align: center; min-width: 0; justify-content: center; gap: 4px; }
+      /* flex:1 1 auto で内容幅ベースに4タブを配置し全幅へ伸ばす。
+         flex:1 1 0（均等固定幅）だと最長の「スクリーニング」が枠をはみ出し隣と接触するため内容ベースにする。
+         アイコンは隠して「銘柄比較」まで収める */
+      .tab { padding: var(--pad-chip-y) var(--space-2); font-size: var(--fs-small); flex: 1 1 auto; text-align: center; justify-content: center; gap: 4px; }
       .nav-tabs .tab .ico { display: none; }
       h1 { font-size: var(--fs-value); }
       .card { padding: var(--space-4); }
@@ -1978,6 +1980,13 @@
       .theme-weekly-grid .theme-box { flex: 0 0 min(200px, 84vw); }
     }
 
+    /* 極小幅（〜360px：小型Android・旧iPhone）ではメインタブの
+       フォントと余白を詰め、4タブ（特に長い「スクリーニング」）を折らず全表示 */
+    @media (max-width: 360px) {
+      .header-inner { padding-left: max(var(--space-4), env(safe-area-inset-left)); padding-right: max(var(--space-4), env(safe-area-inset-right)); }
+      .nav-tabs .tab { font-size: var(--fs-caption); padding-left: var(--space-1); padding-right: var(--space-1); }
+    }
+
     @media (min-width: 769px) {
       .detail-section .table-hint {
         display: flex; font-size: var(--fs-caption); color: var(--text-muted); margin-bottom: var(--space-2); gap: var(--space-2); align-items: center;
@@ -2023,6 +2032,24 @@
     .peer-item .name { font-weight: var(--fw-bold); font-size: var(--fs-body); }
     .peer-item .meta { font-size: var(--fs-small); color: var(--text-muted); margin-top: 2px; }
     .peer-item .vals { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-2); font-size: var(--fs-small); font-weight: var(--fw-semibold); }
+
+    /* ── タッチ端末（スマホ・タブレット）向けのタップ領域拡大 ──
+       pointer: coarse＝指操作の端末だけに適用。マウスのPCは影響なし。
+       主要な操作要素を押しやすい大きさ（概ね高さ40px前後）に引き上げる */
+    @media (pointer: coarse) {
+      .tab { min-height: 40px; }
+      .detail-tab { min-height: 38px; display: inline-flex; align-items: center; justify-content: center; }
+      .compare-add-btn { width: 34px; height: 34px; font-size: var(--fs-subhead); }
+      .chart-range-btns button { min-height: 36px; padding-top: var(--space-2); padding-bottom: var(--space-2); }
+      .help-tip-trigger { width: 24px; height: 24px; font-size: var(--fs-small); }
+      .presets-toggle,
+      .toggle-filters,
+      button.secondary.theme-more { min-height: 38px; }
+      .trending-rank-item { min-height: 44px; }
+      .header-recent-pill { min-height: 34px; }
+      .breadcrumb-link { min-height: 32px; display: inline-flex; align-items: center; }
+      .doc-links a { min-height: 32px; display: inline-flex; align-items: center; }
+    }
   </style>
 </head>
 <body>
