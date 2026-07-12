@@ -1991,6 +1991,11 @@
       .nav-tabs .tab { font-size: var(--fs-caption); padding-left: var(--space-1); padding-right: var(--space-1); }
     }
 
+    /* タブレット縦（〜768px）は幅に余裕があるため一覧カードを2列にして密度を上げる */
+    @media (min-width: 560px) and (max-width: 768px) {
+      .mobile-cards { grid-template-columns: 1fr 1fr; }
+    }
+
     @media (min-width: 769px) {
       .detail-section .table-hint {
         display: flex; font-size: var(--fs-caption); color: var(--text-muted); margin-bottom: var(--space-2); gap: var(--space-2); align-items: center;
