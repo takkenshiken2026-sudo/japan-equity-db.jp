@@ -89,6 +89,20 @@ def collect_short_selling(
     records, meta = fetch_latest_short_selling(file_url=file_url)
     stats = persist_short_selling(db, records)
     stats["fetched"] = len(records)
+    # 収集ゼロ時の原因究明用に診断情報を残す（CIログで確認）
+    stats["diag"] = {
+        k: meta.get(k)
+        for k in (
+            "index_status",
+            "index_len",
+            "file_url",
+            "file_status",
+            "file_bytes",
+            "error",
+            "diag",
+        )
+        if meta.get(k) is not None
+    }
     if log_snapshot:
         save_collection_snapshot(
             source="jpx_short_selling",
