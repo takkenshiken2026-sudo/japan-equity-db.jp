@@ -27,6 +27,11 @@ def _setup_app(db_path: Path):
     sys.path.insert(0, str(ROOT / "backend"))
     from fastapi.testclient import TestClient
     from app.main import app
+    from app.db import init_db
+
+    # 復元した本番DBに新スキーマ（例: short_selling_balances）が無い場合でも
+    # エクスポートが落ちないよう、不足テーブルを作成しておく（create_all は冪等）。
+    init_db()
 
     return TestClient(app)
 
