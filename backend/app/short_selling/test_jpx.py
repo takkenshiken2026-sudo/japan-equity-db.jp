@@ -76,6 +76,29 @@ def test_extract_latest_file_url_picks_newest_dated():
     <a href="/markets/short-selling/2026-07-09.xls">7/9</a>
     <a href="/other/page.html">別ページ</a>
     """
-    url, file_date = _extract_latest_file_url(html)
+    found, diag = _extract_latest_file_url(html)
+    assert found is not None
+    url, file_date = found
     assert url == "https://www.jpx.co.jp/markets/short-selling/2026-07-09.xls"
     assert file_date == "2026-07-09"
+    assert diag["sheet_links"] == 2
+
+
+def test_extract_handles_xlsx_and_query_and_relative():
+    html = """
+    <a href="./nlsgeu-att/20260709.xlsx">最新</a>
+    <a href="/download?file=old.csv">CSV</a>
+    """
+    found, diag = _extract_latest_file_url(html, base_url="https://www.jpx.co.jp/markets/short-selling/index.html")
+    assert found is not None
+    url, file_date = found
+    # 日付付き .xlsx を優先
+    assert url == "https://www.jpx.co.jp/markets/short-selling/nlsgeu-att/20260709.xlsx"
+    assert file_date == "2026-07-09"
+
+
+def test_extract_returns_none_and_diag_when_no_sheets():
+    found, diag = _extract_latest_file_url("<a href='/foo.html'>x</a>")
+    assert found is None
+    assert diag["sheet_links"] == 0
+    assert diag["href_sample"]

@@ -12,19 +12,21 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Optional
+from urllib.parse import urljoin
 
 import httpx
 import pandas as pd
 
 INDEX_URL = "https://www.jpx.co.jp/markets/statistics-equities/short-selling/index.html"
 BASE_URL = "https://www.jpx.co.jp"
-USER_AGENT = "Mozilla/5.0 (compatible; KabuCheck/1.0; +https://japan-equity-db.jp)"
-
-# 公表ページから抽出する空売り残高データファイルのリンク（日付付き .xls/.xlsx/.csv）
-_DATA_LINK_RE = re.compile(
-    r'href="(?P<href>[^"]*?(?:short|xls|csv)[^"]*?\.(?:xlsx?|csv))"',
-    re.IGNORECASE,
+USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
 )
+
+# ページ内の全リンクと、表計算ファイル（.xls/.xlsx/.csv）リンクを検出する
+_HREF_RE = re.compile(r'href=["\']([^"\']+)["\']', re.IGNORECASE)
+_SHEET_RE = re.compile(r"\.(xlsx?|csv)(?:[?#]|$)", re.IGNORECASE)
 _DATE_IN_NAME_RE = re.compile(r"(20\d{2})[-_/]?(\d{2})[-_/]?(\d{2})")
 
 # 論理フィールド -> ヘッダーに含まれ得るキーワード（部分一致）
@@ -187,25 +189,43 @@ def parse_short_selling_bytes(
     return parse_short_selling_frame(frame, published_date=published_date)
 
 
-def _extract_latest_file_url(index_html: str) -> Optional[tuple[str, Optional[str]]]:
-    """公表ページ HTML から最新データファイルの URL と日付を推定する。"""
-    candidates: list[tuple[str, Optional[str]]] = []
-    for m in _DATA_LINK_RE.finditer(index_html):
-        href = m.group("href")
-        url = href if href.startswith("http") else BASE_URL + href
-        date_match = _DATE_IN_NAME_RE.search(href)
-        file_date = None
-        if date_match:
-            y, mo, d = date_match.groups()
-            file_date = f"{y}-{mo}-{d}"
-        candidates.append((url, file_date))
-    if not candidates:
+def _file_date(href: str) -> Optional[str]:
+    m = _DATE_IN_NAME_RE.search(href)
+    if not m:
         return None
-    # 日付付きを優先し、最も新しいものを返す
-    dated = [c for c in candidates if c[1]]
-    if dated:
-        return max(dated, key=lambda c: c[1])
-    return candidates[0]
+    y, mo, d = m.groups()
+    return f"{y}-{mo}-{d}"
+
+
+def _extract_latest_file_url(
+    index_html: str, base_url: str = INDEX_URL
+) -> tuple[Optional[tuple[str, Optional[str]]], dict[str, Any]]:
+    """公表ページ HTML から最新データファイルの URL と日付を推定する。
+
+    戻り値は ((url, 日付) | None, 診断情報)。表計算リンクを幅広く検出し、
+    空売り関連パス・日付付きを優先する。相対 URL は base_url で解決する。
+    """
+    hrefs = _HREF_RE.findall(index_html)
+    sheets = [h for h in hrefs if _SHEET_RE.search(h)]
+    diag: dict[str, Any] = {
+        "total_links": len(hrefs),
+        "sheet_links": len(sheets),
+        "sheet_sample": sheets[:10],
+        "href_sample": [] if sheets else hrefs[:15],
+    }
+    if not sheets:
+        return None, diag
+
+    scored: list[tuple[int, str, str, Optional[str]]] = []
+    for href in sheets:
+        url = urljoin(base_url, href)
+        fdate = _file_date(href)
+        priority = 1 if "short" in href.lower() else 0
+        scored.append((priority, fdate or "", url, fdate))
+    # 空売り関連パス優先 → 日付が新しい順
+    scored.sort(key=lambda c: (c[0], c[1]), reverse=True)
+    best = scored[0]
+    return (best[2], best[3]), diag
 
 
 def fetch_latest_short_selling(
@@ -217,16 +237,22 @@ def fetch_latest_short_selling(
     """公表ページから最新の空売り残高ファイルを取得してパースする。
 
     file_url を指定すればページ探索を省略して直接そのファイルを取得する。
-    戻り値は (レコード一覧, メタ情報)。
+    戻り値は (レコード一覧, メタ情報)。meta には診断情報を含む。
     """
-    headers = {"User-Agent": USER_AGENT}
+    headers = {
+        "User-Agent": USER_AGENT,
+        "accept-language": "ja-JP,ja;q=0.9,en;q=0.8",
+    }
     meta: dict[str, Any] = {"index_url": index_url}
     with httpx.Client(timeout=timeout, follow_redirects=True, headers=headers) as client:
         published_date = None
         if not file_url:
             resp = client.get(index_url)
+            meta["index_status"] = resp.status_code
             resp.raise_for_status()
-            found = _extract_latest_file_url(resp.text)
+            meta["index_len"] = len(resp.text)
+            found, diag = _extract_latest_file_url(resp.text, str(resp.url))
+            meta["diag"] = diag
             if not found:
                 meta["error"] = "no_data_link_found"
                 return [], meta
@@ -235,7 +261,9 @@ def fetch_latest_short_selling(
         meta["published_date"] = published_date
 
         file_resp = client.get(file_url)
+        meta["file_status"] = file_resp.status_code
         file_resp.raise_for_status()
+        meta["file_bytes"] = len(file_resp.content)
         records = parse_short_selling_bytes(
             file_resp.content, file_url, published_date=published_date
         )
