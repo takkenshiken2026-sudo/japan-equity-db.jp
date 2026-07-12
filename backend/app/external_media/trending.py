@@ -71,7 +71,6 @@ def list_news_trending(
     days: int = 7,
 ) -> list[dict[str, Any]]:
     today = _jst_today()
-    yesterday = today - timedelta(days=1)
     lookback_start = today - timedelta(days=max(days, 14))
     cutoff_naive = (
         datetime.combine(lookback_start, datetime.min.time(), tzinfo=JST)
@@ -86,7 +85,10 @@ def list_news_trending(
     for article in articles:
         grouped[article.edinet_code].append(article)
 
-    items: list[dict[str, Any]] = []
+    # 上場企業の関連記事のみを対象に整理し、日付ごとの件数を集計する
+    relevant_by_code: dict[str, list[CompanyNewsArticle]] = {}
+    dates_by_code: dict[str, list[date]] = {}
+    all_dates: list[date] = []
     for edinet_code, company_articles in grouped.items():
         company = db.get(Company, edinet_code)
         if not company or company.listing_status != "上場":
@@ -94,14 +96,32 @@ def list_news_trending(
         relevant = [row for row in company_articles if _is_relevant_article_row(row, company)]
         if not relevant:
             continue
+        relevant_by_code[edinet_code] = relevant
+        art_dates = [d for row in relevant if (d := _article_jst_date(row)) is not None]
+        dates_by_code[edinet_code] = art_dates
+        all_dates.extend(art_dates)
 
-        today_count = sum(1 for row in relevant if _article_jst_date(row) == today)
-        prior_count = sum(1 for row in relevant if _article_jst_date(row) == yesterday)
+    if not all_dates:
+        return []
+
+    # 「今日」の記事が無いビルド（前日収集のDBを復元）でも前日比が出るよう、
+    # 収集済みの最新日を基準日、その前日を比較日として集計する。
+    recent_day = max(all_dates)
+    prior_day = recent_day - timedelta(days=1)
+
+    items: list[dict[str, Any]] = []
+    for edinet_code, relevant in relevant_by_code.items():
+        company = db.get(Company, edinet_code)
+        if not company:
+            continue
+        art_dates = dates_by_code.get(edinet_code, [])
+        today_count = sum(1 for d in art_dates if d == recent_day)
+        prior_count = sum(1 for d in art_dates if d == prior_day)
         delta = today_count - prior_count
         if today_count <= 0 and delta <= 0:
             continue
 
-        today_articles = [row for row in relevant if _article_jst_date(row) == today]
+        today_articles = [row for row in relevant if _article_jst_date(row) == recent_day]
         latest = max(
             today_articles or relevant,
             key=lambda row: (
