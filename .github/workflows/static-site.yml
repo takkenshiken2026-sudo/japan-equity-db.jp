@@ -80,8 +80,9 @@ jobs:
           python -c "from app.db_maintenance import checkpoint_sqlite_wal; checkpoint_sqlite_wal('TRUNCATE')"
 
       - name: Collect JPX short-selling balances
-        # EDINET キー不要。公表データは日々消えるため sync スキップ時も蓄積を止めない
-        if: (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.skip_sync != true)) && (github.event_name != 'workflow_dispatch' || inputs.quick_deploy != true)
+        # EDINET キー不要・軽量・冪等。push デプロイ時にも最新残高を取り込み即表示する
+        # （恒久的な時系列の永続化は schedule 実行の DB バックアップで担保）
+        if: (github.event_name == 'schedule' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.skip_sync != true)) && (github.event_name != 'workflow_dispatch' || inputs.quick_deploy != true)
         run: |
           cd backend
           export DATABASE_URL=sqlite:///./data/edinet.db
