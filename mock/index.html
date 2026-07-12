@@ -1923,7 +1923,11 @@
       .kpi-group-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-2); }
       .kpi { padding: var(--space-3) var(--space-3); }
       .kpi .kpi-value { font-size: var(--fs-subhead); }
-      .detail-tabs-wrap { top: 46px; margin-left: calc(-1 * var(--space-4)); margin-right: calc(-1 * var(--space-4)); padding-left: var(--space-4); padding-right: var(--space-4); }
+      /* モバイルはヘッダーが2〜3行と高く、sticky のままだと詳細のセクションタブ
+         （概要/年次財務…）がヘッダーの裏に隠れて使えない。ヘッダーは通常スクロール
+         させ、代わりにセクションタブを画面最上部に固定して省スペース＆操作性を確保 */
+      header { position: static; }
+      .detail-tabs-wrap { top: 0; margin-left: calc(-1 * var(--space-4)); margin-right: calc(-1 * var(--space-4)); padding-left: var(--space-4); padding-right: var(--space-4); }
       .detail-tabs {
         border-radius: var(--radius); border: 1px solid var(--border);
         padding: var(--space-1);
@@ -2053,6 +2057,18 @@
       .compare-chip button { min-width: 28px; min-height: 28px; display: inline-flex; align-items: center; justify-content: center; margin: -4px -6px -4px 0; }
       /* スクリーニングのチェックボックスを指で押しやすく拡大 */
       .field-check input[type="checkbox"] { width: 18px; height: 18px; }
+    }
+
+    /* ── アクセシビリティ：視覚的な動きを減らす設定を尊重 ──
+       スピナー・スケルトン・トランジション・スムーススクロールを抑制 */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+      }
+      html { scroll-behavior: auto !important; }
     }
   </style>
 </head>
