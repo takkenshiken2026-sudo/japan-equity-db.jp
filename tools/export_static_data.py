@@ -124,6 +124,7 @@ def _export_company_bundle(client, code: str) -> dict | None:
         ("real_estate", f"/api/companies/{code}/real-estate"),
         ("quarterly", f"/api/companies/{code}/quarterly?limit=32"),
         ("valuation_history", f"/api/companies/{code}/valuation-history"),
+        ("short_selling", f"/api/companies/{code}/short-selling"),
     ]
     for key, path in specs:
         response = client.get(path)

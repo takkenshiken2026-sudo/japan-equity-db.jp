@@ -1010,6 +1010,35 @@
     .profile-text p { margin: 0 0 var(--space-3); }
     .profile-text p:last-child { margin-bottom: 0; }
 
+    /* ── 空売り残高セクション ───────────────────────────── */
+    .ss-summary { display: grid; grid-template-columns: 1.1fr 1fr; gap: var(--space-4); align-items: stretch; margin-bottom: var(--space-4); }
+    .ss-headline { display: flex; flex-direction: column; justify-content: center; gap: var(--space-2); background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-4); }
+    .ss-headline-top { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
+    .ss-ratio { font-size: var(--fs-display-min); font-weight: var(--fw-bold); color: var(--text); line-height: 1; }
+    .ss-ratio .unit { font-size: var(--fs-value); margin-left: 2px; }
+    .ss-level { display: inline-flex; align-items: center; gap: 5px; font-size: var(--fs-caption); font-weight: var(--fw-bold); padding: 3px 10px; border-radius: var(--radius-pill); border: 1px solid transparent; letter-spacing: .02em; }
+    .ss-level.low { background: var(--green-light); color: var(--green); border-color: var(--green-border); }
+    .ss-level.medium { background: var(--amber-light); color: var(--amber); border-color: #fde68a; }
+    .ss-level.high { background: var(--red-light); color: var(--red); border-color: #fecaca; }
+    .ss-headline-meta { display: flex; flex-wrap: wrap; gap: var(--space-4); font-size: var(--fs-small); color: var(--text-secondary); }
+    .ss-headline-meta strong { color: var(--text); font-weight: var(--fw-semibold); }
+    .ss-delta-up { color: var(--red); font-weight: var(--fw-semibold); }
+    .ss-delta-down { color: var(--green); font-weight: var(--fw-semibold); }
+    .ss-spark { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3) var(--space-4) var(--space-2); display: flex; flex-direction: column; }
+    .ss-spark-head { display: flex; justify-content: space-between; align-items: baseline; font-size: var(--fs-caption); color: var(--text-muted); font-weight: var(--fw-semibold); margin-bottom: var(--space-1); }
+    .ss-spark svg { width: 100%; height: 68px; display: block; overflow: visible; }
+    .ss-spark-foot { display: flex; justify-content: space-between; font-size: var(--fs-caption); color: var(--text-muted); margin-top: 2px; }
+    .ss-ratio-cell { display: flex; align-items: center; gap: var(--space-2); justify-content: flex-end; }
+    .ss-bar { flex: 0 0 44px; height: 6px; border-radius: var(--radius-pill); background: var(--surface2); overflow: hidden; }
+    .ss-bar span { display: block; height: 100%; background: var(--brand-500, #0ea5e9); border-radius: var(--radius-pill); }
+    .ss-trend-up { color: var(--red); font-weight: var(--fw-semibold); }
+    .ss-trend-down { color: var(--green); font-weight: var(--fw-semibold); }
+    .ss-interpret { margin: 0 0 var(--space-2); font-size: var(--fs-small); color: var(--text-secondary); line-height: 1.7; }
+    .ss-table { min-width: 540px; }
+    .ss-table th, .ss-table td { white-space: nowrap; }
+    .ss-table td:first-child, .ss-table th:first-child { min-width: 190px; }
+    @media (max-width: 640px) { .ss-summary { grid-template-columns: 1fr; } }
+
     .re-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-5); }
     .re-overview-card { margin-top: var(--space-4); }
     .re-overview-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-4); }
@@ -2685,6 +2714,14 @@
             <div class="insight-grid" id="data-insights"></div>
             <nav class="overview-nav" id="overview-nav" aria-label="詳細セクションへ"></nav>
           </div>
+
+          <div class="card section-card" id="short-selling-card" style="display:none">
+            <div class="card-header">
+              <h2 data-icon="trending-down">空売り残高</h2>
+              <span class="muted" id="short-selling-meta"></span>
+            </div>
+            <div id="short-selling-body"></div>
+          </div>
         </div>
 
         <div class="detail-section" id="sec-analysis">
@@ -2958,6 +2995,7 @@
       'bar-chart': '<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>',
       percent: '<line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
       'trending-up': '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',
+      'trending-down': '<polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/>',
       building: '<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/>',
       tag: '<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>',
       sliders: '<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>',
@@ -4068,6 +4106,128 @@
             <span>営業CF ${formatYen(latest.operating_cf)}</span>
           </div>
         </div>`;
+    }
+
+    const SS_LEVEL = {
+      low: { label: '低水準', color: '#059669' },
+      medium: { label: 'やや高い', color: '#b45309' },
+      high: { label: '高水準', color: '#dc2626' },
+    };
+
+    function ssEscape(s) {
+      return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    }
+
+    function ssSparkline(history, color) {
+      const pts = (history || []).filter(p => p && p.ratio != null);
+      if (pts.length < 2) return '';
+      const W = 300, H = 56, PT = 6, PB = 6;
+      const vals = pts.map(p => p.ratio);
+      const min = Math.min(...vals), max = Math.max(...vals);
+      const span = max - min || 1;
+      const x = i => (i / (pts.length - 1)) * W;
+      const y = v => H - PB - ((v - min) / span) * (H - PT - PB);
+      const line = pts.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.ratio).toFixed(1)}`).join(' ');
+      const area = `${line} L${W},${H} L0,${H} Z`;
+      const gid = 'ssg-' + Math.abs(color.split('').reduce((a, c) => a + c.charCodeAt(0), 0));
+      const lx = x(pts.length - 1).toFixed(1), ly = y(pts[pts.length - 1].ratio).toFixed(1);
+      return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="合計残高割合の推移">
+        <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${color}" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+        </linearGradient></defs>
+        <path d="${area}" fill="url(#${gid})"/>
+        <path d="${line}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+        <circle cx="${lx}" cy="${ly}" r="3" fill="${color}" vector-effect="non-scaling-stroke"/>
+      </svg>`;
+    }
+
+    function ssInterpretation(ss) {
+      const lvl = ss.level;
+      let base;
+      if (lvl === 'high') base = '残高割合は高水準です。株価上昇局面では買い戻し（踏み上げ）圧力となり得る一方、下落局面では需給の重しになります。';
+      else if (lvl === 'medium') base = '残高割合はやや高めで、需給面の変化に注意が必要な水準です。';
+      else base = '残高割合は低水準で、現時点で需給への影響は限定的とみられます。';
+      if (ss.change != null && Math.abs(ss.change) >= 0.05) {
+        base += ss.change > 0 ? '直近は残高が増加傾向にあります。' : '直近は残高が減少傾向にあります。';
+      }
+      return base;
+    }
+
+    function renderShortSelling(ss) {
+      const card = document.getElementById('short-selling-card');
+      if (!card) return;
+      const holders = (ss && ss.holders) || [];
+      if (!holders.length) { card.style.display = 'none'; return; }
+      card.style.display = 'block';
+
+      const meta = document.getElementById('short-selling-meta');
+      if (meta) meta.textContent = `直近 ${ss.latest_calc_date ?? '-'} 時点`;
+
+      const lvl = SS_LEVEL[ss.level] || SS_LEVEL.low;
+      const totalTxt = ss.total_ratio != null ? ss.total_ratio.toFixed(2) : '-';
+      const history = ss.history || [];
+      const metaItems = [`<span>報告者 <strong>${ss.count}</strong>者</span>`];
+      if (ss.change != null) {
+        const changeHtml = ss.change > 0 ? `<span class="ss-delta-up">▲ +${ss.change.toFixed(2)}pt</span>`
+          : ss.change < 0 ? `<span class="ss-delta-down">▼ ${ss.change.toFixed(2)}pt</span>`
+          : '<span class="muted">±0</span>';
+        metaItems.push(`<span>直近変化 ${changeHtml}</span>`);
+      }
+      if (ss.peak && history.length >= 2) {
+        metaItems.push(`<span>期間ピーク <strong>${ss.peak.ratio.toFixed(2)}%</strong> <span class="muted">(${ss.peak.date})</span></span>`);
+      }
+
+      const sparkBlock = history.length >= 2
+        ? `<div class="ss-spark">
+             <div class="ss-spark-head"><span>合計残高割合の推移</span><span>${history.length}時点</span></div>
+             ${ssSparkline(history, lvl.color)}
+             <div class="ss-spark-foot"><span>${history[0].date}</span><span>${history[history.length - 1].date}</span></div>
+           </div>`
+        : `<div class="ss-spark">
+             <div class="ss-spark-head"><span>合計残高割合の推移</span></div>
+             <p class="muted" style="font-size:var(--fs-caption);margin:auto 0">推移を表示するにはデータの蓄積が必要です。</p>
+           </div>`;
+
+      const maxRatio = Math.max(...holders.map(h => h.short_ratio || 0), 0.01);
+      const trendMark = (t) => t === 'up' ? '<span class="ss-trend-up">▲ 増</span>'
+        : t === 'down' ? '<span class="ss-trend-down">▼ 減</span>'
+        : t === 'flat' ? '<span class="muted">→ 横ばい</span>' : '<span class="muted">-</span>';
+
+      const rows = holders.map(h => {
+        const r = h.short_ratio;
+        const w = r != null ? Math.max(4, Math.round((r / maxRatio) * 100)) : 0;
+        return `<tr>
+          <td>${ssEscape(h.holder_name)}</td>
+          <td class="num"><div class="ss-ratio-cell"><div class="ss-bar"><span style="width:${w}%;background:${lvl.color}"></span></div><strong>${r != null ? r.toFixed(2) + '%' : '-'}</strong></div></td>
+          <td class="num">${h.short_shares != null ? formatNum(h.short_shares, 0) : '-'}</td>
+          <td class="num">${trendMark(h.trend)}</td>
+          <td class="num muted">${h.calc_date ?? '-'}</td>
+        </tr>`;
+      }).join('');
+
+      document.getElementById('short-selling-body').innerHTML = `
+        <div class="ss-summary">
+          <div class="ss-headline">
+            <div class="ss-headline-top">
+              <span class="ss-ratio">${totalTxt}<span class="unit">%</span></span>
+              <span class="ss-level ${ss.level}">${lvl.label}</span>
+            </div>
+            <div class="ss-headline-meta">${metaItems.join('')}</div>
+          </div>
+          ${sparkBlock}
+        </div>
+        <p class="ss-interpret">${ssInterpretation(ss)}</p>
+        <div class="table-hint">横にスクロールできます</div>
+        <div class="table-wrap table-scroll-hint">
+          <table class="ss-table">
+            <thead><tr><th>報告者</th><th class="num">残高割合</th><th class="num">残高数量(株)</th><th class="num">前回比</th><th class="num">計算日</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        <p class="chart-caption">残高割合0.5%以上の空売りポジションを合算。出典: JPX「空売り残高に関する情報」を日次収集・蓄積した独自データです。ポジションは更新報告があるまで継続として集計しています。</p>`;
+
+      try { decorateStaticIcons(document.getElementById('short-selling-body')); } catch (e) { /* noop */ }
     }
 
     function renderCompanyProfile(profile, company) {
@@ -6189,12 +6349,13 @@
       loadCompanySearchTrend(code, currentTrendDays, mediaRequests.trend);
 
       try {
-        const [data, re, qtr, profile, priceHist] = await Promise.all([
+        const [data, re, qtr, profile, priceHist, shortSell] = await Promise.all([
           api(`/api/companies/${code}?financial_limit=12`),
           api(`/api/companies/${code}/real-estate`).catch(() => null),
           api(`/api/companies/${code}/quarterly?limit=32`).catch(() => null),
           api(`/api/companies/${code}/profile`).catch(() => null),
           api(`/api/companies/${code}/price-history?range=1y`).catch(() => null),
+          api(`/api/companies/${code}/short-selling`).catch(() => null),
         ]);
         const c = data.company;
         const s = data.stock;
@@ -6246,6 +6407,7 @@
         renderDataInsights({ latest, stock: s, re, qtr, benchmark: data.industry_benchmark });
         renderOverviewNav(re, qtr, fin);
         renderCompanyProfile(profile || data.profile, c);
+        renderShortSelling(shortSell);
         renderQuarterlyHighlight(qtr, 'quarterly-tab-highlight');
         renderFinHighlight(latest);
 
