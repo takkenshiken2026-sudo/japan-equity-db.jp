@@ -79,14 +79,15 @@ jobs:
           fi
           python -c "from app.db_maintenance import checkpoint_sqlite_wal; checkpoint_sqlite_wal('TRUNCATE')"
 
-      - name: Collect JPX short-selling balances
-        # EDINET キー不要・軽量・冪等。push デプロイ時にも最新残高を取り込み即表示する
-        # （恒久的な時系列の永続化は schedule 実行の DB バックアップで担保）
+      - name: Collect JPX short-selling & backfill valuations
+        # EDINET キー不要・軽量・冪等。push デプロイ時にも最新残高の取り込みと
+        # 配当利回り等の再計算を行い即表示する（時系列の永続化は schedule で担保）
         if: (github.event_name == 'schedule' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.skip_sync != true)) && (github.event_name != 'workflow_dispatch' || inputs.quick_deploy != true)
         run: |
           cd backend
           export DATABASE_URL=sqlite:///./data/edinet.db
           python -m app.sync_cli collect-short-selling || echo "::warning::short-selling collection failed"
+          python -m app.sync_cli backfill-quotes || echo "::warning::quote valuation backfill failed"
           python -c "from app.db_maintenance import checkpoint_sqlite_wal; checkpoint_sqlite_wal('TRUNCATE')"
 
       - name: Publish database backup

@@ -43,10 +43,17 @@ def _derive_quote_fields(
         financial.net_assets if financial else None,
         shares_outstanding=shares,
     )
+    # 配当利回りは Yahoo の高速取得（chart API）では取れないため、
+    # EDINET の1株配当と株価から自前で算出する（無料・自己収集）。
+    dps = financial.dividend_per_share if financial else None
+    dividend_yield_edinet = None
+    if dps and price and price > 0 and 0 < dps < price:
+        dividend_yield_edinet = dps / price
     return {
         "market_cap": market_cap,
         "per_edinet": valuation.get("per_edinet"),
         "pbr_edinet": valuation.get("pbr_edinet"),
+        "dividend_yield_edinet": dividend_yield_edinet,
     }
 
 
@@ -167,6 +174,9 @@ def backfill_quote_valuations(
         if derived["pbr_edinet"] != quote.pbr_edinet:
             quote.pbr_edinet = derived["pbr_edinet"]
             changed = True
+        if quote.dividend_yield is None and derived.get("dividend_yield_edinet") is not None:
+            quote.dividend_yield = derived["dividend_yield_edinet"]
+            changed = True
         if changed:
             quote.updated_at = datetime.utcnow()
             db.add(quote)
@@ -254,7 +264,7 @@ def _save_quote(
     quote.pbr = quote_data.get("pbr")
     quote.per_edinet = derived["per_edinet"]
     quote.pbr_edinet = derived["pbr_edinet"]
-    quote.dividend_yield = quote_data.get("dividend_yield")
+    quote.dividend_yield = quote_data.get("dividend_yield") or derived.get("dividend_yield_edinet")
     quote.fifty_two_week_high = quote_data.get("fifty_two_week_high")
     quote.fifty_two_week_low = quote_data.get("fifty_two_week_low")
     quote.updated_at = datetime.utcnow()

@@ -290,17 +290,27 @@
       }
     }
     .logo {
-      display: flex; align-items: center; gap: var(--space-2);
-      font-size: var(--fs-subhead); font-weight: var(--fw-bold); color: var(--text-brand); flex-shrink: 0;
+      display: flex; align-items: center; gap: 10px; flex-shrink: 0;
       cursor: pointer; user-select: none;
-      transition: color 0.15s;
     }
-    .logo:hover { color: var(--text-link); }
     .logo-mark {
-      width: 32px; height: 32px; border-radius: var(--radius);
-      background: var(--brand-600); color: var(--text-on-brand);
+      width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--brand-500) 0%, var(--brand-700) 100%);
+      color: var(--text-on-brand);
       display: grid; place-items: center;
+      font-size: 20px; font-weight: var(--fw-bold); line-height: 1;
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);
     }
+    .logo-textwrap { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+    .logo-text {
+      font-size: var(--fs-subhead); font-weight: var(--fw-bold);
+      color: var(--text-brand); letter-spacing: -0.01em; transition: color 0.15s;
+    }
+    .logo-tagline {
+      font-size: 11px; font-weight: var(--fw-medium); color: var(--text-muted);
+      letter-spacing: 0.01em; white-space: nowrap;
+    }
+    .logo:hover .logo-text { color: var(--text-link); }
     .global-search {
       flex: 1; max-width: 480px; position: relative; min-width: 0;
     }
@@ -1861,7 +1871,7 @@
       }
       .header-inner { padding: 0 var(--space-5); padding-left: max(var(--space-5), env(safe-area-inset-left)); padding-right: max(var(--space-5), env(safe-area-inset-right)); }
       .nav-top { gap: var(--space-2); padding: var(--space-2) 0; }
-      .logo-text { display: none; }
+      .logo-textwrap { display: none; }
       .header-recent {
         order: 3; flex: 1 1 100%; max-width: none;
       }
@@ -1988,7 +1998,7 @@
 
     /* ── Small phone (≤480px) ── */
     @media (max-width: 480px) {
-      .logo-text { display: none; }
+      .logo-textwrap { display: none; }
       .logo-mark { width: 30px; height: 30px; }
       .global-search input { font-size: 16px; padding: var(--space-3) var(--space-4) var(--space-3) 38px; }
       .stat { padding: var(--space-3) var(--space-3); }
@@ -2110,7 +2120,7 @@
   <header>
     <div class="header-inner">
       <div class="nav-top">
-        <div class="logo" aria-label="株チェック ホーム"><span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></span><span class="logo-text">株チェック</span></div>
+        <div class="logo" aria-label="株チェック ホーム"><span class="logo-mark" aria-hidden="true">株</span><span class="logo-textwrap"><span class="logo-text">株チェック</span><span class="logo-tagline">有報・四半期データで銘柄分析</span></span></div>
         <nav class="nav-tabs">
           <button class="tab" data-tab="disclosures" data-icon="file">開示</button>
           <button class="tab" data-tab="screening" data-icon="filter">スクリーニング</button>
