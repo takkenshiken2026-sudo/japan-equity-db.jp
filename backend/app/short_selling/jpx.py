@@ -28,6 +28,33 @@ USER_AGENT = (
 _HREF_RE = re.compile(r'href=["\']([^"\']+)["\']', re.IGNORECASE)
 _SHEET_RE = re.compile(r"\.(xlsx?|csv)(?:[?#]|$)", re.IGNORECASE)
 _DATE_IN_NAME_RE = re.compile(r"(20\d{2})[-_/]?(\d{2})[-_/]?(\d{2})")
+# CSS/JS/画像/フォント等の静的アセット（データページ探索から除外）
+_ASSET_RE = re.compile(
+    r"\.(css|js|ico|png|jpe?g|gif|svg|woff2?|ttf|eot)(?:[?#]|$)|/_assets/|fonts\.g",
+    re.IGNORECASE,
+)
+
+
+def _content_links(hrefs: list[str]) -> list[str]:
+    return [h for h in hrefs if not _ASSET_RE.search(h) and not h.startswith(("#", "javascript:", "mailto:"))]
+
+
+def _candidate_subpages(index_html: str, base_url: str) -> list[str]:
+    """データファイルが載っていそうな下位ページ候補を、空売り関連を優先して返す。"""
+    hrefs = _content_links(_HREF_RE.findall(index_html))
+    seen: set[str] = set()
+    cands: list[str] = []
+    for h in hrefs:
+        hl = h.lower()
+        if not (hl.endswith(".html") or hl.endswith("/") or "-att/" in hl or "short" in hl):
+            continue
+        url = urljoin(base_url, h)
+        if url == base_url or url in seen:
+            continue
+        seen.add(url)
+        cands.append(url)
+    cands.sort(key=lambda u: ("short" in u.lower(), _file_date(u) or ""), reverse=True)
+    return cands
 
 # 論理フィールド -> ヘッダーに含まれ得るキーワード（部分一致）
 _COLUMN_KEYWORDS: dict[str, tuple[str, ...]] = {
@@ -211,7 +238,7 @@ def _extract_latest_file_url(
         "total_links": len(hrefs),
         "sheet_links": len(sheets),
         "sheet_sample": sheets[:10],
-        "href_sample": [] if sheets else hrefs[:15],
+        "content_sample": [] if sheets else _content_links(hrefs)[:30],
     }
     if not sheets:
         return None, diag
@@ -254,8 +281,28 @@ def fetch_latest_short_selling(
             found, diag = _extract_latest_file_url(resp.text, str(resp.url))
             meta["diag"] = diag
             if not found:
-                meta["error"] = "no_data_link_found"
-                return [], meta
+                # インデックスに直リンクが無い場合、下位ページを1階層たどって探す
+                subpages = _candidate_subpages(resp.text, str(resp.url))
+                meta["subpages_tried"] = subpages[:6]
+                sub_diags: list[dict[str, Any]] = []
+                for sp in subpages[:6]:
+                    try:
+                        sub = client.get(sp)
+                    except httpx.HTTPError:
+                        continue
+                    if sub.status_code != 200:
+                        continue
+                    f2, d2 = _extract_latest_file_url(sub.text, str(sub.url))
+                    sub_diags.append({"url": sp, "sheet_links": d2.get("sheet_links")})
+                    if f2:
+                        found = f2
+                        meta["data_page"] = sp
+                        meta["diag2"] = d2
+                        break
+                meta["sub_diags"] = sub_diags
+                if not found:
+                    meta["error"] = "no_data_link_found"
+                    return [], meta
             file_url, published_date = found
         meta["file_url"] = file_url
         meta["published_date"] = published_date
