@@ -101,4 +101,17 @@ def test_extract_returns_none_and_diag_when_no_sheets():
     found, diag = _extract_latest_file_url("<a href='/foo.html'>x</a>")
     assert found is None
     assert diag["sheet_links"] == 0
-    assert diag["href_sample"]
+    assert diag["content_sample"] == ["/foo.html"]
+
+
+def test_candidate_subpages_prefers_short_selling():
+    from app.short_selling.jpx import _candidate_subpages
+    html = """
+    <a href="/_assets/css/x.css">css</a>
+    <a href="/markets/statistics-equities/short-selling/daily.html">日次</a>
+    <a href="/other/page.html">別</a>
+    <a href="#top">top</a>
+    """
+    cands = _candidate_subpages(html, "https://www.jpx.co.jp/markets/statistics-equities/short-selling/index.html")
+    assert cands[0].endswith("/short-selling/daily.html")
+    assert not any("css" in c for c in cands)

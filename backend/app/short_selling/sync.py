@@ -100,6 +100,10 @@ def collect_short_selling(
             "file_bytes",
             "error",
             "diag",
+            "subpages_tried",
+            "sub_diags",
+            "data_page",
+            "diag2",
         )
         if meta.get(k) is not None
     }
