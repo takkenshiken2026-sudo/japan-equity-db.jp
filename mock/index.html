@@ -1667,10 +1667,16 @@
     .compare-add-btn:hover:not(:disabled) {
       background: var(--accent-light); border-color: var(--brand-100); color: var(--text-brand);
     }
-    .compare-add-btn:disabled,
-    .compare-add-btn.is-added {
+    .compare-add-btn:disabled {
       background: var(--surface2); color: var(--text-muted); border-color: var(--border);
       cursor: default;
+    }
+    .compare-add-btn.is-added {
+      background: var(--green-light); color: var(--green); border-color: var(--green-border);
+      cursor: pointer;
+    }
+    .compare-add-btn.is-added:hover {
+      background: var(--red-light); color: var(--red); border-color: #fecaca;
     }
     .compare-name-cell {
       display: flex; align-items: center; gap: var(--space-2); min-width: 0;
@@ -4783,9 +4789,15 @@
         if (document.getElementById('compare')?.classList.contains('active')) {
           renderCompareWorkspace({ target: 'compare' });
         }
+        const dashActive = document.getElementById('dashboard')?.classList.contains('active');
         const dashResults = document.getElementById('dash-compare-results');
-        if (dashResults && dashResults.style.display !== 'none') {
-          renderCompareWorkspace({ target: 'dash' });
+        if (dashResults) {
+          if (codes.length >= 2 && dashActive) {
+            // 2社以上そろったら自動で比較結果を表示（初回のみスクロール）
+            showDashCompareResults();
+          } else if (dashResults.style.display !== 'none') {
+            renderCompareWorkspace({ target: 'dash' });
+          }
         }
       },
       add(code) {
@@ -4857,12 +4869,18 @@
     function compareAddButtonHtml(code, selected, atMax) {
       const added = selected.includes(code);
       if (added) {
-        return `<button type="button" class="compare-add-btn is-added" data-compare-add="${code}" disabled title="追加済み" aria-label="追加済み">✓</button>`;
+        // 追加済みでもクリックで解除できるトグルにする
+        return `<button type="button" class="compare-add-btn is-added" data-compare-add="${code}" title="比較から外す" aria-label="比較から外す" aria-pressed="true">✓</button>`;
       }
       if (atMax) {
         return `<button type="button" class="compare-add-btn" data-compare-add="${code}" disabled title="上限4社" aria-label="上限に達しています">＋</button>`;
       }
-      return `<button type="button" class="compare-add-btn" data-compare-add="${code}" title="比較に追加" aria-label="比較に追加">＋</button>`;
+      return `<button type="button" class="compare-add-btn" data-compare-add="${code}" title="比較に追加" aria-label="比較に追加" aria-pressed="false">＋</button>`;
+    }
+
+    function toggleCompare(code) {
+      if (compareStore.load().includes(code)) compareStore.remove(code);
+      else compareStore.add(code);
     }
 
     function refreshCompareAddButtons() {
@@ -4877,7 +4895,7 @@
         if (!next.disabled) {
           next.addEventListener('click', (e) => {
             e.stopPropagation();
-            compareStore.add(code);
+            toggleCompare(code);
           });
         }
       });
@@ -4886,9 +4904,10 @@
     function bindCompareAddButtons(container) {
       container?.querySelectorAll('[data-compare-add]').forEach((btn) => {
         if (btn.disabled) return;
+        const code = btn.dataset.compareAdd;
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
-          compareStore.add(btn.dataset.compareAdd);
+          toggleCompare(code);
         });
       });
     }
@@ -5065,13 +5084,16 @@
       }
     }
 
-    async function showDashCompareResults() {
+    async function showDashCompareResults(opts = {}) {
       const panel = document.getElementById('dash-compare-results');
       if (!panel) return;
+      const wasHidden = panel.style.display === 'none';
       panel.style.display = '';
       decorateStaticIcons(panel);
       await renderCompareWorkspace({ target: 'dash' });
-      requestAnimationFrame(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      if (wasHidden && opts.scroll !== false) {
+        requestAnimationFrame(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      }
     }
 
     function hideDashCompareResults() {
