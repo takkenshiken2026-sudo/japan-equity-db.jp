@@ -2193,7 +2193,7 @@
           </div>
           <div class="trending-panel" id="news-trending-panel">
             <div class="trending-panel-head">
-              <h3 data-icon="newspaper">ニュース急上昇</h3>
+              <h3 data-icon="newspaper">ニュース注目</h3>
             </div>
             <div id="news-trending-list" class="trending-loading"><span class="spinner"></span></div>
           </div>
@@ -5918,22 +5918,7 @@
       const trendCard = document.getElementById('trending-home-card');
       if (!searchEl || !newsEl) return;
 
-      const formatDayOverDayRate = (today, prior) => {
-        const t = today ?? 0;
-        const p = prior ?? 0;
-        if (p > 0) {
-          const pct = Math.round(((t - p) / p) * 1000) / 10;
-          return pct > 0 ? `+${pct}%` : `${pct}%`;
-        }
-        if (t > 0) return '—';
-        return '0%';
-      };
-
-      const formatSearchDayOverDayRate = (item, isMomentum) => {
-        if (isMomentum) {
-          const spike = item.spike ?? 0;
-          return spike > 0 ? `+${spike}%` : `${spike}%`;
-        }
+      const searchBadge = (item) => {
         const prior = item.prior_avg ?? 0;
         const recent = item.recent_avg ?? 0;
         if (prior > 0) {
@@ -5949,35 +5934,41 @@
         searchEl.classList.remove('trending-loading');
         newsEl.classList.remove('trending-loading');
         const searchItems = data.search_trending || [];
-        const newsItems = data.news_trending || [];
+        const newsItems = (data.news_trending || []).slice();
+        // Google Trends 実データがある場合のみ検索急上昇を表示（取得不可時はニュースの代用で
+        // 二重表示になり紛らわしいため非表示にし、ニュース注目を1列で表示）
+        const hasRealSearch = data.search_trending_source === 'google_trends' && searchItems.length > 0;
 
         if (trendCard) trendCard.style.display = '';
-        if (searchPanel) searchPanel.hidden = false;
-
-        const formatNewsDelta = (item) => formatDayOverDayRate(item.today_count ?? item.article_count, item.prior_count);
-        const formatSearchBadge = (item) => formatSearchDayOverDayRate(item, false);
+        const grid = trendCard ? trendCard.querySelector('.trending-home-grid') : null;
+        if (searchPanel) searchPanel.hidden = !hasRealSearch;
+        if (grid) grid.classList.toggle('trending-home-grid--single', !hasRealSearch);
 
         const renderTrendingItem = (item, rate, rateClass = 'trending-rank-badge') => `
               <div class="trending-rank-item" data-code="${item.edinet_code}" role="button" tabindex="0">
                 <div class="trending-rank-name">${(item.name || '').replace(/株式会社/g, '').trim()}</div>
                 <span class="${rateClass}">${rate}</span>
               </div>`;
+        const headRow = (label) => `<div class="trending-rank-cols-head-row"><span>社名</span><span>${label}</span><span>社名</span><span>${label}</span></div>`;
 
-        searchEl.innerHTML = searchItems.length
-          ? `<div class="trending-rank-cols-head-row"><span>社名</span><span>前日比</span><span>社名</span><span>前日比</span></div>
-            <div class="trending-rank-list trending-rank-list--cols">${searchItems.map((item) =>
-              renderTrendingItem(item, formatSearchBadge(item))
-            ).join('')}</div>`
-          : `<p class="trending-empty">現在、検索急上昇銘柄はありません。</p>`;
+        if (hasRealSearch) {
+          searchEl.innerHTML = headRow('前日比') +
+            `<div class="trending-rank-list trending-rank-list--cols">${searchItems.map((item) => {
+              const badge = searchBadge(item);
+              const cls = badge.startsWith('-') ? 'trending-rank-badge trending-rank-badge--down' : 'trending-rank-badge';
+              return renderTrendingItem(item, badge, cls);
+            }).join('')}</div>`;
+        }
 
+        // ニュースは前日比（履歴が薄いと不安定）ではなく直近の記事数でランキング表示
+        newsItems.sort((a, b) => (b.today_count ?? b.article_count ?? 0) - (a.today_count ?? a.article_count ?? 0));
         newsEl.innerHTML = newsItems.length
-          ? `<div class="trending-rank-cols-head-row"><span>社名</span><span>前日比</span><span>社名</span><span>前日比</span></div>
-            <div class="trending-rank-list trending-rank-list--cols">${newsItems.map((item) => {
-              const delta = item.delta ?? 0;
-              const badgeClass = delta < 0 ? 'trending-rank-badge trending-rank-badge--down' : 'trending-rank-badge';
-              return renderTrendingItem(item, formatNewsDelta(item), badgeClass);
+          ? headRow('記事数') +
+            `<div class="trending-rank-list trending-rank-list--cols">${newsItems.map((item) => {
+              const n = item.today_count ?? item.article_count ?? 0;
+              return renderTrendingItem(item, `${n}件`);
             }).join('')}</div>`
-          : `<p class="trending-empty">本日のニュース急上昇銘柄はありません。</p>`;
+          : `<p class="trending-empty">最近ニュースの多い銘柄はありません。</p>`;
 
         [searchEl, newsEl].forEach(container => {
           container.querySelectorAll('[data-code]').forEach(node => {
