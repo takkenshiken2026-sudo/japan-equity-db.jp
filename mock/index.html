@@ -1682,6 +1682,10 @@
       display: flex; align-items: center; gap: var(--space-2); min-width: 0;
     }
     .compare-name-cell .cell-name { min-width: 0; }
+    /* 比較ピッカーで選択中の行を強調 */
+    #compare-picker-tbody tr.is-selected td { background: var(--brand-50); }
+    #compare-picker-tbody tr.is-selected:hover td { background: var(--brand-100); }
+    #compare-picker-tbody tr.is-selected td:first-child { box-shadow: inset 3px 0 0 var(--brand-500); }
     .compare-picker-meta {
       font-size: var(--fs-caption); color: var(--text-muted); margin-bottom: var(--space-2);
     }
@@ -4783,6 +4787,7 @@
         localStorage.setItem('compareCodes', JSON.stringify(codes.slice(0, 4)));
         renderCompareBar();
         renderCompareWorkspaceChips();
+        refreshComparePickerRowSelection();
         refreshCompareAddButtons();
         updateCompareMeta();
         if (!codes.length) hideDashCompareResults();
@@ -4912,6 +4917,24 @@
       });
     }
 
+    // 比較ピッカーの行: クリックで選択/解除をトグル（社名リンクと＋ボタンは各自処理）
+    function bindComparePickerRows(container) {
+      container?.querySelectorAll('tr.compare-pick-row[data-code]').forEach((tr) => {
+        tr.addEventListener('click', (e) => {
+          if (e.target.closest('a, button')) return;
+          toggleCompare(tr.dataset.code);
+        });
+      });
+    }
+
+    // 選択状態の行ハイライトを最新化（トグル時に呼ぶ）
+    function refreshComparePickerRowSelection() {
+      const selected = new Set(compareStore.load());
+      document.querySelectorAll('#compare-picker-tbody tr[data-code]').forEach((tr) => {
+        tr.classList.toggle('is-selected', selected.has(tr.dataset.code));
+      });
+    }
+
     function applyCompareView(viewKey) {
       if (!DASH_VIEWS[viewKey] || DASH_VIEWS[viewKey].special) return;
       compareState.view = viewKey;
@@ -4965,9 +4988,12 @@
         if (!items.length) {
           tbody.innerHTML = '<tr><td colspan="5" class="muted">条件に一致する企業がありません</td></tr>';
         } else {
+          const selectedSet = new Set(selected);
           tbody.innerHTML = items.map((item, i) => {
             const name = (item.name || '').replace(/株式会社/g, '').trim();
-            return `<tr class="clickable" data-code="${item.edinet_code}">
+            rememberCompanyName(item.edinet_code, item.name);
+            const isSel = selectedSet.has(item.edinet_code);
+            return `<tr class="clickable compare-pick-row${isSel ? ' is-selected' : ''}" data-code="${item.edinet_code}">
               <td class="muted col-sm-hide">${i + 1}</td>
               <td>
                 <div class="compare-name-cell">
@@ -4980,7 +5006,7 @@
               <td class="num">${formatComparePickerMetric(item, view)}</td>
             </tr>`;
           }).join('');
-          bindRowClicks(tbody);
+          bindComparePickerRows(tbody);
           bindCompareAddButtons(tbody);
         }
         if (meta) meta.textContent = `${view.title.replace(/（.*）/, '')} · ${items.length}社`;
@@ -4998,6 +5024,16 @@
     }
 
     const COMPARE_ACCENT = ['#374151', '#6b7280', '#9ca3af', '#1f2937'];
+
+    // 選択時点で社名を控えておき、チップを即座に社名表示にする（API解決を待たない）
+    const compareNames = {};
+    function rememberCompanyName(code, name) {
+      const clean = (name || '').replace(/株式会社/g, '').trim();
+      if (code && clean) compareNames[code] = clean;
+    }
+    function compareDisplayName(code) {
+      return compareNames[code] || code;
+    }
 
     function renderCompareWorkspaceChips() {
       const wraps = [
@@ -5017,7 +5053,7 @@
       const html = codes.map((code, idx) => `
         <span class="compare-chip" style="border-color:${COMPARE_ACCENT[idx % COMPARE_ACCENT.length]}40">
           <span style="color:${COMPARE_ACCENT[idx % COMPARE_ACCENT.length]};font-weight:var(--fw-bold);margin-right:4px">${idx + 1}</span>
-          <span data-compare-chip-name="${code}">${code}</span>
+          <span data-compare-chip-name="${code}">${compareDisplayName(code)}</span>
           <button type="button" data-remove-compare="${code}" title="削除">${icon('x', 'xs')}</button>
         </span>`).join('');
       wraps.forEach((wrap) => {
@@ -5026,13 +5062,17 @@
           btn.addEventListener('click', () => compareStore.remove(btn.dataset.removeCompare));
         });
       });
-      api(`/api/companies/compare/batch?codes=${codes.join(',')}`).then((data) => {
-        const nameByCode = Object.fromEntries((data.items || []).map((i) => [i.edinet_code, i.name]));
-        document.querySelectorAll('[data-compare-chip-name]').forEach((el) => {
-          const code = el.getAttribute('data-compare-chip-name');
-          if (nameByCode[code]) el.textContent = (nameByCode[code] || '').replace(/株式会社/g, '').trim();
-        });
-      }).catch(() => {});
+      // 未取得の社名だけ API で補完し、キャッシュにも保存
+      const missing = codes.filter((c) => !compareNames[c]);
+      if (missing.length) {
+        api(`/api/companies/compare/batch?codes=${codes.join(',')}`).then((data) => {
+          (data.items || []).forEach((i) => rememberCompanyName(i.edinet_code, i.name));
+          document.querySelectorAll('[data-compare-chip-name]').forEach((el) => {
+            const code = el.getAttribute('data-compare-chip-name');
+            if (compareNames[code]) el.textContent = compareNames[code];
+          });
+        }).catch(() => {});
+      }
     }
 
     function getCompareWorkspaceEls(target = 'compare') {
