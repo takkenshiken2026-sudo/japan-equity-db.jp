@@ -2210,7 +2210,7 @@
 
         <div class="compare-workspace-toolbar" id="dash-compare-toolbar" style="display:none;margin-bottom:var(--space-3)">
           <div class="compare-workspace-chips" id="dash-compare-chips"></div>
-          <button type="button" class="secondary" id="dash-open-compare-btn" style="display:none;padding:var(--space-2) var(--space-4);font-size:var(--fs-small);align-self:flex-start" data-icon="compare">比較結果を表示</button>
+          <button type="button" class="secondary" id="dash-open-compare-btn" style="display:none;padding:var(--space-2) var(--space-4);font-size:var(--fs-small);align-self:flex-start" data-icon="compare">比較結果を見る</button>
         </div>
 
         <div id="dash-compare-results" class="dash-compare-results" style="display:none;margin-bottom:var(--space-4)">
@@ -4794,14 +4794,14 @@
         if (document.getElementById('compare')?.classList.contains('active')) {
           renderCompareWorkspace({ target: 'compare' });
         }
-        const dashActive = document.getElementById('dashboard')?.classList.contains('active');
+        // 自動表示はしない。「比較結果を見る」ボタンで表示する。
+        // 既に表示中なら選択変更を反映する（2社未満になったら閉じる）。
         const dashResults = document.getElementById('dash-compare-results');
-        if (dashResults) {
-          if (codes.length >= 2 && dashActive) {
-            // 2社以上そろったら自動で比較結果を表示（初回のみスクロール）
-            showDashCompareResults();
-          } else if (dashResults.style.display !== 'none') {
+        if (dashResults && dashResults.style.display !== 'none') {
+          if (codes.length >= 2) {
             renderCompareWorkspace({ target: 'dash' });
+          } else {
+            hideDashCompareResults();
           }
         }
       },
@@ -5124,16 +5124,13 @@
       }
     }
 
-    async function showDashCompareResults(opts = {}) {
+    async function showDashCompareResults() {
       const panel = document.getElementById('dash-compare-results');
       if (!panel) return;
-      const wasHidden = panel.style.display === 'none';
+      // 「比較結果を見る」ボタンで表示。自動スクロールはしない（その場に展開）
       panel.style.display = '';
       decorateStaticIcons(panel);
       await renderCompareWorkspace({ target: 'dash' });
-      if (wasHidden && opts.scroll !== false) {
-        requestAnimationFrame(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-      }
     }
 
     function hideDashCompareResults() {
