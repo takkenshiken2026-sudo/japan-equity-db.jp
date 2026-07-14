@@ -1658,10 +1658,9 @@
     }
     .compare-workspace-chips:empty { display: none; }
     .dash-compare-results {
-      padding: var(--space-4);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: var(--surface2);
+      /* .card がコンテナ体裁を担う。ここではアンカースクロール時の
+         固定ヘッダー分のオフセットだけ付与する。 */
+      scroll-margin-top: 84px;
     }
     .dash-compare-results .card-header h2 {
       padding-left: 0; border-left: none;
@@ -2215,41 +2214,7 @@
 
         <div class="compare-workspace-toolbar" id="dash-compare-toolbar" style="display:none;margin-bottom:var(--space-3)">
           <div class="compare-workspace-chips" id="dash-compare-chips"></div>
-          <button type="button" class="secondary" id="dash-open-compare-btn" style="display:none;padding:var(--space-2) var(--space-4);font-size:var(--fs-small);align-self:flex-start" data-icon="compare">比較結果を見る</button>
-        </div>
-
-        <div id="dash-compare-results" class="dash-compare-results" style="display:none;margin-bottom:var(--space-4)">
-          <div class="card-header" style="margin-bottom:var(--space-3)">
-            <div>
-              <h2 data-icon="compare" style="margin:0">銘柄比較</h2>
-              <span class="muted" style="font-size:var(--fs-small)">選択中の銘柄をこの場で比較</span>
-            </div>
-            <button type="button" class="secondary" id="dash-compare-hide-btn" style="padding:var(--space-2) var(--space-4);font-size:var(--fs-small)">閉じる</button>
-          </div>
-          <div id="dash-compare-empty" class="compare-empty">
-            比較する銘柄を2社以上追加してください。
-          </div>
-          <div id="dash-compare-body" style="display:none">
-            <div class="compare-columns" id="dash-compare-columns"></div>
-            <div class="compare-charts-grid">
-              <div class="chart-box">
-                <h3 data-icon="bar-chart" style="margin:0 0 var(--space-3);font-size:var(--fs-small);color:var(--text-secondary)">売上高推移</h3>
-                <div class="chart-canvas-wrap"><canvas id="dash-compare-chart-revenue"></canvas></div>
-              </div>
-              <div class="chart-box">
-                <h3 data-icon="percent" style="margin:0 0 var(--space-3);font-size:var(--fs-small);color:var(--text-secondary)">ROE推移</h3>
-                <div class="chart-canvas-wrap"><canvas id="dash-compare-chart-roe"></canvas></div>
-              </div>
-              <div class="chart-box">
-                <h3 data-icon="pie-chart" style="margin:0 0 var(--space-3);font-size:var(--fs-small);color:var(--text-secondary)">営業利益率推移</h3>
-                <div class="chart-canvas-wrap"><canvas id="dash-compare-chart-margin"></canvas></div>
-              </div>
-              <div class="chart-box">
-                <h3 data-icon="trending-up" style="margin:0 0 var(--space-3);font-size:var(--fs-small);color:var(--text-secondary)">株価推移（基準日=100）</h3>
-                <div class="chart-canvas-wrap"><canvas id="dash-compare-chart-price"></canvas></div>
-              </div>
-            </div>
-          </div>
+          <button type="button" class="secondary" id="dash-open-compare-btn" style="display:none;padding:var(--space-2) var(--space-4);font-size:var(--fs-small);align-self:flex-start" data-icon="compare" data-icon-suffix="chevron-down">比較結果を見る</button>
         </div>
 
         <div class="filter-section dash-filters">
@@ -2316,6 +2281,39 @@
           </table>
         </div>
         <div class="mobile-cards" id="dash-top-cards"></div>
+      </div>
+      <div id="dash-compare-results" class="card dash-compare-results" style="display:none">
+        <div class="card-header" style="margin-bottom:var(--space-3)">
+          <div>
+            <h2 data-icon="compare" style="margin:0">銘柄比較</h2>
+            <span class="muted" style="font-size:var(--fs-small)">選択中の銘柄を比較</span>
+          </div>
+          <button type="button" class="secondary" id="dash-compare-hide-btn" style="padding:var(--space-2) var(--space-4);font-size:var(--fs-small)">閉じる</button>
+        </div>
+        <div id="dash-compare-empty" class="compare-empty">
+          比較する銘柄を2社以上追加してください。
+        </div>
+        <div id="dash-compare-body" style="display:none">
+          <div class="compare-columns" id="dash-compare-columns"></div>
+          <div class="compare-charts-grid">
+            <div class="chart-box">
+              <h3 data-icon="bar-chart" style="margin:0 0 var(--space-3);font-size:var(--fs-small);color:var(--text-secondary)">売上高推移</h3>
+              <div class="chart-canvas-wrap"><canvas id="dash-compare-chart-revenue"></canvas></div>
+            </div>
+            <div class="chart-box">
+              <h3 data-icon="percent" style="margin:0 0 var(--space-3);font-size:var(--fs-small);color:var(--text-secondary)">ROE推移</h3>
+              <div class="chart-canvas-wrap"><canvas id="dash-compare-chart-roe"></canvas></div>
+            </div>
+            <div class="chart-box">
+              <h3 data-icon="pie-chart" style="margin:0 0 var(--space-3);font-size:var(--fs-small);color:var(--text-secondary)">営業利益率推移</h3>
+              <div class="chart-canvas-wrap"><canvas id="dash-compare-chart-margin"></canvas></div>
+            </div>
+            <div class="chart-box">
+              <h3 data-icon="trending-up" style="margin:0 0 var(--space-3);font-size:var(--fs-small);color:var(--text-secondary)">株価推移（基準日=100）</h3>
+              <div class="chart-canvas-wrap"><canvas id="dash-compare-chart-price"></canvas></div>
+            </div>
+          </div>
+        </div>
       </div>
         </div>
       </div>
@@ -3044,6 +3042,7 @@
       'x-circle': '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
       alert: '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
       chevron: '<polyline points="9 18 15 12 9 6"/>',
+      'chevron-down': '<polyline points="6 9 12 15 18 9"/>',
       chevrons: '<polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/>',
       plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
       minus: '<line x1="5" y1="12" x2="19" y2="12"/>',
@@ -3457,7 +3456,7 @@
     });
     tabs.forEach(tab => tab.addEventListener('click', () => showTab(tab.dataset.tab)));
     document.getElementById('dash-screen-btn').addEventListener('click', () => showTab('screening'));
-    document.getElementById('dash-open-compare-btn')?.addEventListener('click', () => showDashCompareResults());
+    document.getElementById('dash-open-compare-btn')?.addEventListener('click', () => showDashCompareResults(true));
     document.getElementById('dash-compare-hide-btn')?.addEventListener('click', () => hideDashCompareResults());
     document.querySelectorAll('.detail-tab').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -5089,9 +5088,8 @@
       const openBtn = document.getElementById('dash-open-compare-btn');
       const toolbar = document.getElementById('dash-compare-toolbar');
       const codes = compareStore.load();
-      // 比較結果が既に開いているときは「比較結果を見る」ボタンは不要なので隠す
-      const dashOpen = document.getElementById('dash-compare-results')?.style.display !== 'none';
-      if (openBtn) openBtn.style.display = (codes.length >= 2 && !dashOpen) ? 'inline-flex' : 'none';
+      // 「比較結果を見る」は末尾の比較結果へスクロールするアンカー。2社以上で常に表示。
+      if (openBtn) openBtn.style.display = codes.length >= 2 ? 'inline-flex' : 'none';
       if (toolbar) toolbar.style.display = codes.length ? 'flex' : 'none';
       if (!wraps.length) return;
       if (!codes.length) {
@@ -5172,12 +5170,14 @@
       }
     }
 
-    async function showDashCompareResults() {
+    async function showDashCompareResults(scroll = false) {
       const panel = document.getElementById('dash-compare-results');
       if (!panel) return;
-      // 「比較結果を見る」ボタンで表示。自動スクロールはしない（その場に展開）
+      // 比較結果はページ末尾に表示。scroll=true（「比較結果を見る」ボタン）のときは
+      // そこへスムーズスクロールしてアンカーのように移動する。
       panel.style.display = '';
       decorateStaticIcons(panel);
+      if (scroll) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
       await renderCompareWorkspace({ target: 'dash' });
     }
 
