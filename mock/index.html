@@ -1491,6 +1491,16 @@
     .help-tip:focus-within .help-tip-panel {
       opacity: 1; visibility: visible;
     }
+    .help-tip-panel-wide {
+      max-width: min(300px, 82vw);
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .help-tip-panel-wide .help-tip-h {
+      display: block; font-weight: var(--fw-bold); font-size: var(--fs-caption);
+      opacity: 0.7; letter-spacing: 0.02em;
+    }
+    .help-tip-panel-wide .help-tip-h:not(:first-child) { margin-top: var(--space-2); }
+    .help-tip-panel-wide .help-tip-body { display: block; }
     .theme-item {
       display: flex; justify-content: space-between; gap: var(--space-2); padding: var(--space-1) 0;
       font-size: var(--fs-small); cursor: pointer;
@@ -3121,6 +3131,26 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
       return `<span class="help-tip"><button type="button" class="help-tip-trigger" aria-label="${label}">?</button><span class="help-tip-panel" role="tooltip">${safe}</span></span>`;
+    }
+
+    function escapeTipText(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function themeHelpTipHtml(desc, rationale, label = '説明') {
+      if (!desc && !rationale) return '';
+      const blocks = [];
+      if (desc) {
+        blocks.push(`<span class="help-tip-h">条件</span><span class="help-tip-body">${escapeTipText(desc)}</span>`);
+      }
+      if (rationale) {
+        blocks.push(`<span class="help-tip-h">注目される理由</span><span class="help-tip-body">${escapeTipText(rationale)}</span>`);
+      }
+      return `<span class="help-tip"><button type="button" class="help-tip-trigger" aria-label="${label}">?</button><span class="help-tip-panel help-tip-panel-wide" role="tooltip">${blocks.join('')}</span></span>`;
     }
 
     function setHeadingIcon(el, iconName, text) {
@@ -5998,7 +6028,7 @@
             <div class="theme-box-head">
               <div class="theme-box-title">
                 <h3>${iconLabel(PRESET_ICON[theme.preset] || 'sparkles', theme.title, 'sm')}</h3>
-                ${helpTipHtml(desc, `${theme.title}の条件`)}
+                ${themeHelpTipHtml(desc, theme.rationale, `${theme.title}の説明`)}
               </div>
               <span class="theme-meta">${theme.count}社</span>
             </div>
