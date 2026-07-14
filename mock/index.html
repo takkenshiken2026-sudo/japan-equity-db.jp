@@ -1478,7 +1478,7 @@
       width: max-content; max-width: min(240px, 72vw);
       padding: var(--space-2) var(--space-3); border-radius: var(--radius);
       background: var(--text); color: var(--text-on-brand);
-      font-size: var(--fs-caption); font-weight: var(--fw-regular); line-height: 1.45; text-align: left;
+      font-size: var(--fs-small); font-weight: var(--fw-regular); line-height: 1.55; text-align: left;
       box-shadow: var(--shadow); z-index: 30;
       opacity: 0; visibility: hidden; pointer-events: none;
       transition: opacity 0.12s, visibility 0.12s;
@@ -1492,12 +1492,12 @@
       opacity: 1; visibility: visible;
     }
     .help-tip-panel-wide {
-      max-width: min(300px, 82vw);
-      display: flex; flex-direction: column; gap: 2px;
+      max-width: min(340px, 86vw);
+      display: flex; flex-direction: column; gap: 3px;
     }
     .help-tip-panel-wide .help-tip-h {
-      display: block; font-weight: var(--fw-bold); font-size: var(--fs-caption);
-      opacity: 0.7; letter-spacing: 0.02em;
+      display: block; font-weight: var(--fw-bold); font-size: var(--fs-small);
+      opacity: 0.75; letter-spacing: 0.02em;
     }
     .help-tip-panel-wide .help-tip-h:not(:first-child) { margin-top: var(--space-2); }
     .help-tip-panel-wide .help-tip-body { display: block; }
@@ -2190,9 +2190,9 @@
         <div class="dash-main">
       <div class="card" id="weekly-themes-card" style="margin-bottom:0">
         <div class="card-header">
-          <h2 data-icon="sparkles">テーマ株</h2>
+          <h2 data-icon="sparkles">テーマ・注目株</h2>
         </div>
-        <div id="weekly-themes" class="loading" style="padding:var(--space-3) 0"><span class="spinner"></span>テーマ株を読み込み中…</div>
+        <div id="weekly-themes" class="loading" style="padding:var(--space-3) 0"><span class="spinner"></span>テーマ・注目株を読み込み中…</div>
       </div>
       <div class="card trending-home-card" id="trending-home-card">
         <div class="trending-home-grid">
