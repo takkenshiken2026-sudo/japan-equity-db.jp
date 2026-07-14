@@ -24,7 +24,9 @@ permissions:
 
 concurrency:
   group: static-site
-  cancel-in-progress: false
+  # push（コード/UI変更）による新しい実行は、進行中の実行を打ち切って高速に反映する。
+  # schedule（日次フルビルド）は cancel されても翌日また走るため許容。
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -106,7 +108,9 @@ jobs:
         env:
           GOOGLE_SITE_VERIFICATION: ${{ secrets.GOOGLE_SITE_VERIFICATION }}
           GOOGLE_SITE_VERIFICATION_HTML: ${{ secrets.GOOGLE_SITE_VERIFICATION_HTML }}
-          QUICK_DEPLOY: ${{ github.event_name == 'workflow_dispatch' && inputs.quick_deploy == true && '1' || '' }}
+          # push は高速デプロイ（ライブ /data をミラー＋グローバルJSONをローカル再生成、~15分）。
+          # schedule/手動フル同期のときだけ全企業エクスポート（~3時間）を行う。
+          QUICK_DEPLOY: ${{ (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.quick_deploy == true)) && '1' || '' }}
         run: python3 tools/build_public_site.py
 
       - uses: actions/configure-pages@v5
