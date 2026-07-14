@@ -4838,13 +4838,15 @@
         if (document.getElementById('compare')?.classList.contains('active')) {
           renderCompareWorkspace({ target: 'compare' });
         }
-        // 自動表示はしない。「比較結果を見る」ボタンで表示する。
-        // 既に表示中なら選択変更を反映する（2社未満になったら閉じる）。
+        // トップ表示中に2社以上選択されたら、その場で比較結果を自動展開する
+        // （＋を押しただけで下に表示される）。2社未満に減ったら閉じる。
         const dashResults = document.getElementById('dash-compare-results');
-        if (dashResults && dashResults.style.display !== 'none') {
-          if (codes.length >= 2) {
-            renderCompareWorkspace({ target: 'dash' });
-          } else {
+        if (dashResults) {
+          const onDashboard = document.getElementById('dashboard')?.classList.contains('active');
+          const isOpen = dashResults.style.display !== 'none';
+          if (codes.length >= 2 && (onDashboard || isOpen)) {
+            showDashCompareResults();
+          } else if (isOpen) {
             hideDashCompareResults();
           }
         }
@@ -5087,7 +5089,9 @@
       const openBtn = document.getElementById('dash-open-compare-btn');
       const toolbar = document.getElementById('dash-compare-toolbar');
       const codes = compareStore.load();
-      if (openBtn) openBtn.style.display = codes.length >= 2 ? 'inline-flex' : 'none';
+      // 比較結果が既に開いているときは「比較結果を見る」ボタンは不要なので隠す
+      const dashOpen = document.getElementById('dash-compare-results')?.style.display !== 'none';
+      if (openBtn) openBtn.style.display = (codes.length >= 2 && !dashOpen) ? 'inline-flex' : 'none';
       if (toolbar) toolbar.style.display = codes.length ? 'flex' : 'none';
       if (!wraps.length) return;
       if (!codes.length) {
