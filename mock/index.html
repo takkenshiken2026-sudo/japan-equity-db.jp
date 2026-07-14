@@ -3410,7 +3410,7 @@
     const tabs = document.querySelectorAll('.tab');
     const panels = document.querySelectorAll('.panel');
 
-    function showTab(name) {
+    function showTab(name, fromHistory = false) {
       if (name !== 'detail') lastTab = name;
       tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === name));
       panels.forEach(p => {
@@ -3418,7 +3418,13 @@
         p.classList.toggle('active', active);
         p.setAttribute('aria-hidden', active ? 'false' : 'true');
       });
-      history.replaceState(null, '', name === 'detail' ? `#/company/${currentCode}` : `#/${name}`);
+      // ブラウザ履歴に積む（戻る/進むが機能するように）。back/forward 由来
+      // （fromHistory=true）のときは URL が既に目的地なので履歴を触らない。
+      const url = name === 'detail' ? `#/company/${currentCode}` : `#/${name}`;
+      if (!fromHistory) {
+        if (location.hash !== url) history.pushState(null, '', url);
+        else history.replaceState(null, '', url);
+      }
       sessionStorage.setItem('lastTab', name === 'detail' ? lastTab : name);
       if (name === 'screening' && !screeningLoaded) ensureScreeningLoaded();
       if (name === 'search' && !searchInitialized) ensureSearchLoaded();
@@ -6413,10 +6419,10 @@
       });
     }
 
-    async function loadDetail(code) {
+    async function loadDetail(code, fromHistory = false) {
       currentCode = code;
       currentPriceRange = '1y';
-      showTab('detail');
+      showTab('detail', fromHistory);
       document.getElementById('detail-loading').style.display = 'flex';
       document.getElementById('detail-loading').innerHTML = '<span class="spinner"></span>企業データを読み込んでいます…';
       document.getElementById('detail-content').style.display = 'none';
@@ -6645,14 +6651,16 @@
     });
 
     function handleHash() {
+      // hashchange（戻る/進む含む）由来なので URL は既に目的地。fromHistory=true で
+      // 画面だけ切り替え、履歴には積み直さない。
       const m = location.hash.match(/^#\/company\/(\w+)/);
       if (m) {
-        loadDetail(m[1]);
+        loadDetail(m[1], true);
         return;
       }
       const searchMatch = location.hash.match(/^#\/search(?:\?(.*))?$/);
       if (searchMatch) {
-        showTab('search');
+        showTab('search', true);
         ensureSearchLoaded();
         const params = new URLSearchParams(searchMatch[1] || '');
         const q = (params.get('q') || '').trim();
@@ -6663,8 +6671,10 @@
         }
         return;
       }
-      const tab = location.hash.replace('#/', '').split('?')[0] || sessionStorage.getItem('lastTab') || 'dashboard';
-      if (['dashboard', 'news', 'screening', 'search', 'disclosures', 'compare'].includes(tab)) showTab(tab);
+      // ハッシュ空＝トップ（dashboard）。戻るで初期状態に戻れるよう、sessionStorage の
+      // lastTab をフォールバックにしない（積んだ履歴と食い違って戻れなくなるため）。
+      const tab = location.hash.replace('#/', '').split('?')[0] || 'dashboard';
+      if (['dashboard', 'news', 'screening', 'search', 'disclosures', 'compare'].includes(tab)) showTab(tab, true);
     }
     window.addEventListener('hashchange', handleHash);
 
@@ -6773,6 +6783,15 @@
           loadWeeklyThemes(),
         ]);
         setStatus(true);
+        // 初回ロードでハッシュが無い場合、前回のタブを復元しつつ URL を具体化しておく
+        // （最初の履歴エントリに実体を持たせ、戻る操作で確実に初期状態へ戻れるように）。
+        if (!location.hash) {
+          const restore = sessionStorage.getItem('lastTab');
+          if (restore && restore !== 'dashboard' &&
+              ['news', 'screening', 'search', 'disclosures', 'compare'].includes(restore)) {
+            history.replaceState(null, '', `#/${restore}`);
+          }
+        }
         handleHash();
         updateTableScrollHints();
         // 比較バー・最近閲覧・人気検索は後回し
