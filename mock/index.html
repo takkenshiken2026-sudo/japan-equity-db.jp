@@ -2143,6 +2143,7 @@
         <div class="logo" aria-label="株チェック ホーム"><span class="logo-mark" aria-hidden="true">株</span><span class="logo-textwrap"><span class="logo-text">株チェック</span><span class="logo-tagline">有報・四半期データで銘柄分析</span></span></div>
         <nav class="nav-tabs">
           <button class="tab" data-tab="disclosures" data-icon="file">開示</button>
+          <button class="tab" data-tab="news" data-icon="newspaper">注目ニュース</button>
           <button class="tab" data-tab="screening" data-icon="filter">スクリーニング</button>
           <button class="tab" data-tab="search" data-icon="search">企業検索</button>
           <button class="tab" data-tab="compare" data-icon="compare">銘柄比較</button>
@@ -2200,12 +2201,6 @@
               <h3 data-icon="trending-up">検索急上昇</h3>
             </div>
             <div id="search-trending-list" class="trending-loading"><span class="spinner"></span></div>
-          </div>
-          <div class="trending-panel" id="news-trending-panel">
-            <div class="trending-panel-head">
-              <h3 data-icon="newspaper">ニュース注目</h3>
-            </div>
-            <div id="news-trending-list" class="trending-loading"><span class="spinner"></span></div>
           </div>
         </div>
       </div>
@@ -2323,6 +2318,19 @@
         <div class="mobile-cards" id="dash-top-cards"></div>
       </div>
         </div>
+      </div>
+    </section>
+
+    <!-- News -->
+    <section id="news" class="panel" aria-hidden="true">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 data-icon="newspaper">注目ニュース</h2>
+            <span class="muted" style="font-size:var(--fs-small)">直近でニュース掲載が多い上場企業ランキングです。社名をタップすると詳細を表示します。</span>
+          </div>
+        </div>
+        <div id="news-trending-list" class="trending-loading"><span class="spinner"></span></div>
       </div>
     </section>
 
@@ -5868,7 +5876,7 @@
     });
 
     function updateBreadcrumb(companyName, industry) {
-      const tabLabel = { dashboard: 'ダッシュボード', screening: 'スクリーニング', search: '企業検索', compare: '銘柄比較', disclosures: '開示' }[lastTab] || '一覧';
+      const tabLabel = { dashboard: 'ダッシュボード', news: '注目ニュース', screening: 'スクリーニング', search: '企業検索', compare: '銘柄比較', disclosures: '開示' }[lastTab] || '一覧';
       const el = document.getElementById('detail-breadcrumb');
       const mid = industry
         ? `<span class="breadcrumb-sep">/</span><span class="breadcrumb-mid">${industry}</span>`
@@ -5962,14 +5970,12 @@
         newsEl.classList.remove('trending-loading');
         const searchItems = data.search_trending || [];
         const newsItems = (data.news_trending || []).slice();
-        // Google Trends 実データがある場合のみ検索急上昇を表示（取得不可時はニュースの代用で
-        // 二重表示になり紛らわしいため非表示にし、ニュース注目を1列で表示）
+        // Google Trends 実データがある場合のみトップの検索急上昇カードを表示（取得不可時は
+        // ニュースの代用で紛らわしいため非表示にする）。注目ニュースは専用ページに分離。
         const hasRealSearch = data.search_trending_source === 'google_trends' && searchItems.length > 0;
 
-        if (trendCard) trendCard.style.display = '';
-        const grid = trendCard ? trendCard.querySelector('.trending-home-grid') : null;
+        if (trendCard) trendCard.style.display = hasRealSearch ? '' : 'none';
         if (searchPanel) searchPanel.hidden = !hasRealSearch;
-        if (grid) grid.classList.toggle('trending-home-grid--single', !hasRealSearch);
 
         const renderTrendingItem = (item, rate, rateClass = 'trending-rank-badge') => `
               <div class="trending-rank-item" data-code="${item.edinet_code}" role="button" tabindex="0">
@@ -6658,7 +6664,7 @@
         return;
       }
       const tab = location.hash.replace('#/', '').split('?')[0] || sessionStorage.getItem('lastTab') || 'dashboard';
-      if (['dashboard', 'screening', 'search', 'disclosures', 'compare'].includes(tab)) showTab(tab);
+      if (['dashboard', 'news', 'screening', 'search', 'disclosures', 'compare'].includes(tab)) showTab(tab);
     }
     window.addEventListener('hashchange', handleHash);
 
