@@ -233,8 +233,27 @@ def main() -> None:
         if quick_deploy:
             from mirror_live_data import mirror_live_data
 
-            print("Quick deploy: mirroring live /data (skip DB export)")
+            print("Quick deploy: mirroring live /data (skip per-company DB export)")
             manifest = mirror_live_data(OUT, SITE_URL)
+            # 企業バンドルはライブからミラーしつつ、グローバル JSON（themes/weekly など）は
+            # ローカル DB から再生成する。これによりコード変更（テーマの注目理由など）を
+            # ~3時間の全企業エクスポートなしで反映できる。
+            try:
+                from export_static_data import (
+                    _export_globals,
+                    _resolve_db_path,
+                    _setup_app,
+                )
+
+                db_path = _resolve_db_path()
+                if db_path:
+                    client = _setup_app(db_path)
+                    _export_globals(client, OUT / "data")
+                    print("Quick deploy: regenerated global JSON from local DB")
+                else:
+                    print("Quick deploy: no local DB — kept mirrored global JSON")
+            except Exception as exc:  # noqa: BLE001
+                print(f"Quick deploy: global refresh skipped ({exc})")
         else:
             from export_static_data import export_static_data
 
