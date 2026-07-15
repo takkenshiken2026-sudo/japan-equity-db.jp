@@ -2717,9 +2717,9 @@
         <div class="detail-tabs-wrap">
         <div class="detail-tabs" id="detail-tabs">
           <button class="detail-tab active" data-section="overview" data-icon="layout">概要</button>
-          <button class="detail-tab" data-section="analysis" data-icon="line-chart">詳細分析</button>
-          <button class="detail-tab" data-section="financials" data-icon="calendar">年次財務</button>
-          <button class="detail-tab" data-section="quarterly" data-icon="calendar">四半期</button>
+          <button class="detail-tab" data-section="performance" data-icon="bar-chart">業績・財務</button>
+          <button class="detail-tab" data-section="valuation" data-icon="tag">株価・指標</button>
+          <button class="detail-tab" data-section="media" data-icon="newspaper">ニュース・話題</button>
           <button class="detail-tab" data-section="realestate" data-icon="building">不動産</button>
           <button class="detail-tab" data-section="filings" data-icon="file">書類</button>
         </div>
@@ -2728,6 +2728,13 @@
         <div class="detail-section active" id="sec-overview">
           <div class="card section-card verdict-card" id="verdict-card" style="display:none">
             <div id="verdict-body"></div>
+          </div>
+          <div class="card section-card" id="insights-card">
+            <div class="section-head">
+              <h2 data-icon="sparkles">この銘柄のポイント</h2>
+            </div>
+            <div class="insight-grid" id="data-insights"></div>
+            <nav class="overview-nav" id="overview-nav" aria-label="詳細セクションへ"></nav>
           </div>
           <div class="card section-card" id="industry-benchmark-card" style="display:none">
             <div class="section-head">
@@ -2743,107 +2750,9 @@
             </div>
             <div class="peer-grid" id="industry-peers-grid"></div>
           </div>
-          <div class="card section-card" id="insights-card">
-            <div class="section-head">
-              <h2 data-icon="sparkles">この銘柄のポイント</h2>
-            </div>
-            <div class="insight-grid" id="data-insights"></div>
-            <nav class="overview-nav" id="overview-nav" aria-label="詳細セクションへ"></nav>
-          </div>
-
-          <div class="card section-card" id="short-selling-card" style="display:none">
-            <div class="card-header">
-              <h2 data-icon="trending-down">空売り残高</h2>
-              <span class="muted" id="short-selling-meta"></span>
-            </div>
-            <div id="short-selling-body"></div>
-          </div>
         </div>
 
-        <div class="detail-section" id="sec-analysis">
-          <div class="media-insights-row" id="company-media-row" style="display:none">
-          <div class="card section-card" id="company-news-card" style="display:none">
-            <div class="section-head">
-              <h2 data-icon="newspaper">関連ニュース</h2>
-            </div>
-            <div class="chart-box" id="company-news-chart-wrap" style="display:none;margin-bottom:12px">
-              <h3 data-icon="newspaper">月別の掲載件数</h3>
-              <div class="chart-canvas-wrap"><canvas id="company-news-chart"></canvas></div>
-              <div class="chart-caption" id="company-news-chart-caption"></div>
-            </div>
-            <div id="company-news-feed" class="disclosure-feed news-feed"></div>
-          </div>
-
-          <div class="card section-card" id="company-trend-card" style="display:none">
-            <div class="section-head">
-              <h2 data-icon="trending-up">検索トレンド</h2>
-            </div>
-            <div class="chart-range-btns" id="company-trend-range-btns">
-              <button type="button" class="secondary active" data-trend-days="7">7日</button>
-              <button type="button" class="secondary" data-trend-days="30">30日</button>
-              <button type="button" class="secondary" data-trend-days="90">90日</button>
-            </div>
-            <div class="chart-box" style="margin-bottom:0">
-              <h3 data-icon="trending-up">日別の検索関心度</h3>
-              <div class="chart-canvas-wrap"><canvas id="company-trend-chart"></canvas></div>
-              <div class="chart-caption" id="company-trend-chart-caption"></div>
-            </div>
-          </div>
-          </div>
-
-          <div class="card section-card">
-            <div class="section-head">
-              <h2 data-icon="activity">財務健全性・キャッシュフロー</h2>
-            </div>
-            <div class="analysis-kpi" id="analysis-kpi"></div>
-            <div class="chart-grid">
-              <div class="chart-box"><h3 data-icon="activity">キャッシュフロー3区分</h3><div class="chart-canvas-wrap"><canvas id="chart-cf-trio"></canvas></div><div class="chart-caption">単位: 億円</div></div>
-              <div class="chart-box"><h3 data-icon="activity">フリーキャッシュフロー</h3><div class="chart-canvas-wrap"><canvas id="chart-fcf"></canvas></div><div class="chart-caption">営業CF + 投資CF（単位: 億円）</div></div>
-            </div>
-            <div class="chart-grid">
-              <div class="chart-box"><h3 data-icon="percent">自己資本比率 / D/Eレシオ</h3><div class="chart-canvas-wrap with-legend"><canvas id="chart-equity-debt"></canvas></div></div>
-              <div class="chart-box"><h3 data-icon="tag">EPS / 1株配当</h3><div class="chart-canvas-wrap with-legend"><canvas id="chart-dividend-eps"></canvas></div><div class="chart-caption">単位: 円</div></div>
-            </div>
-          </div>
-          <div class="card section-card">
-            <div class="section-head">
-              <h2 data-icon="tag">株価・バリュエーション</h2>
-              <p class="section-lead">52週レンジ内の現在位置と、決算期末ベースの配当利回り推移です。</p>
-            </div>
-            <div id="analysis-stock-range"></div>
-            <div class="chart-box" style="margin-top:12px">
-              <h3 data-icon="tag">PER / PBR 推移（決算期末ベース）</h3>
-              <div class="chart-canvas-wrap" style="height:280px"><canvas id="chart-valuation"></canvas></div>
-            </div>
-            <div class="chart-box" style="margin-top:12px"><h3 data-icon="percent">配当利回り推移（決算期末株価ベース）</h3><div class="chart-canvas-wrap"><canvas id="chart-dividend-yield"></canvas></div></div>
-          </div>
-          <div class="card section-card">
-            <div class="section-head">
-              <h2 data-icon="calendar">四半期ディープダイブ</h2>
-              <p class="section-lead">単期利益の季節性と、前四半期比（QoQ）の変化を確認できます。</p>
-            </div>
-            <div class="chart-grid">
-              <div class="chart-box"><h3 data-icon="bar-chart">単期営業利益・純利益</h3><div class="chart-canvas-wrap"><canvas id="chart-q-single"></canvas></div><div class="chart-caption">単位: 億円</div></div>
-              <div class="chart-box"><h3 data-icon="trending-up">売上・営業利益 QoQ</h3><div class="chart-canvas-wrap with-legend"><canvas id="chart-q-qoq"></canvas></div><div class="chart-caption">単位: %</div></div>
-            </div>
-            <div class="table-hint">横にスクロールできます</div>
-            <div class="table-wrap table-scroll-hint">
-              <table>
-                <thead>
-                  <tr>
-                    <th>四半期</th><th class="num">累計売上</th><th class="num">単期売上</th>
-                    <th class="num">累計営業利益</th><th class="num">単期営業利益</th><th class="num">単期純利益</th>
-                    <th class="num">売上YoY</th><th class="num">売上QoQ</th><th class="num">営業利益YoY</th><th class="num">営業利益QoQ</th>
-                    <th class="num">EPS累計</th><th class="num">EPS YoY</th>
-                  </tr>
-                </thead>
-                <tbody id="analysis-quarterly-table"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <div class="detail-section" id="sec-financials">
+        <div class="detail-section" id="sec-performance">
           <div class="card">
             <div class="card-header"><h2 data-icon="bar-chart">年次財務（直近12期）</h2></div>
             <div id="fin-highlight"></div>
@@ -2890,9 +2799,20 @@
               </table>
             </div>
           </div>
-        </div>
-
-        <div class="detail-section" id="sec-quarterly">
+          <div class="card section-card">
+            <div class="section-head">
+              <h2 data-icon="activity">財務健全性・キャッシュフロー</h2>
+            </div>
+            <div class="analysis-kpi" id="analysis-kpi"></div>
+            <div class="chart-grid">
+              <div class="chart-box"><h3 data-icon="activity">キャッシュフロー3区分</h3><div class="chart-canvas-wrap"><canvas id="chart-cf-trio"></canvas></div><div class="chart-caption">単位: 億円</div></div>
+              <div class="chart-box"><h3 data-icon="activity">フリーキャッシュフロー</h3><div class="chart-canvas-wrap"><canvas id="chart-fcf"></canvas></div><div class="chart-caption">営業CF + 投資CF（単位: 億円）</div></div>
+            </div>
+            <div class="chart-grid">
+              <div class="chart-box"><h3 data-icon="percent">自己資本比率 / D/Eレシオ</h3><div class="chart-canvas-wrap with-legend"><canvas id="chart-equity-debt"></canvas></div></div>
+              <div class="chart-box"><h3 data-icon="tag">EPS / 1株配当</h3><div class="chart-canvas-wrap with-legend"><canvas id="chart-dividend-eps"></canvas></div><div class="chart-caption">単位: 円</div></div>
+            </div>
+          </div>
           <div class="card">
             <div class="card-header"><h2 data-icon="calendar">四半期業績</h2><span class="muted" id="quarterly-meta"></span></div>
             <p class="section-lead" style="margin:calc(-1 * var(--space-2)) 0 var(--space-4)">累計・単期売上と前年比（YoY）・前四半期比（QoQ）です。</p>
@@ -2915,6 +2835,84 @@
                 <tbody id="detail-quarterly"></tbody>
               </table>
             </div>
+          </div>
+          <div class="card section-card">
+            <div class="section-head">
+              <h2 data-icon="calendar">四半期ディープダイブ</h2>
+              <p class="section-lead">単期利益の季節性と、前四半期比（QoQ）の変化を確認できます。</p>
+            </div>
+            <div class="chart-grid">
+              <div class="chart-box"><h3 data-icon="bar-chart">単期営業利益・純利益</h3><div class="chart-canvas-wrap"><canvas id="chart-q-single"></canvas></div><div class="chart-caption">単位: 億円</div></div>
+              <div class="chart-box"><h3 data-icon="trending-up">売上・営業利益 QoQ</h3><div class="chart-canvas-wrap with-legend"><canvas id="chart-q-qoq"></canvas></div><div class="chart-caption">単位: %</div></div>
+            </div>
+            <div class="table-hint">横にスクロールできます</div>
+            <div class="table-wrap table-scroll-hint">
+              <table>
+                <thead>
+                  <tr>
+                    <th>四半期</th><th class="num">累計売上</th><th class="num">単期売上</th>
+                    <th class="num">累計営業利益</th><th class="num">単期営業利益</th><th class="num">単期純利益</th>
+                    <th class="num">売上YoY</th><th class="num">売上QoQ</th><th class="num">営業利益YoY</th><th class="num">営業利益QoQ</th>
+                    <th class="num">EPS累計</th><th class="num">EPS YoY</th>
+                  </tr>
+                </thead>
+                <tbody id="analysis-quarterly-table"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section" id="sec-valuation">
+          <div class="card section-card">
+            <div class="section-head">
+              <h2 data-icon="tag">株価・バリュエーション</h2>
+              <p class="section-lead">52週レンジ内の現在位置と、決算期末ベースの配当利回り推移です。</p>
+            </div>
+            <div id="analysis-stock-range"></div>
+            <div class="chart-box" style="margin-top:12px">
+              <h3 data-icon="tag">PER / PBR 推移（決算期末ベース）</h3>
+              <div class="chart-canvas-wrap" style="height:280px"><canvas id="chart-valuation"></canvas></div>
+            </div>
+            <div class="chart-box" style="margin-top:12px"><h3 data-icon="percent">配当利回り推移（決算期末株価ベース）</h3><div class="chart-canvas-wrap"><canvas id="chart-dividend-yield"></canvas></div></div>
+          </div>
+          <div class="card section-card" id="short-selling-card" style="display:none">
+            <div class="card-header">
+              <h2 data-icon="trending-down">空売り残高</h2>
+              <span class="muted" id="short-selling-meta"></span>
+            </div>
+            <div id="short-selling-body"></div>
+          </div>
+        </div>
+
+        <div class="detail-section" id="sec-media">
+          <div class="media-insights-row" id="company-media-row" style="display:none">
+          <div class="card section-card" id="company-news-card" style="display:none">
+            <div class="section-head">
+              <h2 data-icon="newspaper">関連ニュース</h2>
+            </div>
+            <div class="chart-box" id="company-news-chart-wrap" style="display:none;margin-bottom:12px">
+              <h3 data-icon="newspaper">月別の掲載件数</h3>
+              <div class="chart-canvas-wrap"><canvas id="company-news-chart"></canvas></div>
+              <div class="chart-caption" id="company-news-chart-caption"></div>
+            </div>
+            <div id="company-news-feed" class="disclosure-feed news-feed"></div>
+          </div>
+
+          <div class="card section-card" id="company-trend-card" style="display:none">
+            <div class="section-head">
+              <h2 data-icon="trending-up">検索トレンド</h2>
+            </div>
+            <div class="chart-range-btns" id="company-trend-range-btns">
+              <button type="button" class="secondary active" data-trend-days="7">7日</button>
+              <button type="button" class="secondary" data-trend-days="30">30日</button>
+              <button type="button" class="secondary" data-trend-days="90">90日</button>
+            </div>
+            <div class="chart-box" style="margin-bottom:0">
+              <h3 data-icon="trending-up">日別の検索関心度</h3>
+              <div class="chart-canvas-wrap"><canvas id="company-trend-chart"></canvas></div>
+              <div class="chart-caption" id="company-trend-chart-caption"></div>
+            </div>
+          </div>
           </div>
         </div>
 
@@ -4117,9 +4115,9 @@
 
     function renderOverviewNav(re, qtr, fin) {
       const items = [
-        { section: 'analysis', label: '詳細分析', show: true },
-        { section: 'financials', label: '年次財務', show: fin?.length },
-        { section: 'quarterly', label: '四半期', show: qtr?.items?.length },
+        { section: 'performance', label: '業績・財務', show: (fin?.length || qtr?.items?.length) },
+        { section: 'valuation', label: '株価・指標', show: true },
+        { section: 'media', label: 'ニュース・話題', show: true },
         { section: 'realestate', label: '不動産', show: re?.items?.length },
         { section: 'filings', label: '提出書類', show: true },
       ].filter(n => n.show);
