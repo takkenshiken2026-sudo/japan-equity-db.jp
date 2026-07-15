@@ -1018,11 +1018,13 @@
         data: s.data.slice(-maxLen),
         color: s.color,
       })),
-      { yFmt: (v) => `${Number(v).toFixed(1)}` }
+      // 日次で点数が多いため、数値ラベル・塗りつぶし・マーカーを消して細い線のみに
+      // （数値やマーカーが重なって真っ黒になるのを防ぎ、各社の推移が見えるように）。
+      { yFmt: (v) => `${Number(v).toFixed(1)}`, fill: false, pointRadius: 0, borderWidth: 1.5, valueLabels: false }
     );
   }
 
-  function renderMultiLineChart(canvasId, labels, series, { yFmt = yenOku } = {}) {
+  function renderMultiLineChart(canvasId, labels, series, { yFmt = yenOku, fill = true, pointRadius = 2, borderWidth, valueLabels = true } = {}) {
     if (!document.getElementById(canvasId)) return;
     const hasData = series.some((s) => hasNumericData(s.data));
     if (!hasData) {
@@ -1030,17 +1032,26 @@
       return;
     }
     resizeWrap(canvasId, 280);
-    const opts = baseOptions(yFmt, { legend: true, labelFmt: (v) => yFmt(v) });
+    // valueLabels=false のとき各点の数値ラベルを描かない（点数が多いと数値が
+    // 重なって真っ黒になり読めなくなるため）。
+    const opts = baseOptions(yFmt, { legend: true, labelFmt: valueLabels ? (v) => yFmt(v) : null });
     opts.plugins.tooltip.callbacks.label = (ctx) => `${ctx.dataset.label}: ${yFmt(ctx.parsed.y)}`;
     mountChart(canvasId, {
       type: 'line',
       data: {
         labels,
-        datasets: series.map((s) => ({
-          ...lineDataset(s.label, s.data, s.color),
-          spanGaps: true,
-          pointRadius: 2,
-        })),
+        datasets: series.map((s) => {
+          const ds = {
+            ...lineDataset(s.label, s.data, s.color),
+            spanGaps: true,
+            pointRadius,
+            // 点数が多いチャートは塗り重なりで真っ黒になるため、fill を切って
+            // 細い線のみで描画する（fill=false のとき）。
+            fill,
+          };
+          if (borderWidth != null) ds.borderWidth = borderWidth;
+          return ds;
+        }),
       },
       options: opts,
     });
