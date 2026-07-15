@@ -2717,8 +2717,6 @@
         <div class="detail-tabs-wrap">
         <div class="detail-tabs" id="detail-tabs">
           <button class="detail-tab active" data-section="overview" data-icon="layout">概要</button>
-          <button class="detail-tab" data-section="performance" data-icon="bar-chart">業績・財務</button>
-          <button class="detail-tab" data-section="valuation" data-icon="tag">株価・指標</button>
           <button class="detail-tab" data-section="media" data-icon="newspaper">ニュース・話題</button>
           <button class="detail-tab" data-section="realestate" data-icon="building">不動産</button>
           <button class="detail-tab" data-section="filings" data-icon="file">書類</button>
@@ -2726,33 +2724,6 @@
         </div>
 
         <div class="detail-section active" id="sec-overview">
-          <div class="card section-card verdict-card" id="verdict-card" style="display:none">
-            <div id="verdict-body"></div>
-          </div>
-          <div class="card section-card" id="insights-card">
-            <div class="section-head">
-              <h2 data-icon="sparkles">この銘柄のポイント</h2>
-            </div>
-            <div class="insight-grid" id="data-insights"></div>
-            <nav class="overview-nav" id="overview-nav" aria-label="詳細セクションへ"></nav>
-          </div>
-          <div class="card section-card" id="industry-benchmark-card" style="display:none">
-            <div class="section-head">
-              <h2 data-icon="users">同業比較</h2>
-              <p class="section-lead" id="industry-benchmark-lead"></p>
-            </div>
-            <div class="kpi-group-grid" id="industry-benchmark-grid"></div>
-          </div>
-          <div class="card section-card" id="industry-peers-card" style="display:none">
-            <div class="section-head">
-              <h2 data-icon="users">同業の他銘柄</h2>
-              <p class="section-lead" id="industry-peers-lead">同じ業種の上場企業から、売上規模の近い銘柄を表示しています。</p>
-            </div>
-            <div class="peer-grid" id="industry-peers-grid"></div>
-          </div>
-        </div>
-
-        <div class="detail-section" id="sec-performance">
           <div class="card">
             <div class="card-header"><h2 data-icon="bar-chart">年次財務（直近12期）</h2></div>
             <div id="fin-highlight"></div>
@@ -2813,6 +2784,18 @@
               <div class="chart-box"><h3 data-icon="tag">EPS / 1株配当</h3><div class="chart-canvas-wrap with-legend"><canvas id="chart-dividend-eps"></canvas></div><div class="chart-caption">単位: 円</div></div>
             </div>
           </div>
+          <div class="card section-card">
+            <div class="section-head">
+              <h2 data-icon="tag">株価・バリュエーション</h2>
+              <p class="section-lead">52週レンジ内の現在位置と、決算期末ベースの配当利回り推移です。</p>
+            </div>
+            <div id="analysis-stock-range"></div>
+            <div class="chart-box" style="margin-top:12px">
+              <h3 data-icon="tag">PER / PBR 推移（決算期末ベース）</h3>
+              <div class="chart-canvas-wrap" style="height:280px"><canvas id="chart-valuation"></canvas></div>
+            </div>
+            <div class="chart-box" style="margin-top:12px"><h3 data-icon="percent">配当利回り推移（決算期末株価ベース）</h3><div class="chart-canvas-wrap"><canvas id="chart-dividend-yield"></canvas></div></div>
+          </div>
           <div class="card">
             <div class="card-header"><h2 data-icon="calendar">四半期業績</h2><span class="muted" id="quarterly-meta"></span></div>
             <p class="section-lead" style="margin:calc(-1 * var(--space-2)) 0 var(--space-4)">累計・単期売上と前年比（YoY）・前四半期比（QoQ）です。</p>
@@ -2860,20 +2843,29 @@
               </table>
             </div>
           </div>
-        </div>
-
-        <div class="detail-section" id="sec-valuation">
-          <div class="card section-card">
+          <div class="card section-card verdict-card" id="verdict-card" style="display:none">
+            <div id="verdict-body"></div>
+          </div>
+          <div class="card section-card" id="insights-card">
             <div class="section-head">
-              <h2 data-icon="tag">株価・バリュエーション</h2>
-              <p class="section-lead">52週レンジ内の現在位置と、決算期末ベースの配当利回り推移です。</p>
+              <h2 data-icon="sparkles">この銘柄のポイント</h2>
             </div>
-            <div id="analysis-stock-range"></div>
-            <div class="chart-box" style="margin-top:12px">
-              <h3 data-icon="tag">PER / PBR 推移（決算期末ベース）</h3>
-              <div class="chart-canvas-wrap" style="height:280px"><canvas id="chart-valuation"></canvas></div>
+            <div class="insight-grid" id="data-insights"></div>
+            <nav class="overview-nav" id="overview-nav" aria-label="詳細セクションへ"></nav>
+          </div>
+          <div class="card section-card" id="industry-benchmark-card" style="display:none">
+            <div class="section-head">
+              <h2 data-icon="users">同業比較</h2>
+              <p class="section-lead" id="industry-benchmark-lead"></p>
             </div>
-            <div class="chart-box" style="margin-top:12px"><h3 data-icon="percent">配当利回り推移（決算期末株価ベース）</h3><div class="chart-canvas-wrap"><canvas id="chart-dividend-yield"></canvas></div></div>
+            <div class="kpi-group-grid" id="industry-benchmark-grid"></div>
+          </div>
+          <div class="card section-card" id="industry-peers-card" style="display:none">
+            <div class="section-head">
+              <h2 data-icon="users">同業の他銘柄</h2>
+              <p class="section-lead" id="industry-peers-lead">同じ業種の上場企業から、売上規模の近い銘柄を表示しています。</p>
+            </div>
+            <div class="peer-grid" id="industry-peers-grid"></div>
           </div>
           <div class="card section-card" id="short-selling-card" style="display:none">
             <div class="card-header">
@@ -4115,8 +4107,6 @@
 
     function renderOverviewNav(re, qtr, fin) {
       const items = [
-        { section: 'performance', label: '業績・財務', show: (fin?.length || qtr?.items?.length) },
-        { section: 'valuation', label: '株価・指標', show: true },
         { section: 'media', label: 'ニュース・話題', show: true },
         { section: 'realestate', label: '不動産', show: re?.items?.length },
         { section: 'filings', label: '提出書類', show: true },
