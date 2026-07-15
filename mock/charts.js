@@ -87,6 +87,56 @@
 
   Chart.register(valueLabelsPlugin);
 
+  // 各系列の「最後の点」だけに数値ラベルを、線の色で右側に描く。
+  // 複数系列の末尾値が近いと重なるため、縦方向に最小間隔を空けて衝突回避する。
+  const endLabelsPlugin = {
+    id: 'endLabels',
+    afterDatasetsDraw(chart, _args, pluginOpts) {
+      const formatter = pluginOpts?.formatter;
+      if (!formatter) return;
+      const { ctx, chartArea } = chart;
+      const items = [];
+      chart.data.datasets.forEach((dataset, di) => {
+        const meta = chart.getDatasetMeta(di);
+        if (meta.hidden) return;
+        let idx = -1;
+        for (let i = dataset.data.length - 1; i >= 0; i--) {
+          const v = dataset.data[i];
+          if (v != null && !Number.isNaN(v)) { idx = i; break; }
+        }
+        if (idx < 0 || !meta.data[idx]) return;
+        const { x, y } = meta.data[idx].getProps(['x', 'y'], true);
+        const text = formatter(dataset.data[idx], chart, di, idx);
+        if (!text || text === '-') return;
+        items.push({ x, y, text, color: dataset.borderColor || COLORS.ink });
+      });
+      if (!items.length) return;
+      // 縦位置で並べ、最小間隔（gap）を確保して重なりを解消
+      items.sort((a, b) => a.y - b.y);
+      const gap = 14;
+      for (let i = 1; i < items.length; i++) {
+        if (items[i].y - items[i - 1].y < gap) items[i].y = items[i - 1].y + gap;
+      }
+      // チャート下端をはみ出す場合は上方向に押し戻す
+      const overflow = items[items.length - 1].y - (chartArea.bottom - 2);
+      if (overflow > 0) items.forEach((it) => { it.y -= overflow; });
+      if (items[0].y < chartArea.top + 2) {
+        const up = chartArea.top + 2 - items[0].y;
+        items.forEach((it) => { it.y += up; });
+      }
+      ctx.save();
+      ctx.font = '700 11px "Noto Sans JP", sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      items.forEach((it) => {
+        ctx.fillStyle = it.color;
+        ctx.fillText(it.text, Math.min(it.x + 6, chart.width - 2), it.y);
+      });
+      ctx.restore();
+    },
+  };
+  Chart.register(endLabelsPlugin);
+
   function destroy(id) {
     const prev = instances.get(id);
     if (prev) {
@@ -171,7 +221,7 @@
     };
   }
 
-  function baseOptions(yFmt, { legend = false, pctAxis = false, labelFmt = null } = {}) {
+  function baseOptions(yFmt, { legend = false, pctAxis = false, labelFmt = null, endLabelFmt = null } = {}) {
     const plugins = {
       legend: legend
         ? {
@@ -196,14 +246,19 @@
     if (labelFmt) {
       plugins.valueLabels = { formatter: labelFmt };
     }
+    if (endLabelFmt) {
+      plugins.endLabels = { formatter: endLabelFmt };
+    }
+    // 末尾ラベルを描くときは右側に余白を確保して数値がはみ出さないようにする
+    const rightPad = endLabelFmt ? 48 : 20;
     return {
       responsive: true,
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       layout: {
         padding: legend
-          ? { top: 24, right: 20, bottom: 20, left: 12 }
-          : { top: 24, right: 20, bottom: 12, left: 12 },
+          ? { top: 24, right: rightPad, bottom: 20, left: 12 }
+          : { top: 24, right: rightPad, bottom: 12, left: 12 },
       },
       plugins,
       scales: {
@@ -1018,13 +1073,13 @@
         data: s.data.slice(-maxLen),
         color: s.color,
       })),
-      // 日次で点数が多いため、数値ラベル・塗りつぶし・マーカーを消して細い線のみに
-      // （数値やマーカーが重なって真っ黒になるのを防ぎ、各社の推移が見えるように）。
-      { yFmt: (v) => `${Number(v).toFixed(1)}`, fill: false, pointRadius: 0, borderWidth: 1.5, valueLabels: false }
+      // 日次で点数が多いため、全点の数値ラベル・塗りつぶし・マーカーは消し、細い線のみに。
+      // 直近（末尾）の値だけを各社の色で右側に表示し、重なりは縦にずらして回避する。
+      { yFmt: (v) => `${Number(v).toFixed(1)}`, fill: false, pointRadius: 0, borderWidth: 1.5, valueLabels: false, endLabels: true }
     );
   }
 
-  function renderMultiLineChart(canvasId, labels, series, { yFmt = yenOku, fill = true, pointRadius = 2, borderWidth, valueLabels = true } = {}) {
+  function renderMultiLineChart(canvasId, labels, series, { yFmt = yenOku, fill = true, pointRadius = 2, borderWidth, valueLabels = true, endLabels = false } = {}) {
     if (!document.getElementById(canvasId)) return;
     const hasData = series.some((s) => hasNumericData(s.data));
     if (!hasData) {
@@ -1033,8 +1088,12 @@
     }
     resizeWrap(canvasId, 280);
     // valueLabels=false のとき各点の数値ラベルを描かない（点数が多いと数値が
-    // 重なって真っ黒になり読めなくなるため）。
-    const opts = baseOptions(yFmt, { legend: true, labelFmt: valueLabels ? (v) => yFmt(v) : null });
+    // 重なって真っ黒になり読めなくなるため）。endLabels=true のときは末尾の値だけ表示。
+    const opts = baseOptions(yFmt, {
+      legend: true,
+      labelFmt: valueLabels ? (v) => yFmt(v) : null,
+      endLabelFmt: endLabels ? (v) => yFmt(v) : null,
+    });
     opts.plugins.tooltip.callbacks.label = (ctx) => `${ctx.dataset.label}: ${yFmt(ctx.parsed.y)}`;
     mountChart(canvasId, {
       type: 'line',
