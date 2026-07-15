@@ -4837,15 +4837,16 @@
         if (document.getElementById('compare')?.classList.contains('active')) {
           renderCompareWorkspace({ target: 'compare' });
         }
-        // トップ表示中に2社以上選択されたら、その場で比較結果を自動展開する
-        // （＋を押しただけで下に表示される）。2社未満に減ったら閉じる。
+        // トップ表示中に2社以上選択されたら比較結果を末尾に展開する。比較結果は
+        // ページ末尾にあり画面外になりがちなので、初めて開くときはそこへスクロール
+        // して「比較画面が出た」ことが分かるようにする。2社未満に減ったら閉じる。
         const dashResults = document.getElementById('dash-compare-results');
         if (dashResults) {
           const onDashboard = document.getElementById('dashboard')?.classList.contains('active');
-          const isOpen = dashResults.style.display !== 'none';
-          if (codes.length >= 2 && (onDashboard || isOpen)) {
-            showDashCompareResults();
-          } else if (isOpen) {
+          const wasOpen = dashResults.style.display !== 'none';
+          if (codes.length >= 2 && (onDashboard || wasOpen)) {
+            showDashCompareResults(onDashboard && !wasOpen);
+          } else if (wasOpen) {
             hideDashCompareResults();
           }
         }
