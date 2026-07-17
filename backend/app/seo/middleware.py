@@ -12,7 +12,7 @@ class TechSEOMiddleware(BaseHTTPMiddleware):
 
         if path.startswith("/api"):
             response.headers["X-Robots-Tag"] = "noindex, nofollow"
-        elif path in ("/robots.txt", "/sitemap.xml", "/llms.txt", "/disclaimer"):
+        elif path in ("/robots.txt", "/ads.txt", "/sitemap.xml", "/llms.txt", "/disclaimer"):
             response.headers["Cache-Control"] = "public, max-age=86400"
         elif path == "/" or path.startswith("/companies") or path.startswith("/industries"):
             response.headers["Cache-Control"] = "public, max-age=3600, stale-while-revalidate=86400"
