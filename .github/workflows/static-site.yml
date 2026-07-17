@@ -23,11 +23,11 @@ permissions:
   id-token: write
 
 concurrency:
-  # schedule（日次フル同期）は push に打ち切られないよう別グループにする。
+  # schedule / [full-sync] push は UI の通常 push に打ち切られないよう別グループにする。
   # 以前は同一 group + cancel-in-progress で、長い日次ビルドが UI push に
   # キャンセルされ、株価など当日同期結果が Pages に載らないことがあった。
-  group: static-site-${{ github.event_name == 'schedule' && 'schedule' || 'deploy' }}
-  cancel-in-progress: ${{ github.event_name != 'schedule' }}
+  group: static-site-${{ (github.event_name == 'schedule' || (github.event_name == 'push' && contains(github.event.head_commit.message || '', '[full-sync]'))) && 'full' || 'deploy' }}
+  cancel-in-progress: ${{ github.event_name != 'schedule' && !(github.event_name == 'push' && contains(github.event.head_commit.message || '', '[full-sync]')) }}
 
 jobs:
   build:
@@ -63,7 +63,11 @@ jobs:
           fi
 
       - name: Daily sync
-        if: (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.skip_sync != true)) && (github.event_name != 'workflow_dispatch' || inputs.quick_deploy != true)
+        # schedule / 手動フル / push コミットメッセージに [full-sync] があるとき
+        if: |
+          github.event_name == 'schedule' ||
+          (github.event_name == 'workflow_dispatch' && inputs.skip_sync != true && inputs.quick_deploy != true) ||
+          (github.event_name == 'push' && contains(github.event.head_commit.message || '', '[full-sync]'))
         run: |
           if [ -z "$EDINET_API_KEY" ]; then
             echo "::warning::EDINET_API_KEY 未設定 — sync をスキップ"
@@ -97,9 +101,8 @@ jobs:
         env:
           GOOGLE_SITE_VERIFICATION: ${{ secrets.GOOGLE_SITE_VERIFICATION }}
           GOOGLE_SITE_VERIFICATION_HTML: ${{ secrets.GOOGLE_SITE_VERIFICATION_HTML }}
-          # push は高速デプロイ（ライブ /data をミラー＋グローバルJSONをローカル再生成、~15分）。
-          # schedule/手動フル同期のときだけ全企業エクスポート（~3時間）を行う。
-          QUICK_DEPLOY: ${{ (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.quick_deploy == true)) && '1' || '' }}
+          # 通常 push は高速デプロイ。schedule / [full-sync] / 手動フル同期は全企業エクスポート。
+          QUICK_DEPLOY: ${{ (github.event_name == 'push' && !contains(github.event.head_commit.message || '', '[full-sync]') && '1') || (github.event_name == 'workflow_dispatch' && inputs.quick_deploy == true && '1') || '' }}
         run: python3 tools/build_public_site.py
 
       - uses: actions/configure-pages@v5
@@ -111,7 +114,10 @@ jobs:
       # 以前はバックアップ失敗（Release.tag_name already exists）でビルド前に落ち、
       # 当日の株価同期結果が Pages に一切載らない状態になっていた。
       - name: Publish database backup
-        if: (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.skip_sync != true)) && (github.event_name != 'workflow_dispatch' || inputs.quick_deploy != true)
+        if: |
+          github.event_name == 'schedule' ||
+          (github.event_name == 'workflow_dispatch' && inputs.skip_sync != true && inputs.quick_deploy != true) ||
+          (github.event_name == 'push' && contains(github.event.head_commit.message || '', '[full-sync]'))
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
