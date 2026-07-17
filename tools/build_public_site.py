@@ -136,6 +136,7 @@ def _write_robots_txt() -> None:
     (OUT / "robots.txt").write_text(
         f"""User-agent: *
 Allow: /
+Allow: /ads.txt
 Allow: /companies/
 Allow: /industries/
 Allow: /disclaimer
@@ -148,11 +149,20 @@ Sitemap: {SITE_URL}/sitemap.xml
 
 
 def _write_ads_txt() -> None:
-    # Google AdSense publisher ID (ca-pub-… → pub-…)
-    (OUT / "ads.txt").write_text(
-        "google.com, pub-7927260139193410, DIRECT, f08c47fec0942fa0\n",
-        encoding="utf-8",
+    # Canonical source: seo/ads.txt (AdSense crawler expects site-root /ads.txt)
+    src = SEO / "ads.txt"
+    text = src.read_text(encoding="utf-8") if src.exists() else (
+        "google.com, pub-7927260139193410, DIRECT, f08c47fec0942fa0\n"
     )
+    if "pub-7927260139193410" not in text:
+        raise ValueError("seo/ads.txt must include AdSense publisher ID pub-7927260139193410")
+    (OUT / "ads.txt").write_text(text, encoding="utf-8")
+
+
+def _write_cname() -> None:
+    # Keep custom domain bound across GitHub Pages Actions deploys
+    host = SITE_URL.removeprefix("https://").removeprefix("http://").split("/")[0]
+    (OUT / "CNAME").write_text(f"{host}\n", encoding="utf-8")
 
 
 def _write_llms_txt(listed_label: str) -> None:
@@ -311,6 +321,7 @@ def main() -> None:
     _write_brand_assets(listed_label)
     _write_robots_txt()
     _write_ads_txt()
+    _write_cname()
     _write_llms_txt(listed_label)
     (OUT / "sitemap.xml").write_text(sitemap_xml, encoding="utf-8")
     _write_google_verification_html()

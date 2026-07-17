@@ -93,6 +93,7 @@ def robots_txt(request: Request):
     base = site_base(request)
     return f"""User-agent: *
 Allow: /
+Allow: /ads.txt
 Allow: /companies/
 Allow: /industries/
 Allow: /disclaimer
@@ -104,7 +105,17 @@ Sitemap: {base}/sitemap.xml
 
 @router.get("/ads.txt", response_class=PlainTextResponse)
 def ads_txt():
-    return "google.com, pub-7927260139193410, DIRECT, f08c47fec0942fa0\n"
+    # Keep in sync with seo/ads.txt (static site source of truth)
+    for candidate in (
+        Path(__file__).resolve().parent / "ads.txt",
+        Path(__file__).resolve().parents[3] / "seo" / "ads.txt",
+    ):
+        if candidate.is_file():
+            return candidate.read_text(encoding="utf-8")
+    return (
+        "# japan-equity-db.jp - Google AdSense\n"
+        "google.com, pub-7927260139193410, DIRECT, f08c47fec0942fa0\n"
+    )
 
 
 @router.get("/llms.txt", response_class=PlainTextResponse)
