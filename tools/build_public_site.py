@@ -147,6 +147,14 @@ Sitemap: {SITE_URL}/sitemap.xml
     )
 
 
+def _write_ads_txt() -> None:
+    # Google AdSense publisher ID (ca-pub-… → pub-…)
+    (OUT / "ads.txt").write_text(
+        "google.com, pub-7927260139193410, DIRECT, f08c47fec0942fa0\n",
+        encoding="utf-8",
+    )
+
+
 def _write_llms_txt(listed_label: str) -> None:
     (OUT / "llms.txt").write_text(
         f"""# {SITE_NAME}
@@ -302,6 +310,7 @@ def main() -> None:
 
     _write_brand_assets(listed_label)
     _write_robots_txt()
+    _write_ads_txt()
     _write_llms_txt(listed_label)
     (OUT / "sitemap.xml").write_text(sitemap_xml, encoding="utf-8")
     _write_google_verification_html()

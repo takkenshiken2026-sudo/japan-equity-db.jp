@@ -102,6 +102,11 @@ Sitemap: {base}/sitemap.xml
 """
 
 
+@router.get("/ads.txt", response_class=PlainTextResponse)
+def ads_txt():
+    return "google.com, pub-7927260139193410, DIRECT, f08c47fec0942fa0\n"
+
+
 @router.get("/llms.txt", response_class=PlainTextResponse)
 def llms_txt(request: Request, db: Session = Depends(get_db)):
     base = site_base(request)
