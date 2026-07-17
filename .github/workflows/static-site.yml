@@ -23,10 +23,11 @@ permissions:
   id-token: write
 
 concurrency:
-  group: static-site
-  # push（コード/UI変更）による新しい実行は、進行中の実行を打ち切って高速に反映する。
-  # schedule（日次フルビルド）は cancel されても翌日また走るため許容。
-  cancel-in-progress: true
+  # schedule（日次フル同期）は push に打ち切られないよう別グループにする。
+  # 以前は同一 group + cancel-in-progress で、長い日次ビルドが UI push に
+  # キャンセルされ、株価など当日同期結果が Pages に載らないことがあった。
+  group: static-site-${{ github.event_name == 'schedule' && 'schedule' || 'deploy' }}
+  cancel-in-progress: ${{ github.event_name != 'schedule' }}
 
 jobs:
   build:
@@ -92,18 +93,6 @@ jobs:
           python -m app.sync_cli backfill-quotes || echo "::warning::quote valuation backfill failed"
           python -c "from app.db_maintenance import checkpoint_sqlite_wal; checkpoint_sqlite_wal('TRUNCATE')"
 
-      - name: Publish database backup
-        if: (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.skip_sync != true)) && (github.event_name != 'workflow_dispatch' || inputs.quick_deploy != true)
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if [ ! -f backend/data/edinet.db ]; then exit 0; fi
-          gzip -c backend/data/edinet.db > /tmp/edinet.db.gz
-          if ! gh release view db-backup &>/dev/null; then
-            gh release create db-backup --title "Production DB backup" --notes "Auto-updated by Static Site workflow."
-          fi
-          gh release upload db-backup /tmp/edinet.db.gz --clobber
-
       - name: Build static site
         env:
           GOOGLE_SITE_VERIFICATION: ${{ secrets.GOOGLE_SITE_VERIFICATION }}
@@ -117,6 +106,46 @@ jobs:
       - uses: actions/upload-pages-artifact@v5
         with:
           path: public_site
+
+      # サイト成果物のアップロード後にバックアップする。
+      # 以前はバックアップ失敗（Release.tag_name already exists）でビルド前に落ち、
+      # 当日の株価同期結果が Pages に一切載らない状態になっていた。
+      - name: Publish database backup
+        if: (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.skip_sync != true)) && (github.event_name != 'workflow_dispatch' || inputs.quick_deploy != true)
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ ! -f backend/data/edinet.db ]; then
+            echo "No database to publish"
+            exit 0
+          fi
+          gzip -c backend/data/edinet.db > /tmp/edinet.db.gz
+          echo "Compressed backup: $(wc -c < /tmp/edinet.db.gz) bytes"
+
+          # view が一時失敗しても create の 422（既存タグ）でジョブ全体を落とさない
+          if ! gh release view db-backup &>/dev/null; then
+            gh release create db-backup \
+              --title "Production DB backup" \
+              --notes "Auto-updated by Static Site workflow." \
+              || echo "::warning::gh release create failed (tag may already exist); continuing to upload"
+          fi
+
+          uploaded=0
+          for attempt in 1 2 3 4; do
+            if gh release upload db-backup /tmp/edinet.db.gz --clobber; then
+              uploaded=1
+              break
+            fi
+            echo "::warning::release upload attempt ${attempt} failed; retrying..."
+            sleep $((attempt * 8))
+          done
+          if [ "$uploaded" != "1" ]; then
+            echo "::error::Failed to upload db-backup after retries"
+            exit 1
+          fi
+          echo "Published db-backup release asset"
 
   deploy:
     needs: build
