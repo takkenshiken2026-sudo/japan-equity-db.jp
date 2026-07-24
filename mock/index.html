@@ -21,6 +21,14 @@
   <meta name="twitter:image" content="__SITE_URL__/og-image.svg" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <meta name="theme-color" content="#0284c7" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QSNNHKCTFR"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-QSNNHKCTFR', { send_page_view: false });
+  </script>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7927260139193410"
      crossorigin="anonymous"></script>
   <script type="application/ld+json">__SITE_JSON_LD__</script>
@@ -3401,6 +3409,20 @@
     const tabs = document.querySelectorAll('.tab');
     const panels = document.querySelectorAll('.panel');
 
+    // SPA（hash / pushState）でも GA4 に仮想ページビューを送る
+    let lastGaPagePath = null;
+    function trackPageView() {
+      if (typeof gtag !== 'function') return;
+      const page_path = location.pathname + location.search + location.hash;
+      if (page_path === lastGaPagePath) return;
+      lastGaPagePath = page_path;
+      gtag('event', 'page_view', {
+        page_title: document.title,
+        page_location: location.href,
+        page_path,
+      });
+    }
+
     function showTab(name, fromHistory = false) {
       if (name !== 'detail') lastTab = name;
       tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === name));
@@ -3424,6 +3446,7 @@
         ensureComparePickerLoaded();
         renderCompareWorkspace({ target: 'compare' });
       }
+      trackPageView();
     }
     function scrollToAnchor(id) {
       const el = document.getElementById(id);
